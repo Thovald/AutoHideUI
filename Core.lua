@@ -58,12 +58,7 @@ main.frame:RegisterEvent("PLAYER_LOGIN")
 
 function Private:OnProfileChanged()
     db = Private.db.profile
-    
-    if #db == 0 then
-        config.SetSelectedGroup()
-        return
-    end
-    config.SetSelectedGroup()
+    config.SetSelectedGroup(true)
 end
 
 local function InitDB()

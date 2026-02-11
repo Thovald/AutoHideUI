@@ -330,9 +330,11 @@ local function GetGroupNames()
     return groupNames
 end
 
-function config.SetSelectedGroup()
+function config.SetSelectedGroup(profileChanged)
     -- keeping last selection
-    if selectedGroup and Private.db.profile[selectedGroup] then
+    if profileChanged then
+        selectedGroup = 1
+    elseif selectedGroup and Private.db.profile[selectedGroup] then
         return
     end
 
@@ -785,7 +787,7 @@ end
 local function SetElementForConditionSelection(path, info, order)
     local name = info.name
     local label = L["label_"..name]
-    local pathDB = Private.db.profile
+    local pathDB = Private.db
 
     local spacer = {
         type = "description",
@@ -796,8 +798,8 @@ local function SetElementForConditionSelection(path, info, order)
     local enable = {
         name = label,
         type = "toggle",
-        get = function(info) return pathDB[selectedGroup].conditions[name].enabled end,
-        set = function(info, value) pathDB[selectedGroup].conditions[name].enabled = value end,
+        get = function(info) return pathDB.profile[selectedGroup].conditions[name].enabled end,
+        set = function(info, value) pathDB.profile[selectedGroup].conditions[name].enabled = value end,
         disabled = function(info)
             return false
         end,
@@ -812,8 +814,8 @@ local function SetElementForConditionSelection(path, info, order)
         width = 0.7,
         min = 0,
         max = 1,
-        get = function() return pathDB[selectedGroup].conditions[name].alpha end,
-        set = function(_, value) pathDB[selectedGroup].conditions[name].alpha = value end,
+        get = function() return pathDB.profile[selectedGroup].conditions[name].alpha end,
+        set = function(_, value) pathDB.profile[selectedGroup].conditions[name].alpha = value end,
         order = order
     }
     order = order + 1
@@ -821,8 +823,8 @@ local function SetElementForConditionSelection(path, info, order)
     local priority = {
         name = L["priority"],
         type = "toggle",
-        get = function(info) return pathDB[selectedGroup].conditions[name].priority end,
-        set = function(info, value) pathDB[selectedGroup].conditions[name].priority = value end,
+        get = function(info) return pathDB.profile[selectedGroup].conditions[name].priority end,
+        set = function(info, value) pathDB.profile[selectedGroup].conditions[name].priority = value end,
         disabled = function(info)
             return false
         end,

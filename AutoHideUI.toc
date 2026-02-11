@@ -1,0 +1,15 @@
+## Interface: 120001
+## Version: 1.0.0-beta.1
+## Title: AutoHideUI
+## Notes: Automatically fades out UI elements of your choice.|nFades them back in when certain conditions (like combat or mouseover) are met.|n|n/autohide or /autohideui or|n Esc => Options => AddOns => AutoHideUI
+## Author: Thovald
+## SavedVariables: AutoHideUIDB
+## IconTexture: Interface\AddOns\AutoHideUI\Media\Icon.tga
+## X-Curse-Project-ID:
+## X-Wago-ID:
+
+embeds.xml
+Locales/Locales.xml
+
+Core.lua
+Options.lua

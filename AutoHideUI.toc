@@ -5,8 +5,8 @@
 ## Author: Thovald
 ## SavedVariables: AutoHideUIDB
 ## IconTexture: Interface\AddOns\AutoHideUI\Media\Icon.tga
-## X-Curse-Project-ID:
-## X-Wago-ID:
+## X-Curse-Project-ID: 1460033
+## X-Wago-ID: v6335L6b
 
 embeds.xml
 Locales/Locales.xml

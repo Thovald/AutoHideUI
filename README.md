@@ -1,13 +1,13 @@
 <h1>Auto Hide UI</h1>
 
-<h3><font color="83d2ff">What this does:</font></h2>
+<u><h3><font color="83d2ff">What this does:</font></h2></u>
 
 Fades out UI Elements and brings them back when certain conditions (like mouseover or combat) are met.<br>
 You choose what, how and when to fade!<br>
 - Esc => "Options" => "Addons" => "Auto Hide UI"
 - /autohide
 - /autohideui
-<h3><font color="83d2ff">Default behavior:</font></h2>
+<u><h3><font color="83d2ff">Default behavior:</font></h2></u>
 
 Frames will fade out or remain hidden until any of these conditions are true:
 - you are <b>in combat</b>
@@ -17,7 +17,7 @@ Frames will fade out or remain hidden until any of these conditions are true:
 - you are <b>below 35% health</b>
 - you are <b>in a vehicle</b>
 
-<h3><font color="83d2ff">Customizability:</font></h2>
+<u><h3><font color="83d2ff">Customizability:</font></h2></u>
 
 You decide which Frames are affected and under which conditions they should be visible/hidden.  
 - Choose which Frames are affected.
@@ -28,7 +28,7 @@ You decide which Frames are affected and under which conditions they should be v
 You could have your UnitFrames and your CooldownManager fade in whenever you are in combat.<br>
 And have that one ActionBar with toys and mounts only fade in when you mouse over it. 
 
-<h3><font color="83d2ff">Supports other AddOns:</font></h2>
+<u><h3><font color="83d2ff">Supports other AddOns:</font></h2></u>
 
 Supports <b>ElvUI</b>, <b>Unhalted Unit Frames</b>, <b>Details</b> and <b>Dominos</b>.<br>
 Will automatically detect and use their Frames over the default Blizzard ones.<br>
@@ -38,7 +38,7 @@ There is a setting in the "Fade Settings" tab to override the Alpha of these Add
 If you want these AddOns to remain in control of their Alpha (for range checks or their own fade system), either remove their Frames from <b>Auto Hide UI</b> or disable this setting.
 
 
-<h3><font color="83d2ff">How to add Custom Frames:</font></h2>
+<u><h3><font color="83d2ff">How to add Custom Frames:</font></h2></u>
 
 If the provided Frame selection doesn't include the Frame you wish to hide, you must first find out that Frame's name:
 - Type /fstack in your chat.

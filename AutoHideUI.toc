@@ -1,5 +1,5 @@
 ## Interface: 120001
-## Version: 1.0.3
+## Version: 1.0.4
 ## Title: Auto Hide UI
 ## Notes: Automatically fades out UI elements of your choice.|nFades them back in when certain conditions (like combat or mouseover) are met.|n|n/autohide or /autohideui or|n Esc => Options => AddOns => AutoHideUI
 ## Author: Thovald

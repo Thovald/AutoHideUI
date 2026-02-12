@@ -372,10 +372,12 @@ local function WipeActiveFramesLists()
     wipe(activeGroups)
 end
 
-local function GetFramesByArg(arg, val)
+local function GetFramesByArg(arg, val, includeDefault)
     local frameList = {}
     for _, frameInfo in pairs(activeStrings) do
-        if not frameInfo.args.notInUse and frameInfo.args[arg] == val then
+        local isInUse = not frameInfo.args.notInUse
+        local isValidFrame = includeDefault or not frameInfo.args.isDefault
+        if isInUse and isValidFrame and frameInfo.args[arg] == val then
             for _, frame in pairs(frameInfo.frames) do
                 frameList[frame] = frameInfo
             end
@@ -388,7 +390,6 @@ local function RestoreOriginalAlphaFunctions()
     local arg, val = "forceAlpha", true
     local frameList = GetFramesByArg(arg, val)
     for frame in pairs(frameList) do
-
         if frame._origSetAlpha then
             frame.SetAlpha = frame._origSetAlpha
             frame._origSetAlpha = nil
@@ -546,6 +547,15 @@ local function CheckForAddOnFrames(frameString, groupDB)
     end
 end
 
+local function IsDefaultFrame(frameString)
+    for _, info in ipairs(config.DEFAULT_FRAMES) do
+        if frameString == info.frame then
+            return true
+        end
+    end
+    return false
+end
+
 local function HandleSpecialFrame(frameString, specialFrame)
     local frameList, args
 
@@ -581,6 +591,7 @@ local function GetAllFrameObjectsFromString(frameString, groupDB)
     if specialFrame then
         local frameInfo = HandleSpecialFrame(frameString, specialFrame)
         if frameInfo then
+            frameInfo.args.isDefault = IsDefaultFrame(frameString)
             return frameInfo
         end
     end
@@ -592,6 +603,7 @@ local function GetAllFrameObjectsFromString(frameString, groupDB)
 
     local frameList = {frameObject}
     local frameInfo = CreateFrameInfo(frameList)
+    frameInfo.args.isDefault = IsDefaultFrame(frameString)
 
     return frameInfo
 end

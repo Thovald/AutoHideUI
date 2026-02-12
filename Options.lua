@@ -17,7 +17,7 @@ local pairs, ipairs  = pairs, ipairs
 local selectedGroup
 local isOptionsOpen
 local MENU_WIDTH = 630
-local MENU_HEIGHT = 750
+local MENU_HEIGHT = 700
 local MENU_HEIGHT_MIN = 400
 local MENU_HEIGHT_MAX = 1000
 local highlightFrames = {}

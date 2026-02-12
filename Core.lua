@@ -24,7 +24,7 @@ local MOUSE_TICKER_INTERVAL = 0.125
 local lastLowHealth = LowHealthFrame:IsVisible()
 local lastInstanceCheck = 0
 local INSTANCE_THROTTLE = 1
-local pendingFadeCount = {}
+local pendingFades = {}
 local runAfterCombat = {} -- {{fn, arg1, arg2, ...}, ...}
 
 local DRUID_FORMS= {
@@ -143,16 +143,18 @@ local function CreateMouseoverLists()
     end
 end
 
-local function InitFadeCount()
-    wipe(pendingFadeCount)
-    for _, group in ipairs(activeGroups) do
-        pendingFadeCount[group] = 0
+local function ResetPendingFades()
+    for _, fadeInfo in ipairs(pendingFades) do
+        if fadeInfo and fadeInfo.timer then
+            fadeInfo.timer:Cancel()
+        end
     end
+    wipe(pendingFades)
 end
 
 local function ResetStates()
     ResetAllGroupStates()
-    InitFadeCount()
+    ResetPendingFades()
 end
 
 local function CancelMouseoverTicker()
@@ -163,7 +165,7 @@ local function CancelMouseoverTicker()
 end
 
 local function ClearQueues()
-    InitFadeCount()
+    ResetPendingFades()
     wipe(runAfterCombat)
 end
 
@@ -174,7 +176,7 @@ end
 
 local function InitAddon()
     internal.InitFrames()
-    InitFadeCount()
+    ResetPendingFades()
     RegisterAllEvents()
     CreateMouseoverLists()
     internal.CreateMouseoverTicker()
@@ -532,13 +534,14 @@ local function CheckForAddOnFrames(frameString, groupDB)
         if addonInfo:isLoaded() then
             local frameList, args
             if addonInfo.customGetter and addonInfo.frames[frameString] then
-                frameList, args = addonInfo.customGetter(), addonInfo.args
+                frameList = addonInfo.customGetter()
+                args = CopyTable(addonInfo.args)
             else
                 frameList = GetAddOnFrames(addonInfo.frames[frameString])
                 args = CopyTable(addonInfo.args)
             end
 
-            if frameList  then
+            if frameList then
                 local frameInfo = CreateFrameInfo(frameList, args)
                 frameInfo.args.forceAlpha = groupDB.config.forceAlpha
                 return frameInfo
@@ -659,7 +662,7 @@ local function CombineFrameLists(frameString, frameInfo, framesInUse, indexedFra
     end
 
     -- without this check, having multiple groups could flag used frames as notInUse
-    if not activeStrings[frameString] or activeStrings[frameString].args.notInUse then
+    if (not activeStrings[frameString]) or activeStrings[frameString].args.notInUse then
         frameInfo.group = groupInfo
         activeStrings[frameString] = frameInfo
     end
@@ -696,7 +699,7 @@ local function HandleAllGroupFrames(dbIndex, groupDB)
     local indexedFrames = {}
 
     -- order matters! prefer commonFrames 
-    for _, source in ipairs({ commonFrames, customFrames }) do
+    for i, source in ipairs({ commonFrames, customFrames }) do
         for frameString, frameInfo in pairs(source) do
             CombineFrameLists(frameString, frameInfo, framesInUse, indexedFrames, activeGroups[dbIndex])
         end
@@ -925,25 +928,6 @@ local function GetTargetAlpha(group)
     return alpha or group.config.idleAlpha
 end
 
--- function internal.SetAllAlphaToFull()
---     for _, group in ipairs(activeGroups) do
---         for _, frame in pairs(group.frames) do
---             group.states.endAlpha = 1
---             frame:SetAlpha(1)
---         end
---     end
--- end
-
--- function internal.SetAllFrameAlpha()
---     for i, group in ipairs(activeGroups) do
---         local targetAlpha = GetTargetAlpha(group)
---         group.states.endAlpha = targetAlpha
---         for _, frame in pairs(group.frames) do
---             frame:SetAlpha(targetAlpha)
---         end
---     end
--- end
-
 function internal.SetAllAlpha(targetAlpha)
     for _, group in ipairs(activeGroups) do
         local newAlpha = targetAlpha or GetTargetAlpha(group)
@@ -962,7 +946,16 @@ function internal.IsFadeInProgress(states)
     return GetTime() < states.fadeEndTime
 end
 
+local function CancelPendingFade(group)
+    if pendingFades[group] and pendingFades[group].timer then
+        pendingFades[group].timer:Cancel()
+        pendingFades[group] = nil
+    end
+end
+
 local function ApplyFade(group, targetAlpha)
+    CancelPendingFade(group)
+
     local states = group.states
 
     if internal.IsFadeInProgress(states) then
@@ -984,26 +977,37 @@ local function ApplyFade(group, targetAlpha)
         tinsert(FADEFRAMES, frame)
     end
 
-    pendingFadeCount[group] = pendingFadeCount[group] + 1
     main.frame:SetScript("OnUpdate", UIFrameFade_OnUpdate)
 end
 
-local function ScheduleFade(group, targetAlpha, delay)
-    local fadeCount = pendingFadeCount[group] + 1
-    pendingFadeCount[group] = fadeCount
+local function ScheduleFade(group, targetAlpha, delay, fadeMode)
+    local pendingFade = pendingFades[group]
+    if pendingFade and pendingFade.fadeMode ~= fadeMode then
+        CancelPendingFade(group)
+    elseif pendingFade then
+        pendingFade.targetAlpha = targetAlpha
+        return
+    end
 
-    C_Timer.After(delay, function()
-        if pendingFadeCount[group] ~= fadeCount then
+    local timer = C_Timer.NewTimer(delay, function()
+        local fadeInfo = pendingFades[group]
+        if not fadeInfo then
             return
         end
 
         local currentTarget = GetTargetAlpha(group)
-        if currentTarget ~= targetAlpha then
-            return
+        if currentTarget == fadeInfo.targetAlpha then
+            ApplyFade(group, currentTarget)
         end
 
-        ApplyFade(group, targetAlpha)
+        pendingFades[group] = nil
     end)
+
+    pendingFades[group] = {
+        timer = timer,
+        fadeMode = fadeMode,
+        targetAlpha = targetAlpha,
+    }
 end
 
 local function CheckForFadeDelay(group)
@@ -1020,14 +1024,16 @@ local function FadeGroup(group)
     local targetAlpha = GetTargetAlpha(group)
 
     if targetAlpha == group.states.endAlpha then
+        CancelPendingFade(group)
         return
     end
 
-    group.states.fadeMode = targetAlpha > group.states.endAlpha and "IN" or "OUT"
+    local fadeMode = targetAlpha > group.states.endAlpha and "IN" or "OUT"
+    group.states.fadeMode = fadeMode
 
     local shouldDelayFade, delay = CheckForFadeDelay(group)
     if shouldDelayFade then
-        ScheduleFade(group, targetAlpha, delay)
+        ScheduleFade(group, targetAlpha, delay, fadeMode)
     else
         ApplyFade(group, targetAlpha)
     end

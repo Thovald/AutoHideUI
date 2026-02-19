@@ -11,21 +11,34 @@ local config = Private.config
 -- namespace for functions that are referenced before they are defined
 local internal = {}
 
+-- unlike systemFrame, main.frame's events are registered based on which conditions are enabled
+main.frame = CreateFrame("Frame")
+local systemFrame = CreateFrame("Frame")
+systemFrame:RegisterEvent("PLAYER_LOGIN")
+systemFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+systemFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
+
 -- these are what we read and write to on runtime
-local activeStrings = {} -- [frameString] = { frames = {frameObject1, ...}, args = {} , group = reference to parent group}
-local activeGroups = {} -- [1] = { frames = {frameObject1, ...}, config = {}, states = {}, conditions = {combat = {}, ...}}
+local activeStrings = {} -- [frameString] = { frames = {frameObject, ...}, args = {} , group = reference to parent group}
+local activeGroups = {} -- [1] = { frames = {frameObject, ...}, config = {}, states = {}, conditions = {combat = {}, ...}}
+local activeFrames = {} -- {frameObject = {isInUse = bool, group = groupTable, frameString = string}, ...}
 
 -- used to only create and run mouseover stuff where it's needed
 local mouseoverTicker
-local mouseoverFrames = {} -- [frameObject] = groupObject
-local mouseoverGroups = {} -- [groupTable] = true
+local mouseoverFrames = {} -- {frameObject = groupTable, ...}
+local mouseoverGroups = {} -- {groupTable = true, ...}
 local MOUSE_TICKER_INTERVAL = 0.125
 
+local FADE_QUEUE = {}
+local inCombat = InCombatLockdown()
 local lastLowHealth = LowHealthFrame:IsVisible()
 local lastInstanceCheck = 0
 local INSTANCE_THROTTLE = 1
 local pendingFades = {}
 local runAfterCombat = {} -- {{fn, arg1, arg2, ...}, ...}
+local framesThatToggleVisibility = {} -- {frame = {threshold = 0.1, group = groupTable }, ...}
+local minimapHelperFrame -- mouseover helper frame when minimap is hidden
+main.helperFrames = {}
 
 local DRUID_FORMS= {
     {
@@ -52,9 +65,6 @@ local GetShapeshiftFormID, UnitInVehicle, UnitCastingInfo, UnitChannelInfo, IsRe
 ------------------
 -- Setup
 ------------------
-
-main.frame = CreateFrame("Frame")
-main.frame:RegisterEvent("PLAYER_LOGIN")
 
 function Private:OnProfileChanged()
     db = Private.db.profile
@@ -166,12 +176,14 @@ end
 
 local function ClearQueues()
     ResetPendingFades()
+    internal.StopFadeAnimations()
     wipe(runAfterCombat)
 end
 
 local function ResetAddon()
     internal.ResetFrames()
     ResetStates()
+    wipe(framesThatToggleVisibility)
 end
 
 local function InitAddon()
@@ -181,15 +193,14 @@ local function InitAddon()
     CreateMouseoverLists()
     internal.CreateMouseoverTicker()
     internal.UpdateAllConditions()
-    --internal.SetAllFrameAlpha()
     internal.SetAllAlpha()
+    internal.ToggleHelperFrames()
 end
 
 function main.SuspendAddon()
     UnregisterAllEvents()
     CancelMouseoverTicker()
     ClearQueues()
-    --internal.SetAllAlphaToFull()
     internal.SetAllAlpha(1)
 end
 
@@ -218,11 +229,43 @@ function main.ColorString(string, clr)
     end
 end
 
+local function RunAfterCombatQueue()
+    for _, entry in ipairs(runAfterCombat) do
+        local func = entry[1]
+        if type(func) == "function" then
+            func(unpack(entry, 2))
+        end
+    end
+    wipe(runAfterCombat)
+end
+
 ------------------
 -- Managing Frames
 ------------------
 
 local FRAME_INFO_TEMPLATE = {frames = {}, args = {}}
+
+local function MINIMAPCLUSTER_CUSTOMGETTER(frameString)
+    local frameList = {}
+    local minimapFrame = internal.GetFrameObjectFromString(frameString)
+    if not minimapFrame then return
+        frameList
+    end
+    tinsert(frameList, minimapFrame)
+
+    if not minimapHelperFrame then
+        minimapHelperFrame = CreateFrame("Frame", "minimapHelperFrame", minimapFrame)
+        minimapHelperFrame:SetPoint("CENTER")
+        minimapHelperFrame:SetAllPoints()
+        minimapHelperFrame:SetParent(UIParent)
+        main.helperFrames[minimapHelperFrame] = {dependancy = frameString}
+    end
+    tinsert(frameList, minimapHelperFrame)
+
+    framesThatToggleVisibility[minimapFrame] = {threshold = 0.1}
+
+    return frameList
+end
 
 local ADDON_FRAME_MAPPING = {
     {
@@ -234,7 +277,7 @@ local ADDON_FRAME_MAPPING = {
             FocusFrame = {"UUF_Focus", "UUF_FocusTarget"},
             PetFrame = {"UUF_Pet", "UUF_PetTarget"},
         },
-        args = {},
+        args = {forceAlpha = true},
     },
     {
         name = "Dominos",
@@ -250,14 +293,42 @@ local ADDON_FRAME_MAPPING = {
             MultiBar7 = {"DominosFrame14"},
             StanceBar = {"DominosFrameclass"},
             PetActionBar = {"DominosFramepet"},
+            MicroMenu = {"DominosFramemenu"},
+            BagsBar = {"DominosFramebags"},
+            MainStatusTrackingBarContainer = {"DominosFrameexp"},
         },
         args = {},
     },
     {
         name = "ElvUI",
-        isLoaded = function() return ElvUI end,
+        isLoaded = function() return ElvUI and ElvUI[1] and ElvUI[1].db and ElvUI[1].DataBars and ElvUI[1].DataBars.db and ElvUI[1].DataBars.db.experience and ElvUI[1].DataBars.db.experience.enable end,
         frames = {
-            MicroMenu = {"ElvUI_MicroBar"},
+            MainStatusTrackingBarContainer = {"ElvUI_ExperienceBarHolder"},
+        },
+        args = {},
+    },
+    {
+        name = "ElvUI",
+        isLoaded = function() return ElvUI and ElvUI[1] and ElvUI[1]:GetModule("Minimap") and ElvUI[1]:GetModule("Minimap").Initialized end,
+        frames = {
+            MinimapCluster = {},
+        },
+        args = {},
+        customGetter = function()
+            local frameList = MINIMAPCLUSTER_CUSTOMGETTER("MinimapCluster")
+            local addonButton =  internal.GetFrameObjectFromString("AddonCompartmentFrame")
+            if addonButton then
+                tinsert(frameList, addonButton)
+            end
+            return frameList
+        end,
+    },
+    {
+        name = "ElvUI",
+        isLoaded = function() return ElvUI and ElvUI[1] and ElvUI[1]:GetModule("Auras") and ElvUI[1]:GetModule("Auras").Initialized end,
+        frames = {
+            BuffFrame = {"ElvUIPlayerBuffs"},
+            DebuffFrame = {"ElvUIPlayerDebuffs"},
         },
         args = {},
     },
@@ -271,7 +342,7 @@ local ADDON_FRAME_MAPPING = {
             PetFrame = {"ElvUF_Pet", "ElvUF_PetTarget"},
             PlayerCastingBarFrame = {"ElvUF_Player_CastBar"},
         },
-        args = {},
+        args = {forceAlpha = true},
     },
     {
         name = "ElvUI",
@@ -287,8 +358,9 @@ local ADDON_FRAME_MAPPING = {
             MultiBar7 = {"ElvUI_Bar15"},
             StanceBar = {"ElvUI_StanceBar"},
             PetActionBar = {"ElvUI_BarPet"},
+            MicroMenu = {"ElvUI_MicroBar"},
         },
-        args = {reparent = true,},
+        args = {reparent = true, forceAlpha = true},
     },
     {
         name = "Details",
@@ -296,14 +368,14 @@ local ADDON_FRAME_MAPPING = {
         frames = {
             DamageMeter = {},
         },
-        args = {},
+        args = {forceAlpha = true},
         customGetter = function()
             local baseNames = {"DetailsBaseFrame", "DetailsRowFrame"}
             local count = 1
             local frameList = {}
 
             local detailsFrame = {}
-            while detailsFrame do
+            while detailsFrame and count < 50 do
                 for i = 1,2 do
                     detailsFrame = internal.GetFrameObjectFromString(baseNames[i]..count)
                     if detailsFrame then
@@ -326,7 +398,7 @@ local SPECIAL_FRAMES = {
             local function ReparentVehicleButton()
                 MainMenuBarVehicleLeaveButton:SetParent(UIParent)
             end
-            if InCombatLockdown() then
+            if inCombat then
                 tinsert(runAfterCombat, {ReparentVehicleButton})
             else
                 ReparentVehicleButton()
@@ -352,7 +424,21 @@ local SPECIAL_FRAMES = {
             return frameList
         end
     },
+    MinimapCluster = {
+        customGetter = MINIMAPCLUSTER_CUSTOMGETTER,
+    },
 }
+
+function internal.ToggleHelperFrames()
+    for frame, info in pairs(main.helperFrames) do
+        local frameString = info.dependancy
+        if not activeStrings[frameString].args.isInUse then
+            frame:Hide()
+        else
+            frame:Show()
+        end
+    end
+end
 
 function main.FetchFramesFromString(frameString)
     if not activeStrings[frameString] then
@@ -372,12 +458,13 @@ end
 local function WipeActiveFramesLists()
     wipe(activeStrings)
     wipe(activeGroups)
+    wipe(activeFrames)
 end
 
 local function GetFramesByArg(arg, val, includeDefault)
     local frameList = {}
     for _, frameInfo in pairs(activeStrings) do
-        local isInUse = not frameInfo.args.notInUse
+        local isInUse = frameInfo.args.isInUse
         local isValidFrame = includeDefault or not frameInfo.args.isDefault
         if isInUse and isValidFrame and frameInfo.args[arg] == val then
             for _, frame in pairs(frameInfo.frames) do
@@ -412,13 +499,7 @@ local function ReplaceAlphaFunctions(frame, groupInfo)
     end
 
     frame._origSetAlpha = frame.SetAlpha
-    frame.SetAlpha = function(self, alpha)
-        if internal.IsFadeInProgress(groupInfo.states) then
-            self:_origSetAlpha(alpha)
-        else
-            self:_origSetAlpha(groupInfo.states.endAlpha)
-        end
-    end
+    frame.SetAlpha = function(self, alpha) end
 
     if frame.SetAlphaFromBoolean then
         frame._origSetAlphaFromBoolean = frame.SetAlphaFromBoolean
@@ -431,10 +512,11 @@ local function ReplaceAlphaFunctions(frame, groupInfo)
         end
     end
 
+    frame.lastAlpha = frame:GetAlpha()
 end
 
 local function RestoreOriginalParents()
-    if InCombatLockdown() then
+    if inCombat then
         tinsert(runAfterCombat, {RestoreOriginalParents})
         return
     end
@@ -464,7 +546,7 @@ local function ReparentFrame(frame)
 end
 
 local function ReparentAllCustomFrames()
-    if InCombatLockdown() then
+    if inCombat then
         tinsert(runAfterCombat, {ReparentAllCustomFrames})
         return
     end
@@ -492,6 +574,7 @@ end
 
 local function CreateFrameGroup(groupDB)
     local groupInfo = {
+        name = groupDB.name,
         frames = {},
         config = CopyTable(groupDB.config),
         states = CopyTable(config.DEFAULT_STATES),
@@ -510,7 +593,9 @@ local function CreateFrameInfo(frameList, args)
 end
 
 local function GetAddOnFrames(frameStringList)
-    if not frameStringList then return end
+    if not frameStringList then
+        return
+    end
 
     local frameList = {}
     -- specifically checking if first frame was found because that's the main one.
@@ -534,7 +619,7 @@ local function CheckForAddOnFrames(frameString, groupDB)
         if addonInfo:isLoaded() then
             local frameList, args
             if addonInfo.customGetter and addonInfo.frames[frameString] then
-                frameList = addonInfo.customGetter()
+                frameList = addonInfo.customGetter(frameString)
                 args = CopyTable(addonInfo.args)
             else
                 frameList = GetAddOnFrames(addonInfo.frames[frameString])
@@ -543,7 +628,7 @@ local function CheckForAddOnFrames(frameString, groupDB)
 
             if frameList then
                 local frameInfo = CreateFrameInfo(frameList, args)
-                frameInfo.args.forceAlpha = groupDB.config.forceAlpha
+                frameInfo.args.forceAlpha = frameInfo.args.forceAlpha and groupDB.config.forceAlpha
                 return frameInfo
             end
         end
@@ -562,8 +647,8 @@ end
 local function HandleSpecialFrame(frameString, specialFrame)
     local frameList, args
 
-    if  specialFrame.customGetter then
-        frameList, args = specialFrame.customGetter()
+    if specialFrame.customGetter then
+        frameList, args = specialFrame.customGetter(frameString)
     else
         local frameObject = internal.GetFrameObjectFromString(frameString)
         if not frameObject then
@@ -573,7 +658,9 @@ local function HandleSpecialFrame(frameString, specialFrame)
         end
     end
 
-    if not frameList then return end
+    if not frameList then
+        return
+    end
 
     if specialFrame.onAdded then
         specialFrame.onAdded()
@@ -618,7 +705,7 @@ local function GetAllCommonFrames(groupDB)
         local frameInfo = GetAllFrameObjectsFromString(frameString, groupDB)
         if frameInfo then
             frameList[frameString] = frameInfo
-            frameInfo.args.notInUse = not isChecked
+            frameInfo.args.isInUse = isChecked
         end
     end
 
@@ -634,12 +721,35 @@ local function GetAllCustomFrames(groupDB)
             local frameInfo = GetAllFrameObjectsFromString(frameString, groupDB)
             if frameInfo then
                 frameInfo.args.forceAlpha = groupDB.config.forceAlpha
+                frameInfo.args.isInUse = true
                 frameList[frameString] = frameInfo
             end
         end
     end
 
     return frameList
+end
+
+local function CreateActiveFramesList()
+    for frameString, info in pairs(activeStrings) do
+        local isInUse = info.args.isInUse
+        for _, frame in pairs(info.frames) do
+            if not activeFrames[frame] or not activeFrames[frame].isInUse then
+                activeFrames[frame] = {
+                    frameString = frameString,
+                    group = info.group,
+                    isInUse = isInUse
+                }
+            end
+        end
+    end
+end
+
+local function FinishVisibilityFrames()
+    for frame, frameInfo in pairs(framesThatToggleVisibility) do
+        frameInfo.group = activeFrames[frame].group
+        frameInfo.isInUse = activeFrames[frame].isInUse
+    end
 end
 
 local function CombineFrameLists(frameString, frameInfo, framesInUse, indexedFrames, groupInfo)
@@ -655,14 +765,14 @@ local function CombineFrameLists(frameString, frameInfo, framesInUse, indexedFra
     end
 
     for _, frame in ipairs(frameInfo.frames) do
-        if not frameInfo.args.notInUse then
+        if frameInfo.args.isInUse then
             framesInUse[frame] = true
             tinsert(indexedFrames, frame)
         end
     end
 
-    -- without this check, having multiple groups could flag used frames as notInUse
-    if (not activeStrings[frameString]) or activeStrings[frameString].args.notInUse then
+    -- without this check, having multiple groups could flag used frames as not in use
+    if (not activeStrings[frameString]) or (not activeStrings[frameString].args.isInUse) then
         frameInfo.group = groupInfo
         activeStrings[frameString] = frameInfo
     end
@@ -675,7 +785,7 @@ local function HasFrames(frameList)
 
     for _, frameInfo in pairs(frameList) do
         for _, frame in pairs(frameInfo.frames) do
-            if frame and not frameInfo.args.notInUse then
+            if frame and frameInfo.args.isInUse then
                 return true
             end
         end
@@ -699,7 +809,7 @@ local function HandleAllGroupFrames(dbIndex, groupDB)
     local indexedFrames = {}
 
     -- order matters! prefer commonFrames 
-    for i, source in ipairs({ commonFrames, customFrames }) do
+    for _, source in ipairs({ commonFrames, customFrames }) do
         for frameString, frameInfo in pairs(source) do
             CombineFrameLists(frameString, frameInfo, framesInUse, indexedFrames, activeGroups[dbIndex])
         end
@@ -713,17 +823,17 @@ local function HandleAllGroupFrames(dbIndex, groupDB)
 end
 
 function internal.InitFrames()
-    wipe(activeStrings)
-    wipe(activeGroups)
+    WipeActiveFramesLists()
 
     for dbIndex, groupDB in ipairs(db) do
         HandleAllGroupFrames(dbIndex, groupDB)
     end
 
+    CreateActiveFramesList()
+    FinishVisibilityFrames()
     ReparentAllCustomFrames()
     ReplaceAllAlphaFunctions()
 end
-
 
 ------------------
 -- Conditions
@@ -758,15 +868,7 @@ local function UpdateConditionForAllGroups(condition, value)
     end
 end
 
-local function ConditionCombat(combatState)
-    local inCombat
-
-    if combatState ~= nil then
-        inCombat = combatState
-    else
-        inCombat = InCombatLockdown()
-    end
-
+local function ConditionCombat()
     UpdateConditionForAllGroups("combat", inCombat)
 end
 
@@ -933,14 +1035,114 @@ function internal.SetAllAlpha(targetAlpha)
         local newAlpha = targetAlpha or GetTargetAlpha(group)
         group.states.endAlpha = newAlpha
         for _, frame in pairs(group.frames) do
-            frame:SetAlpha(newAlpha)
+            if frame._origSetAlpha then
+                frame:_origSetAlpha(newAlpha)
+            else
+                frame:SetAlpha(newAlpha)
+            end
         end
     end
+    internal.UpdateAllFrameVisibility()
 end
 
 ------------------
 -- Fade Stuff
 ------------------
+
+-- slightly trimmed version of Blizzard's code. we also use SetAlpha differently
+function AutoHide_FrameFade_OnUpdate(self, elapsed)
+	local index = 1;
+	local frame, fadeInfo;
+	while FADE_QUEUE[index] do
+		frame = FADE_QUEUE[index];
+		fadeInfo = FADE_QUEUE[index].fadeInfo;
+		-- Reset the timer if there isn't one, this is just an internal counter
+		if ( not fadeInfo.fadeTimer ) then
+			fadeInfo.fadeTimer = 0;
+		end
+		fadeInfo.fadeTimer = fadeInfo.fadeTimer + elapsed;
+
+		-- If the fadeTimer is less then the desired fade time then set the alpha otherwise hold the fade state, call the finished function, or just finish the fade
+		if ( fadeInfo.fadeTimer < fadeInfo.timeToFade ) then
+			if ( fadeInfo.mode == "IN" ) then
+				fadeInfo.fadeMethod(frame, (fadeInfo.fadeTimer / fadeInfo.timeToFade) * (fadeInfo.endAlpha - fadeInfo.startAlpha) + fadeInfo.startAlpha);
+			elseif ( fadeInfo.mode == "OUT" ) then
+				fadeInfo.fadeMethod(frame, ((fadeInfo.timeToFade - fadeInfo.fadeTimer) / fadeInfo.timeToFade) * (fadeInfo.startAlpha - fadeInfo.endAlpha)  + fadeInfo.endAlpha);
+			end
+		else
+			fadeInfo.fadeMethod(frame, fadeInfo.endAlpha)
+            -- Complete the fade and call the finished function if there is one
+            tDeleteItem(FADE_QUEUE, frame)
+            if ( fadeInfo.finishedFunc ) then
+                fadeInfo.finishedFunc(fadeInfo.finishedArg1, fadeInfo.finishedArg2, fadeInfo.finishedArg3, fadeInfo.finishedArg4);
+                fadeInfo.finishedFunc = nil;
+            end
+		end
+
+		index = index + 1;
+	end
+
+	if ( #FADE_QUEUE == 0 ) then
+		self:SetScript("OnUpdate", nil);
+	end
+end
+
+function internal.StopFadeAnimations()
+    wipe(FADE_QUEUE)
+end
+
+function internal.SetVisibilityFromAlpha(frame, endAlpha, threshold)
+    if inCombat then
+        return
+    end
+
+    if endAlpha > threshold then
+        frame:Show()
+    else
+        frame:Hide()
+    end
+end
+
+local function UpdateFrameVisibility(frame, frameInfo)
+    if inCombat or not frameInfo then
+        return
+    end
+
+    local isShown = frame:IsShown()
+
+    if frameInfo.group.states.endAlpha >= frameInfo.threshold and not isShown then
+        frame:Show()
+    elseif frameInfo.group.states.endAlpha < frameInfo.threshold and isShown then
+        frame:Hide()
+    end
+end
+
+function internal.UpdateAllFrameVisibility(setVisibilityToValue)
+    for frame, frameInfo in pairs(framesThatToggleVisibility) do
+        if frameInfo.isInUse then
+            if setVisibilityToValue == nil then
+                UpdateFrameVisibility(frame, frameInfo)
+            elseif setVisibilityToValue then
+                frame:Show()
+            else
+                frame:Hide()
+            end
+        end
+    end
+end
+
+local function HandleVisibilityForFade(frame, fadeInfo)
+    if not framesThatToggleVisibility[frame] then
+        return
+    end
+    if fadeInfo.mode == "OUT" then
+        fadeInfo.finishedFunc = UpdateFrameVisibility
+        fadeInfo.finishedArg1 = frame
+        fadeInfo.finishedArg2 = framesThatToggleVisibility[frame]
+    else
+        UpdateFrameVisibility(frame, framesThatToggleVisibility[frame])
+    end
+end
 
 function internal.IsFadeInProgress(states)
     return GetTime() < states.fadeEndTime
@@ -969,15 +1171,17 @@ local function ApplyFade(group, targetAlpha)
 
     for _, frame in pairs(group.frames) do
         frame.fadeInfo = {
-            mode = group.states.fadeMode;
-            timeToFade = group.config.timeToFade;
-            startAlpha = group.states.startAlpha;
-            endAlpha = group.states.endAlpha;
+            mode = group.states.fadeMode,
+            timeToFade = group.config.timeToFade,
+            startAlpha = group.states.startAlpha,
+            endAlpha = group.states.endAlpha,
+            fadeMethod = frame._origSetAlpha or frame.SetAlpha
         }
-        tinsert(FADEFRAMES, frame)
+        HandleVisibilityForFade(frame, frame.fadeInfo)
+        tinsert(FADE_QUEUE, frame)
     end
 
-    main.frame:SetScript("OnUpdate", UIFrameFade_OnUpdate)
+    main.frame:SetScript("OnUpdate", AutoHide_FrameFade_OnUpdate)
 end
 
 local function ScheduleFade(group, targetAlpha, delay, fadeMode)
@@ -1010,7 +1214,7 @@ local function ScheduleFade(group, targetAlpha, delay, fadeMode)
     }
 end
 
-local function CheckForFadeDelay(group)
+local function ShouldDelayFade(group)
     if group.states.fadeMode == "IN" and group.config.fadeInDelay > 0 then
         return true, group.config.fadeInDelay
     elseif group.states.fadeMode == "OUT" and group.config.fadeOutDelay > 0 then
@@ -1031,7 +1235,7 @@ local function FadeGroup(group)
     local fadeMode = targetAlpha > group.states.endAlpha and "IN" or "OUT"
     group.states.fadeMode = fadeMode
 
-    local shouldDelayFade, delay = CheckForFadeDelay(group)
+    local shouldDelayFade, delay = ShouldDelayFade(group)
     if shouldDelayFade then
         ScheduleFade(group, targetAlpha, delay, fadeMode)
     else
@@ -1048,6 +1252,7 @@ end
 ------------------
 -- Events
 ------------------
+
 local function OnLogin()
     -- deferred to ensure all AddOn frames have been created.
     C_Timer.After(1, function()
@@ -1062,22 +1267,21 @@ local function OnTargetChanged()
     FadeAllGroups()
 end
 
-local function OnCombatStart()
-    ConditionCombat(true)
+local function OnCombatChange()
+    ConditionCombat()
     FadeAllGroups()
 end
 
-local function OnCombatEnd()
-    for _, entry in ipairs(runAfterCombat) do
-        local func = entry[1]
-        if type(func) == "function" then
-            func(unpack(entry, 2))
-        end
-    end
-    wipe(runAfterCombat)
+local function OnCombatStart()
+    local setVisibilityToValue = true
+    internal.UpdateAllFrameVisibility(setVisibilityToValue)
+    inCombat = true
+end
 
-    ConditionCombat(false)
-    FadeAllGroups()
+local function OnCombatEnd()
+    inCombat = false
+    internal.UpdateAllFrameVisibility()
+    RunAfterCombatQueue()
 end
 
 local function OnMouseover()
@@ -1101,7 +1305,6 @@ local function OnInstanceChange()
     end
     ResetStates()
     internal.UpdateAllConditions()
-    --internal.SetAllFrameAlpha()
     internal.SetAllAlpha()
     lastInstanceCheck = currentTime
 end
@@ -1122,7 +1325,9 @@ local function OnVehicleChange()
 end
 
 local function OnHealthChange(unit)
-    if unit ~= "player" then return end
+    if unit ~= "player" then
+        return
+    end
 
     local currentLowHealth = LowHealthFrame:IsVisible()
     if lastLowHealth ~= currentLowHealth then
@@ -1133,14 +1338,18 @@ local function OnHealthChange(unit)
 end
 
 local function OnCastStart(unit)
-    if unit ~= "player" then return end
+    if unit ~= "player" then
+        return
+    end
 
     ConditionCasting(true)
     FadeAllGroups()
 end
 
 local function OnCastEnd(unit)
-    if unit ~= "player" then return end
+    if unit ~= "player" then
+        return
+    end
 
     ConditionCasting(false)
     FadeAllGroups()
@@ -1156,10 +1365,9 @@ end
 ------------------
 
 local EVENT_HANDLER = {
-    PLAYER_LOGIN = OnLogin,
     PLAYER_TARGET_CHANGED = OnTargetChanged,
-    PLAYER_REGEN_DISABLED = OnCombatStart,
-    PLAYER_REGEN_ENABLED = OnCombatEnd,
+    PLAYER_REGEN_DISABLED = OnCombatChange,
+    PLAYER_REGEN_ENABLED = OnCombatChange,
     PLAYER_ENTERING_WORLD = OnInstanceChange,
     LOADING_SCREEN_DISABLED = OnInstanceChange,
     ZONE_CHANGED_NEW_AREA = OnInstanceChange,
@@ -1177,8 +1385,21 @@ local EVENT_HANDLER = {
     PLAYER_UPDATE_RESTING = OnRestingChange,
 }
 
+local SYSTEM_EVENT_HANDLER = {
+    PLAYER_LOGIN = OnLogin,
+    PLAYER_REGEN_ENABLED = OnCombatEnd,
+    PLAYER_REGEN_DISABLED = OnCombatStart,
+}
+
+function systemFrame:OnEvent(event, ...)
+    SYSTEM_EVENT_HANDLER[event]()
+end
+
 function main.frame:OnEvent(event, ...)
     EVENT_HANDLER[event](...)
 end
 
+
+
 main.frame:SetScript("OnEvent", main.frame.OnEvent)
+systemFrame:SetScript("OnEvent", systemFrame.OnEvent)

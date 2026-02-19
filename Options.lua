@@ -26,7 +26,7 @@ local highlightFrames = {}
 -- Widgets
 ------------------
 
-AceGUI:RegisterWidgetType("MyAddon_CheckboxWithHooks", function()
+AceGUI:RegisterWidgetType("AutoHideUI_CheckboxWithHooks", function()
     local widget = AceGUI:Create("CheckBox")
 
     widget.frame:HookScript("OnEnter", function(self)
@@ -74,11 +74,15 @@ config.DEFAULT_FRAMES = {
     { frame = "UtilityCooldownViewer", label = L["CDManager Utility"], enabled = true },
     { frame = "BuffIconCooldownViewer", label = L["CDManager Buffs"], enabled = true },
     { frame = "BuffBarCooldownViewer", label = L["CDManager Bars"], enabled = true },
+    { frame = "BuffFrame", label = L["Buff Frame"], enabled = false },
+    { frame = "DebuffFrame", label = L["Debuff Frame"], enabled = false },
     -- other
     { frame = "DamageMeter", label = L["Damage Meter"], enabled = true },
-    { frame = "BagsBar", label = L["Bags Bar"], enabled = true },
+    { frame = "MinimapCluster", label = L["Minimap"], enabled = false , description = L["descr_Minimap"]},
     { frame = "MicroMenu", label = L["Micro Menu"], enabled = false },
     { frame = "ObjectiveTrackerFrame", label = L["Objectives Frame"], enabled = false },
+    { frame = "MainStatusTrackingBarContainer", label = L["Experience Bar"], enabled = false },
+    { frame = "BagsBar", label = L["Bags Bar"], enabled = true },
 
 }
 
@@ -187,6 +191,7 @@ config.CONDITION_DEFINITIONS = {
         events = {
             "UNIT_HEALTH",
         },
+        description = L["descr_health"]
     },
     {
         name = "mounted",
@@ -250,7 +255,7 @@ local GROUP_TEMPLATE = {
 }
 
 local ALPHA_PREF = {
-    "Highest", "Lowest",
+    L["Highest"], L["Lowest"],
 }
 
 ------------------
@@ -301,6 +306,10 @@ local function GetNextHighlight()
 end
 
 function config.ShowHighlight(frame)
+    if main.helperFrames[frame] then
+        return
+    end
+
     local highlight = GetNextHighlight()
 
     if frame:IsVisible() then
@@ -710,12 +719,13 @@ local OPTIONS_MENU = {
                     values = function() return GetGroupNames() end,
                     get = function() return selectedGroup end,
                     set = function(_, value) selectedGroup = value end,
+                    width = 1,
                     order = 3,
                 },
                 buttonNew = {
                     name = L["button_newGroup"],
                     type = "execute",
-                    width = 0.7,
+                    width = 0.9,
                     func = function() StaticPopup_Show("AUTOHIDEUI_CREATE_GROUP") end,
                     order = 5,
                 },
@@ -752,7 +762,8 @@ local function GetElementForFrameSelection(order, frameInfo)
         disabled = function(info)
             return IsFrameSelectedElsewhere(frameString)
         end,
-        dialogControl = "MyAddon_CheckboxWithHooks",
+        dialogControl = "AutoHideUI_CheckboxWithHooks",
+        desc = frameInfo.description, -- most times is nil
         order = order,
         arg = {frameString = frameString},
     }
@@ -763,7 +774,7 @@ end
 local function SetupFrameSelection()
     local path = OPTIONS_MENU.args.setup.args.tabFrames.args.group_defaultFrames.args
 
-    local spacerLocation = {PlayerCastingBarFrame = true, PetActionBar = true, BuffBarCooldownViewer = true}
+    local spacerLocation = {PlayerCastingBarFrame = true, PetActionBar = true, DebuffFrame = true}
     local order = 1
     local spacerCount = 1
 
@@ -803,6 +814,7 @@ local function SetElementForConditionSelection(path, info, order)
         disabled = function(info)
             return false
         end,
+        desc = info.description,
         width = 1.1,
         order = order,
     }
@@ -922,10 +934,14 @@ end
 local function SetHooksForAce()
     hooksecurefunc(AceConfigDialog, "Open", function(_, appName)
         -- this runs every time an option is changed, not just when menu opens.
-        if appName ~= "AutoHideUI" then return end
+        if appName ~= "AutoHideUI" then
+            return
+        end
 
         local f = AceConfigDialog.OpenFrames[appName]
-        if not f then return end
+        if not f then
+            return
+        end
 
         local frame = f.frame
 

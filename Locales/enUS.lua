@@ -25,6 +25,7 @@ L["descr_frames"] = "The same Frame can't be assigned to multiple Groups.|nElvUI
 L["group_defaultFrames"] = "Common Frames"
 L["group_customFrames"] = "Custom Frames"
 L["descr_customFrames"] = "Add the names of any other Frame here. Separate them with commas."
+L["descr_Minimap"] = "The minimap is a special case!|n|nFor best results, set it to be at full Alpha when in combat and at 0 Alpha when faded out."
 
 L["Player Frame"] = true
 L["Target Frame"] = true
@@ -47,8 +48,13 @@ L["CDManager Bars"] = true
 L["CDManager Buffs"] = true
 L["CDManager Essential"] = true
 L["CDManager Utility"] = true
+L["Buff Frame"] = true
+L["Debuff Frame"] = true
 L["Player Castbar"] = true
 L["Damage Meter"] = true
+L["Minimap"] = true
+L["Experience Bar"] = true
+
 
 -- tab: fade behavior
 L["tab_fadeSetup"] = "Fade Settings"
@@ -62,11 +68,13 @@ L["slider_idleAlpha"] = "Alpha when no Conditions are active"
 L["checkbox_forceAlpha"] = "Force Alpha on AddOn-Frames"
 L["desc_forceAlpha"] = "Enable this to stop other AddOns fighting with Auto Hide UI over the Alpha of their Frames.|n|nOnly affects Frames that are actually in use by Auto Hide UI."
 
-L["descr_alphaPref"] = "The settings below determine which Alpha to choose when multiple Conditions/Prio-Conditions are active at the same time."
+L["descr_alphaPref"] = "The settings below determine which Alpha to choose when multiple (Prio-)Conditions are active at the same time."
 L["dropdown_alphaPref"] = "Condition-Alpha Preference"
 L["tooltip_alphaPref"] = "Which Condition's Alpha to choose when multiple Conditions are active."
 L["dropdown_prioAlphaPref"] = "Prio-Condition-Alpha Preference"
 L["tooltip_prioAlphaPref"] = "Which Priority-Condition's Alpha to choose when multiple Priority-Conditions are active."
+L["Highest"] = true
+L["Lowest"] = true
 
 -- tab: fade conditions
 L["tab_fadeConditions"] = "Fade Conditions"
@@ -77,7 +85,6 @@ L["enable"] = "Enable"
 L["alpha"] = "Alpha"
 L["priority"] = "Prio"
 
---L["header_conditions"] = "Conditions"
 L["label_combat"] = "When in combat"
 L["label_instance"] = "When in instance"
 L["label_mouseover"] = "On mouseover"
@@ -88,6 +95,7 @@ L["label_resting"] = "When resting"
 L["label_health"] = "When <35% health"
 L["label_mounted"] = "When mounted"
 L["label_inVehicle"] = "When in a vehicle"
+L["descr_health"] = "Due to AddOn restrictions, the threshold can't be customized anymore.|n|nRequires the game option 'Do Not Flash Screen at Low Health' to be disabled."
 
 L["dropdown_druidForms"] = "Include Druid Forms"
 L["dropdownOption_druid1"] = "Land/Air/Water"

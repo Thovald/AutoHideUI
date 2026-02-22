@@ -614,10 +614,41 @@ local function GetAddOnFrames(frameStringList)
     end
 end
 
+local function CheckForAddOnStrings(frameString, addonInfo)
+    -- if user enters the name of an AddOn frame instead of ticking the common frame.
+    -- useful for ElvUI users who don't like that Bar1 hides other bars as well.
+    -- still need to detect it this way to catch any custom args etc.
+    local frameObject, args
+    for _, frameStringList in pairs(addonInfo.frames) do
+        for _, string in pairs(frameStringList) do
+            if string == frameString then
+                frameObject = internal.GetFrameObjectFromString(frameString)
+                break
+            end
+        end
+    end
+
+    if not frameObject then
+        return false
+    end
+
+    args = CopyTable(addonInfo.args)
+
+    return {frameObject}, args
+end
+
 local function CheckForAddOnFrames(frameString, groupDB)
     for _, addonInfo in ipairs(ADDON_FRAME_MAPPING) do
         if addonInfo:isLoaded() then
             local frameList, args
+
+            frameList, args = CheckForAddOnStrings(frameString, addonInfo)
+            if frameList then
+                local frameInfo = CreateFrameInfo(frameList, args)
+                print("returning!")
+                return frameInfo
+            end
+
             if addonInfo.customGetter and addonInfo.frames[frameString] then
                 frameList = addonInfo.customGetter(frameString)
                 args = CopyTable(addonInfo.args)
@@ -631,6 +662,7 @@ local function CheckForAddOnFrames(frameString, groupDB)
                 frameInfo.args.forceAlpha = frameInfo.args.forceAlpha and groupDB.config.forceAlpha
                 return frameInfo
             end
+
         end
     end
 end
@@ -1092,7 +1124,7 @@ function internal.StopFadeAnimations()
 end
 
 function internal.SetVisibilityFromAlpha(frame, endAlpha, threshold)
-    if inCombat then
+    if inCombat and frame:IsProtected() then
         return
     end
 
@@ -1104,7 +1136,7 @@ function internal.SetVisibilityFromAlpha(frame, endAlpha, threshold)
 end
 
 local function UpdateFrameVisibility(frame, frameInfo)
-    if inCombat or not frameInfo then
+    if (inCombat and frame:IsProtected()) or not frameInfo then
         return
     end
 
@@ -1120,7 +1152,7 @@ end
 function internal.UpdateAllFrameVisibility(setVisibilityToValue)
     for frame, frameInfo in pairs(framesThatToggleVisibility) do
         if frameInfo.isInUse then
-            if setVisibilityToValue == nil then
+            if setVisibilityToValue == nil or not frame:IsProtected() then
                 UpdateFrameVisibility(frame, frameInfo)
             elseif setVisibilityToValue then
                 frame:Show()

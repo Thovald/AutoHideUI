@@ -388,7 +388,6 @@ local ADDON_FRAME_MAPPING = {
             return frameList
         end
     },
-
 }
 
 -- used for frames in the GUI's frame selector
@@ -645,7 +644,6 @@ local function CheckForAddOnFrames(frameString, groupDB)
             frameList, args = CheckForAddOnStrings(frameString, addonInfo)
             if frameList then
                 local frameInfo = CreateFrameInfo(frameList, args)
-                print("returning!")
                 return frameInfo
             end
 

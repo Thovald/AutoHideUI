@@ -944,6 +944,7 @@ local function SetHooksForAce()
         end
 
         local frame = f.frame
+        f:SetStatusText(L["chatCommands"].." /autohide /autohideui")
 
         if not Private.isAceHooked then
             frame:SetResizeBounds(MENU_WIDTH, MENU_HEIGHT_MIN, MENU_WIDTH, MENU_HEIGHT_MAX)

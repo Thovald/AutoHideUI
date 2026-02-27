@@ -102,3 +102,5 @@ L["dropdown_druidForms"] = "Einschl. Druidenformen"
 L["dropdownOption_druid1"] = "Land/Luft/Wasser"
 L["dropdownOption_druid2"] = "Land/Luft"
 L["dropdownOption_druid3"] = "Keine"
+
+L["chatCommands"] = "Chat Befehle:"

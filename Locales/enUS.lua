@@ -102,7 +102,7 @@ L["dropdownOption_druid1"] = "Land/Air/Water"
 L["dropdownOption_druid2"] = "Land/Air"
 L["dropdownOption_druid3"] = "None"
 
-
+L["chatCommands"] = "Chat Commands:"
 
 
 

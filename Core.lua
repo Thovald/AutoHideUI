@@ -1297,7 +1297,14 @@ local function OnTargetChanged()
     FadeAllGroups()
 end
 
-local function OnCombatChange()
+local function OnCombatChange(combatStatus)
+    inCombat = combatStatus
+
+    -- we are running this here as well, because it's not guaranteed that both frames fire events in the order we want.
+    if not inCombat then
+        RunAfterCombatQueue()
+    end
+
     ConditionCombat()
     FadeAllGroups()
 end
@@ -1396,8 +1403,8 @@ end
 
 local EVENT_HANDLER = {
     PLAYER_TARGET_CHANGED = OnTargetChanged,
-    PLAYER_REGEN_DISABLED = OnCombatChange,
-    PLAYER_REGEN_ENABLED = OnCombatChange,
+    PLAYER_REGEN_DISABLED = function() OnCombatChange(true) end,
+    PLAYER_REGEN_ENABLED = function() OnCombatChange(false) end,
     PLAYER_ENTERING_WORLD = OnInstanceChange,
     LOADING_SCREEN_DISABLED = OnInstanceChange,
     ZONE_CHANGED_NEW_AREA = OnInstanceChange,

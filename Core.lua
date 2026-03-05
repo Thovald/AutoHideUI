@@ -1301,7 +1301,9 @@ local function OnCombatChange(combatStatus)
     inCombat = combatStatus
 
     -- we are running this here as well, because it's not guaranteed that both frames fire events in the order we want.
-    if not inCombat then
+    if inCombat then
+        wipe(runAfterCombat)
+    else
         RunAfterCombatQueue()
     end
 
@@ -1310,6 +1312,7 @@ local function OnCombatChange(combatStatus)
 end
 
 local function OnCombatStart()
+    wipe(runAfterCombat)
     local setVisibilityToValue = true
     internal.UpdateAllFrameVisibility(setVisibilityToValue)
     inCombat = true

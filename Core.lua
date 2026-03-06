@@ -1200,6 +1200,7 @@ local function ApplyFade(group, targetAlpha)
     states.fadeEndTime = GetTime() + group.config.timeToFade
 
     for _, frame in pairs(group.frames) do
+        tDeleteItem(FADE_QUEUE, frame) -- for safety if timeToFade is set to 0 and fades trigger within one frame
         frame.fadeInfo = {
             mode = group.states.fadeMode,
             timeToFade = group.config.timeToFade,

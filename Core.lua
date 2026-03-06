@@ -340,6 +340,7 @@ local ADDON_FRAME_MAPPING = {
             TargetFrame = {"ElvUF_Target", "ElvUF_TargetTarget"},
             FocusFrame = {"ElvUF_Focus", "ElvUF_FocusTarget"},
             PetFrame = {"ElvUF_Pet", "ElvUF_PetTarget"},
+            PartyFrame = {"ElvUF_Party"},
             PlayerCastingBarFrame = {"ElvUF_Player_CastBar"},
         },
         args = {forceAlpha = true},

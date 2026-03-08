@@ -186,11 +186,13 @@ config.CONDITION_DEFINITIONS = {
         db = {
             enabled = true,
             alpha = 1,
-            threshold = 0.75,
+            style = 1,
             priority = false,
         },
         events = {
             "UNIT_HEALTH",
+            "UNIT_MAXHEALTH",
+            "UNIT_MAX_HEALTH_MODIFIERS_CHANGED",
         },
         description = L["descr_health"]
     },
@@ -695,6 +697,20 @@ local EXTRA_CONDITION_ELEMENTS = {
             order = 10,
         },
     },
+    health = {
+        dropdown_health = {
+            name = L["dropdown_health"],
+            desc = L["descr_health"],
+            type = "select",
+            width = 0.8,
+            values = function() return {L["dropdownOption_health1"], L["dropdownOption_health2"]} end,
+            get = function() return Private.db.profile[selectedGroup].conditions.health.style end,
+            set = function(_, value) Private.db.profile[selectedGroup].conditions.health.style = value end,
+            order = 10,
+        },
+    },
+
+
 }
 
 local OPTIONS_MENU = {

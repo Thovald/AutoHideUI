@@ -93,10 +93,17 @@ L["label_targetFriendly"] = "When targeting friendly"
 L["label_targetHostile"] = "When targeting hostile"
 L["label_casting"] = "When casting"
 L["label_resting"] = "When resting"
-L["label_health"] = "When <35% health"
+L["label_health"] = "Health"
 L["label_mounted"] = "When mounted"
 L["label_inVehicle"] = "When in a vehicle"
-L["descr_health"] = "Due to AddOn restrictions, the threshold can't be customized anymore.|n|nRequires the game option 'Do Not Flash Screen at Low Health' to be disabled."
+L["descr_health"] = "Due to AddOn restrictions, this relies entirely on workarounds."..
+                    "|n|n"..
+                    "When below 35% Health:".."|n"..
+                    "Requires the game option 'Do Not Flash Screen at Low Health' to be disabled."..
+                    "|n|n"..
+                    "When missing Health:".."|n"..
+                    "Works by monitoring health events. No event usually means full health.".."|n"..
+                    "Has checks in place to weed out most false-positives."
 
 L["dropdown_druidForms"] = "Include Druid Forms"
 L["dropdownOption_druid1"] = "Land/Air/Water"
@@ -105,7 +112,9 @@ L["dropdownOption_druid3"] = "None"
 
 L["chatCommands"] = "Chat Commands:"
 
-
+L["dropdown_health"] = "Show ..."
+L["dropdownOption_health1"] = "when below 35% HP"
+L["dropdownOption_health2"] = "when missing health"
 
 
 

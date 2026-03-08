@@ -94,10 +94,18 @@ L["label_targetFriendly"] = "Bei freundl. Ziel"
 L["label_targetHostile"] = "Bei feindl. Ziel"
 L["label_casting"] = "Beim Zaubern"
 L["label_resting"] = "Beim Ausruhen"
-L["label_health"] = "Wenn <35% Leben"
+L["label_health"] = "Gesundheit"
 L["label_mounted"] = "Beim Reiten"
 L["label_inVehicle"] = "In einem Fahrzeug"
-L["descr_health"] = "Wegen AddOn Limitierungen lässt sich der Schwellenwert der Gesundheit nicht mehr anpassen.|n|nDie folgende Blizzard-Option muss ausgeschaltet sein damit diese Option funktioniert:|n'Bildschirm bei niedriger Gesundheit nicht aufleuchten lassen'"
+L["descr_health"] = "Aufgrund von AddOn-Beschränkungen beruht dies auf provisorischen Lösungen."..
+                    "|n|n"..
+                    "Wenn unter 35% Gesundheit:".."|n"..
+                    "Benötigt, dass die folgende Blizzard-Option ausgeschaltet ist:|n"..
+                    "'Bildschirm bei niedriger Gesundheit nicht aufleuchten lassen'"..
+                    "|n|n"..
+                    "Bei fehlender Gesundheit:".."|n"..
+                    "Funktioniert durch die Überwachung von Gesundheitsereignissen. Kein Ereignis bedeutet idR volle Gesundheit.".."|n"..
+                    "Verfügt über Kontrollen um die meisten falsch-positiven Ergebnisse auszusortieren."
 
 L["dropdown_druidForms"] = "Einschl. Druidenformen"
 L["dropdownOption_druid1"] = "Land/Luft/Wasser"
@@ -105,3 +113,7 @@ L["dropdownOption_druid2"] = "Land/Luft"
 L["dropdownOption_druid3"] = "Keine"
 
 L["chatCommands"] = "Chat Befehle:"
+
+L["dropdown_health"] = "Zeige ..."
+L["dropdownOption_health1"] = "bei unter 35% Gesundheit"
+L["dropdownOption_health2"] = "bei fehlender Gesundheit"

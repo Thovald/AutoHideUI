@@ -102,8 +102,8 @@ L["descr_health"] = "Due to AddOn restrictions, this relies entirely on workarou
                     "Requires the game option 'Do Not Flash Screen at Low Health' to be disabled."..
                     "|n|n"..
                     "When missing Health:".."|n"..
-                    "Works by monitoring health events. No event usually means full health.".."|n"..
-                    "Has checks in place to weed out most false-positives."
+                    "Works by monitoring health events.".."|n"..
+                    "Assumes you're at full health if no health event fired for 3sec."
 
 L["dropdown_druidForms"] = "Include Druid Forms"
 L["dropdownOption_druid1"] = "Land/Air/Water"
@@ -112,9 +112,9 @@ L["dropdownOption_druid3"] = "None"
 
 L["chatCommands"] = "Chat Commands:"
 
-L["dropdown_health"] = "Show ..."
-L["dropdownOption_health1"] = "when below 35% HP"
-L["dropdownOption_health2"] = "when missing health"
+L["dropdown_health"] = "Show when ..."
+L["dropdownOption_health1"] = "below 35% HP"
+L["dropdownOption_health2"] = "missing health"
 
 
 

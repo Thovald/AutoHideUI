@@ -186,7 +186,7 @@ config.CONDITION_DEFINITIONS = {
         db = {
             enabled = true,
             alpha = 1,
-            style = 1,
+            style = 2,
             priority = false,
         },
         events = {

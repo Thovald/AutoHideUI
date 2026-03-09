@@ -29,12 +29,16 @@ local mouseoverFrames = {} -- {frameObject = groupTable, ...}
 local mouseoverGroups = {} -- {groupTable = true, ...}
 local MOUSE_TICKER_INTERVAL = 0.125
 
-local FADE_QUEUE = {}
-local inCombat = InCombatLockdown()
-local lastLowHealthVis = LowHealthFrame:IsVisible()
+-- health-check stuff
+local TIME_TO_FLAG_FULL_HEALTH = 3
 local isMissingHealth = false
 local maxHealthChangeTime = 0
 local healthTimer
+
+local FADE_QUEUE = {}
+local inCombat = InCombatLockdown()
+local lastLowHealthVis = LowHealthFrame:IsVisible()
+local fadeDelayOffset = 0
 local lastInstanceCheck = 0
 local INSTANCE_THROTTLE = 1
 local pendingFades = {}
@@ -436,10 +440,14 @@ local SPECIAL_FRAMES = {
 function internal.ToggleHelperFrames()
     for frame, info in pairs(main.helperFrames) do
         local frameString = info.dependency
-        if not activeStrings[frameString].args.isInUse then
-            frame:Hide()
+        if activeStrings[frameString] then
+            if not activeStrings[frameString].args.isInUse then
+                frame:Hide()
+            else
+                frame:Show()
+            end
         else
-            frame:Show()
+            frame:Hide()
         end
     end
 end
@@ -782,8 +790,10 @@ end
 
 local function FinishVisibilityFrames()
     for frame, frameInfo in pairs(framesThatToggleVisibility) do
-        frameInfo.group = activeFrames[frame].group
-        frameInfo.isInUse = activeFrames[frame].isInUse
+        if activeFrames[frame] then
+            frameInfo.group = activeFrames[frame].group
+            frameInfo.isInUse = activeFrames[frame].isInUse
+        end
     end
 end
 
@@ -1006,10 +1016,12 @@ local function CheckMissingHealthChange()
 
     isMissingHealth = true
 
-    healthTimer = C_Timer.NewTimer(3, function()
+    healthTimer = C_Timer.NewTimer(TIME_TO_FLAG_FULL_HEALTH, function()
         isMissingHealth = false
         ConditionHealth()
+        fadeDelayOffset = TIME_TO_FLAG_FULL_HEALTH * -1
         internal.FadeAllGroups()
+        fadeDelayOffset = 0
     end)
 
     return true
@@ -1288,9 +1300,11 @@ local function ScheduleFade(group, targetAlpha, delay, fadeMode)
 end
 
 local function ShouldDelayFade(group)
-    if group.states.fadeMode == "IN" and group.config.fadeInDelay > 0 then
+    local fadeInDelay = group.config.fadeInDelay + fadeDelayOffset
+    local fadeOutDelay = group.config.fadeOutDelay + fadeDelayOffset
+    if group.states.fadeMode == "IN" and fadeInDelay > 0 then
         return true, group.config.fadeInDelay
-    elseif group.states.fadeMode == "OUT" and group.config.fadeOutDelay > 0 then
+    elseif group.states.fadeMode == "OUT" and fadeOutDelay > 0 then
         return true, group.config.fadeOutDelay
     else
         return false, 0

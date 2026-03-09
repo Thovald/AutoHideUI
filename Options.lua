@@ -210,6 +210,20 @@ config.CONDITION_DEFINITIONS = {
         },
     },
     {
+        name = "flying",
+        db = {
+            enabled = false,
+            alpha = 1,
+            style = 3,
+            priority = false,
+        },
+        events = {
+            "PLAYER_MOUNT_DISPLAY_CHANGED",
+            "UPDATE_SHAPESHIFT_FORM",
+            "PLAYER_IS_GLIDING_CHANGED",
+        },
+    },
+    {
         name = "inVehicle",
         db = {
             enabled = true,
@@ -697,6 +711,17 @@ local EXTRA_CONDITION_ELEMENTS = {
             order = 10,
         },
     },
+    flying = {
+        style = {
+            name = L["dropdown_flightStyle"],
+            type = "select",
+            width = 0.8,
+            values = function() return {L["dropdownOption_flight1"], L["dropdownOption_flight2"], L["dropdownOption_flight3"]} end,
+            get = function() return Private.db.profile[selectedGroup].conditions.flying.style end,
+            set = function(_, value) Private.db.profile[selectedGroup].conditions.flying.style = value end,
+            order = 10,
+        },
+    },
     health = {
         dropdown_health = {
             name = L["dropdown_health"],
@@ -913,6 +938,16 @@ function internal.GetNewGroup(name, useDefaultFrameSelection)
     end
 
     return newGroup
+end
+
+function config.CheckGroupsForMissingEntries(defaultGroup)
+    for _, group in ipairs(Private.db.profile) do
+        for name, entry in pairs(defaultGroup.conditions) do
+            if not group.conditions[name] then
+                group.conditions[name] = CopyTable(entry)
+            end
+        end
+    end
 end
 
 function config.GetDefaultGroup(name)

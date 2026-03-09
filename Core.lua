@@ -37,6 +37,10 @@ local healthTimer
 
 local FADE_QUEUE = {}
 local inCombat = InCombatLockdown()
+local isMounted = IsMounted()
+local isFlying = IsFlying()
+local isGliding = C_PlayerInfo.GetGlidingInfo()
+local isFlyingTicker
 local lastLowHealthVis = LowHealthFrame:IsVisible()
 local fadeDelayOffset = 0
 local lastInstanceCheck = 0
@@ -66,8 +70,8 @@ local GetTime, pairs, ipairs, max, min, C_Timer
     = GetTime, pairs, ipairs, max, min, C_Timer
 local IsInInstance, InCombatLockdown, IsOnNeighborhoodMap, IsInsideHouse, IsMounted
     = IsInInstance, InCombatLockdown, C_Housing.IsOnNeighborhoodMap, C_Housing.IsInsideHouse, IsMounted
-local GetShapeshiftFormID, UnitInVehicle, UnitCastingInfo, UnitChannelInfo, IsResting
-    = GetShapeshiftFormID, UnitInVehicle, UnitCastingInfo, UnitChannelInfo, IsResting
+local GetShapeshiftFormID, UnitInVehicle, UnitCastingInfo, UnitChannelInfo, IsResting, IsFlying
+    = GetShapeshiftFormID, UnitInVehicle, UnitCastingInfo, UnitChannelInfo, IsResting, IsFlying
 
 ------------------
 -- Setup
@@ -79,14 +83,12 @@ function Private:OnProfileChanged()
 end
 
 local function InitDB()
-    local defaultProfile = {
-        profile = {
-            config.GetDefaultGroup(L["name_defaultGroup"])
-        }
-    }
+    local defaultGroup = config.GetDefaultGroup(L["name_defaultGroup"])
+    local defaultProfile = { profile = {defaultGroup} }
 
     Private.db = LibStub("AceDB-3.0"):New("AutoHideUIDB", defaultProfile, true)
     db = Private.db.profile
+    config.CheckGroupsForMissingEntries(defaultGroup)
 
     Private.db.RegisterCallback(Private, "OnProfileChanged", "OnProfileChanged")
     Private.db.RegisterCallback(Private, "OnProfileCopied", "OnProfileChanged")
@@ -174,10 +176,15 @@ local function ResetStates()
     ResetPendingFades()
 end
 
-local function CancelMouseoverTicker()
+local function CancelTickers()
     if mouseoverTicker then
         mouseoverTicker:Cancel()
         mouseoverTicker = nil
+    end
+
+    if isFlyingTicker then
+        isFlyingTicker:Cancel()
+        isFlyingTicker = nil
     end
 end
 
@@ -206,7 +213,7 @@ end
 
 function main.SuspendAddon()
     UnregisterAllEvents()
-    CancelMouseoverTicker()
+    CancelTickers()
     ClearQueues()
     internal.SetAllAlpha(1)
 end
@@ -968,12 +975,57 @@ local function ConditionMouseover()
     return false
 end
 
+local function ConditionFlying()
+    for _, group in ipairs(activeGroups) do
+        local steady = isFlying and group.conditions.flying.style ~= 1
+        local skyriding = isGliding and group.conditions.flying.style ~= 2
+        UpdateActiveConditions(group, "flying", steady or skyriding)
+    end
+end
+
+local function StartIsFlyingTicker()
+    if isFlyingTicker then
+        return
+    end
+
+    isFlyingTicker = C_Timer.NewTicker(0.25, function()
+        if isFlying ~= IsFlying() then
+            isFlying = not isFlying
+            ConditionFlying()
+            internal.FadeAllGroups()
+        end
+    end)
+end
+
+local function HandleIsFlyingTicker()
+    if not isMounted then
+        if isFlyingTicker then
+            isFlyingTicker:Cancel()
+            isFlyingTicker = nil
+        end
+        return
+    end
+
+    local _, canGlide = C_PlayerInfo.GetGlidingInfo()
+    for i, group in ipairs(activeGroups) do
+        if group.conditions.flying.enabled and group.conditions.flying.style ~= 1 and not canGlide then
+            StartIsFlyingTicker()
+            return
+        end
+    end
+end
+
 local function ConditionMounted()
-    UpdateConditionForAllGroups("mounted", IsMounted())
+    isMounted = IsMounted()
+    UpdateConditionForAllGroups("mounted", isMounted)
+    RunNextFrame(HandleIsFlyingTicker)
 end
 
 local function ConditionShapeshift()
     local shapeId = GetShapeshiftFormID()
+    isMounted = DRUID_FORMS[2][shapeId]
+    RunNextFrame(HandleIsFlyingTicker)
+
     for _, group in ipairs(activeGroups) do
         local formsKey = group.conditions.mounted.druidForms
         local validShapes = DRUID_FORMS[formsKey]
@@ -1416,6 +1468,12 @@ local function OnShapeshift()
     internal.FadeAllGroups()
 end
 
+local function OnGlideChange(val)
+    isGliding = val
+    ConditionFlying()
+    internal.FadeAllGroups()
+end
+
 local function OnVehicleChange()
     ConditionVehicle()
     internal.FadeAllGroups()
@@ -1487,6 +1545,7 @@ local EVENT_HANDLER = {
     UPDATE_MOUSEOVER_UNIT = OnMouseover,
     PLAYER_MOUNT_DISPLAY_CHANGED = OnMountChange,
     UPDATE_SHAPESHIFT_FORM = OnShapeshift,
+    PLAYER_IS_GLIDING_CHANGED = OnGlideChange,
     UNIT_ENTERED_VEHICLE = OnVehicleChange,
     UNIT_EXITED_VEHICLE = OnVehicleChange,
     UNIT_HEALTH = OnHealthChange,

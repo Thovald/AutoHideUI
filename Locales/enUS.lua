@@ -115,8 +115,11 @@ L["chatCommands"] = "Chat Commands:"
 L["dropdown_health"] = "Show when ..."
 L["dropdownOption_health1"] = "below 35% HP"
 L["dropdownOption_health2"] = "missing health"
-
-
+L["label_flying"] = "When Flying"
+L["dropdown_flightStyle"] = "Flight Style"
+L["dropdownOption_flight1"] = "Only Skyriding"
+L["dropdownOption_flight2"] = "Only Steady Flight"
+L["dropdownOption_flight3"] = "Both"
 
 
 

@@ -86,16 +86,16 @@ L["enable"] = "Enable"
 L["alpha"] = "Alpha"
 L["priority"] = "Prio"
 
-L["label_combat"] = "When in combat"
-L["label_instance"] = "When in instance"
+L["label_combat"] = "In combat"
+L["label_instance"] = "In instance"
 L["label_mouseover"] = "On mouseover"
-L["label_targetFriendly"] = "When targeting friendly"
-L["label_targetHostile"] = "When targeting hostile"
-L["label_casting"] = "When casting"
-L["label_resting"] = "When resting"
+L["label_targetFriendly"] = "Friendly Target/Focus"
+L["label_targetHostile"] = "Hostile Target/Focus"
+L["label_casting"] = "Casting"
+L["label_resting"] = "Resting"
 L["label_health"] = "Health"
-L["label_mounted"] = "When mounted"
-L["label_inVehicle"] = "When in a vehicle"
+L["label_mounted"] = "Mounted"
+L["label_inVehicle"] = "In Vehicle"
 L["descr_health"] = "Due to AddOn restrictions, this relies entirely on workarounds."..
                     "|n|n"..
                     "When below 35% Health:".."|n"..
@@ -115,15 +115,18 @@ L["chatCommands"] = "Chat Commands:"
 L["dropdown_health"] = "Show when ..."
 L["dropdownOption_health1"] = "below 35% HP"
 L["dropdownOption_health2"] = "missing health"
-L["label_flying"] = "When Flying"
+L["label_flying"] = "Flying"
 L["dropdown_flightStyle"] = "Flight Style"
 L["dropdownOption_flight1"] = "Only Skyriding"
 L["dropdownOption_flight2"] = "Only Steady Flight"
 L["dropdownOption_flight3"] = "Both"
 
-
-
-
+L["checkbox_softTarget"] = "Incl. Soft Target"
+L["descr_softTarget"] = "For players that have the game's 'Action Targeting' option enabled."
+L["label_interactable"] = "Can interact"
+L["descr_interactable"] = "When something interactable is in reach of the player character."
+L["checkbox_excludeNPCs"] = "Exclude NPCs"
+L["descr_excludeNPCs"] = "Will ignore interactable objects that can be targeted, like NPCs."
 
 
 

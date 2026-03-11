@@ -140,9 +140,12 @@ config.CONDITION_DEFINITIONS = {
             enabled = true,
             alpha = 1,
             priority = false,
+            softTarget = false,
         },
         events = {
             "PLAYER_TARGET_CHANGED",
+            "PLAYER_SOFT_FRIEND_CHANGED",
+            "PLAYER_FOCUS_CHANGED",
         },
     },
     {
@@ -151,10 +154,26 @@ config.CONDITION_DEFINITIONS = {
             enabled = true,
             alpha = 1,
             priority = false,
+            softTarget = false,
         },
         events = {
             "PLAYER_TARGET_CHANGED",
+            "PLAYER_SOFT_ENEMY_CHANGED",
+            "PLAYER_FOCUS_CHANGED",
         },
+    },
+    {
+        name = "interactable",
+        db = {
+            enabled = false,
+            alpha = 1,
+            priority = false,
+            excludeNPCs = true,
+        },
+        events = {
+            "PLAYER_SOFT_INTERACT_CHANGED",
+        },
+        description = L["descr_interactable"]
     },
     {
         name = "casting",
@@ -734,7 +753,39 @@ local EXTRA_CONDITION_ELEMENTS = {
             order = 10,
         },
     },
-
+    targetFriendly = {
+        checkbox_softTargetFriendly = {
+            name = L["checkbox_softTarget"],
+            desc = L["descr_softTarget"],
+            type = "toggle",
+            get = function() return Private.db.profile[selectedGroup].conditions.targetFriendly.softTarget end,
+            set = function(_, value) Private.db.profile[selectedGroup].conditions.targetFriendly.softTarget = value end,
+            width = 0.8,
+            order = 10,
+        }
+    },
+    targetHostile = {
+        checkbox_softTargetHostile = {
+            name = L["checkbox_softTarget"],
+            desc = L["descr_softTarget"],
+            type = "toggle",
+            get = function() return Private.db.profile[selectedGroup].conditions.targetHostile.softTarget end,
+            set = function(_, value) Private.db.profile[selectedGroup].conditions.targetHostile.softTarget = value end,
+            width = 0.8,
+            order = 10,
+        }
+    },
+    interactable = {
+        checkbox_interactable = {
+            name = L["checkbox_excludeNPCs"],
+            desc = L["descr_excludeNPCs"],
+            type = "toggle",
+            get = function() return Private.db.profile[selectedGroup].conditions.interactable.excludeNPCs end,
+            set = function(_, value) Private.db.profile[selectedGroup].conditions.interactable.excludeNPCs = value end,
+            width = 0.8,
+            order = 10,
+        }
+    },
 
 }
 
@@ -841,6 +892,9 @@ local function SetElementForConditionSelection(path, info, order)
     local name = info.name
     local label = L["label_"..name]
     local pathDB = Private.db
+    local DisabledFunc = function()
+        return not pathDB.profile[selectedGroup].conditions[name].enabled
+    end
 
     local spacer = {
         type = "description",
@@ -853,9 +907,6 @@ local function SetElementForConditionSelection(path, info, order)
         type = "toggle",
         get = function(info) return pathDB.profile[selectedGroup].conditions[name].enabled end,
         set = function(info, value) pathDB.profile[selectedGroup].conditions[name].enabled = value end,
-        disabled = function(info)
-            return false
-        end,
         desc = info.description,
         width = 1.1,
         order = order,
@@ -870,6 +921,7 @@ local function SetElementForConditionSelection(path, info, order)
         max = 1,
         get = function() return pathDB.profile[selectedGroup].conditions[name].alpha end,
         set = function(_, value) pathDB.profile[selectedGroup].conditions[name].alpha = value end,
+        disabled = DisabledFunc,
         order = order
     }
     order = order + 1
@@ -879,9 +931,7 @@ local function SetElementForConditionSelection(path, info, order)
         type = "toggle",
         get = function(info) return pathDB.profile[selectedGroup].conditions[name].priority end,
         set = function(info, value) pathDB.profile[selectedGroup].conditions[name].priority = value end,
-        disabled = function(info)
-            return false
-        end,
+        disabled = DisabledFunc,
         width = 0.35,
         order = order,
     }
@@ -898,6 +948,7 @@ local function SetElementForConditionSelection(path, info, order)
     if extraConditionElements then
         for extraName, extraElement in pairs(extraConditionElements) do
             extraElement.order = order
+            extraElement.disabled = DisabledFunc
             path[extraName] = extraElement
             order = order + 1
         end
@@ -941,10 +992,18 @@ function internal.GetNewGroup(name, useDefaultFrameSelection)
 end
 
 function config.CheckGroupsForMissingEntries(defaultGroup)
+    -- ensuring new conditions or new sub-options for existing conditions are added to user profile.
+    -- AceDB will not handle additional groups the user may have created, so we have to.
     for _, group in ipairs(Private.db.profile) do
-        for name, entry in pairs(defaultGroup.conditions) do
-            if not group.conditions[name] then
-                group.conditions[name] = CopyTable(entry)
+        for conditionName, conditionInfo in pairs(defaultGroup.conditions) do
+            if not group.conditions[conditionName] then
+                group.conditions[conditionName] = CopyTable(conditionInfo)
+            else
+                for setting, value in pairs(conditionInfo) do
+                    if group.conditions[conditionName][setting] == nil then
+                        group.conditions[conditionName][setting] = value
+                    end
+                end
             end
         end
     end

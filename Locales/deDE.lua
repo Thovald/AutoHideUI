@@ -90,8 +90,8 @@ L["priority"] = "Prio"
 L["label_combat"] = "Im Kampf"
 L["label_instance"] = "In einer Instanz"
 L["label_mouseover"] = "Bei Mouseover"
-L["label_targetFriendly"] = "Bei freundl. Ziel"
-L["label_targetHostile"] = "Bei feindl. Ziel"
+L["label_targetFriendly"] = "Freundl. Ziel/Fokus"
+L["label_targetHostile"] = "Feindl. Ziel/Fokus"
 L["label_casting"] = "Beim Zaubern"
 L["label_resting"] = "Beim Ausruhen"
 L["label_health"] = "Gesundheit"
@@ -101,12 +101,11 @@ L["descr_health"] = "Aufgrund von AddOn-Beschränkungen beruht dies auf provisor
                     "|n|n"..
                     "Wenn unter 35% Gesundheit:".."|n"..
                     "Benötigt, dass die folgende Blizzard-Option ausgeschaltet ist:|n"..
-                    "'Bildschirm bei niedriger Gesundheit nicht aufleuchten lassen'"..
+                    "'Bildschirm bei niedriger Gesundheit nicht aufleuchten lassen'."..
                     "|n|n"..
                     "Bei fehlender Gesundheit:".."|n"..
-                    "Funktioniert durch die Überwachung von Gesundheitsereignissen. Kein Ereignis bedeutet idR volle Gesundheit.".."|n"..
-                    "Verfügt über Kontrollen um die meisten falsch-positiven Ergebnisse auszusortieren."
-
+                    "Funktioniert durch die Überwachung von Gesundheitsereignissen.|n"..
+                    "Kein Ereignis für 3sec wird als volle Gesundheit interpretiert."
 L["dropdown_druidForms"] = "Einschl. Druidenformen"
 L["dropdownOption_druid1"] = "Land/Luft/Wasser"
 L["dropdownOption_druid2"] = "Land/Luft"
@@ -122,3 +121,10 @@ L["dropdown_flightStyle"] = "Flug Stil"
 L["dropdownOption_flight1"] = "Nur Himmelsreiten"
 L["dropdownOption_flight2"] = "Nur Statisch"
 L["dropdownOption_flight3"] = "Beides"
+
+L["checkbox_softTarget"] = "Soft-Ziel einschliessen"
+L["descr_softTarget"] = "Für Spieler, welche die Spiel-Option für automatische Zielerfassung eingeschaltet haben."
+L["label_interactable"] = "Kann interagieren"
+L["descr_interactable"] = "Wenn sich etwas interagierbares in der Reichweite des Spielers befindet."
+L["checkbox_excludeNPCs"] = "NPCs ausschliessen"
+L["descr_excludeNPCs"] = "Ignoriert interagierbare Objekte, die nicht anvisiert werden können, wie zB NPCs."

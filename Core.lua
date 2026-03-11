@@ -37,6 +37,7 @@ local healthTimer
 
 local FADE_QUEUE = {}
 local inCombat = InCombatLockdown()
+local hasHostileTarget, hasFriendlyTarget, hasHostileFocus, hasFriendlyFocus
 local isMounted = IsMounted()
 local isFlying = IsFlying()
 local isGliding = C_PlayerInfo.GetGlidingInfo()
@@ -70,8 +71,8 @@ local GetTime, pairs, ipairs, max, min, C_Timer
     = GetTime, pairs, ipairs, max, min, C_Timer
 local IsInInstance, InCombatLockdown, IsOnNeighborhoodMap, IsInsideHouse, IsMounted
     = IsInInstance, InCombatLockdown, C_Housing.IsOnNeighborhoodMap, C_Housing.IsInsideHouse, IsMounted
-local GetShapeshiftFormID, UnitInVehicle, UnitCastingInfo, UnitChannelInfo, IsResting, IsFlying
-    = GetShapeshiftFormID, UnitInVehicle, UnitCastingInfo, UnitChannelInfo, IsResting, IsFlying
+local GetShapeshiftFormID, UnitInVehicle, UnitCastingInfo, UnitChannelInfo, IsResting, IsFlying, UnitExists, UnitCanAttack
+    = GetShapeshiftFormID, UnitInVehicle, UnitCastingInfo, UnitChannelInfo, IsResting, IsFlying, UnitExists, UnitCanAttack
 
 ------------------
 -- Setup
@@ -251,6 +252,24 @@ local function RunAfterCombatQueue()
         end
     end
     wipe(runAfterCombat)
+end
+
+local function UpdateTargetStatesForUnitToken(unitToken, valHostile, valFriendly)
+    if unitToken == "target" then
+        hasHostileTarget = valHostile
+        hasFriendlyTarget = valFriendly
+    elseif unitToken == "focus" then
+        hasHostileFocus = valHostile
+        hasFriendlyFocus = valFriendly
+    end
+end
+
+local function GetOtherTargetStates(unitToken)
+    if unitToken == "target" then
+        return hasHostileFocus, hasFriendlyFocus
+    elseif unitToken == "focus" then
+        return hasHostileTarget, hasFriendlyTarget
+    end
 end
 
 ------------------
@@ -924,19 +943,57 @@ local function ConditionCombat()
     UpdateConditionForAllGroups("combat", inCombat)
 end
 
-local function ConditionTarget()
-    local hasHostileTarget, hasFriendlyTarget
+local function ConditionTarget(unitToken)
+    local otherHostileTarget, otherFriendlyTarget = GetOtherTargetStates(unitToken)
+    local thisHostileTarget, thisFriendlyTarget
 
-    if UnitExists("target") then
-        if UnitCanAttack("player", "target") then
-            hasHostileTarget = true
+    if UnitExists(unitToken) then
+        if not otherHostileTarget and UnitCanAttack("player", unitToken) then
+            thisHostileTarget = true
         else
-            hasFriendlyTarget = true
+            thisFriendlyTarget = true
         end
     end
+    
+    UpdateTargetStatesForUnitToken(unitToken, thisHostileTarget, thisFriendlyTarget)
 
-    UpdateConditionForAllGroups("targetHostile", hasHostileTarget)
-    UpdateConditionForAllGroups("targetFriendly", hasFriendlyTarget)
+    UpdateConditionForAllGroups("targetHostile", thisHostileTarget or otherHostileTarget)
+    UpdateConditionForAllGroups("targetFriendly", thisFriendlyTarget or otherFriendlyTarget)
+end
+
+local function ConditionSoftTarget()
+    local anyTarget = hasHostileTarget or hasHostileFocus or hasFriendlyTarget or hasFriendlyFocus
+
+    if anyTarget then
+        return
+    end
+
+    local hasHostileSoftTarget, hasFriendlySoftTarget
+
+    for _, group in pairs(activeGroups) do
+        if group.conditions.targetHostile.softTarget and UnitExists("softenemy") then
+            hasHostileSoftTarget = true
+        elseif group.conditions.targetFriendly.softTarget and UnitExists("softfriend") then
+            -- Action Targeting doesn't turn on the CVar for friendly targets.
+            -- PLAYER_SOFT_INTERACT_CHANGED fires on them regardless of Action Targeting setting.
+            hasFriendlySoftTarget = true
+        end
+
+        UpdateActiveConditions(group, "targetHostile", hasHostileSoftTarget)
+        UpdateActiveConditions(group, "targetFriendly", hasFriendlySoftTarget)
+    end
+end
+
+local function ConditionInteractable(canInteract)
+    local softTarget = UnitExists("softinteract")
+    for _, group in pairs(activeGroups) do
+        if group.conditions.interactable.excludeNPCs and canInteract then
+            canInteract = not softTarget
+        else
+            canInteract = canInteract or softTarget
+        end
+        UpdateActiveConditions(group, "interactable", canInteract)
+    end
 end
 
 local function ConditionInstance()
@@ -1101,7 +1158,10 @@ end
 
 function internal.UpdateAllConditions()
     ConditionCombat()
-    ConditionTarget()
+    ConditionTarget("target")
+    ConditionTarget("focus")
+    ConditionSoftTarget()
+    ConditionInteractable()
     ConditionInstance()
     ConditionMounted()
     ConditionShapeshift()
@@ -1110,6 +1170,7 @@ function internal.UpdateAllConditions()
     ConditionCasting()
     ConditionResting()
     ConditionHealth()
+    ConditionFlying()
 end
 
 ------------------
@@ -1401,8 +1462,22 @@ local function OnLogin()
     end)
 end
 
-local function OnTargetChanged()
-    ConditionTarget()
+local function OnTargetChange(unitToken)
+    ConditionTarget(unitToken)
+    internal.FadeAllGroups()
+end
+
+local function OnSoftTargetChange()
+    ConditionSoftTarget()
+    internal.FadeAllGroups()
+end
+
+local function OnInteractableChange(_, newTarget)
+    if newTarget then
+        ConditionInteractable(true)
+    else
+        UpdateConditionForAllGroups("interactable", false)
+    end
     internal.FadeAllGroups()
 end
 
@@ -1535,7 +1610,11 @@ end
 ------------------
 
 local EVENT_HANDLER = {
-    PLAYER_TARGET_CHANGED = OnTargetChanged,
+    PLAYER_TARGET_CHANGED = function() OnTargetChange("target") end,
+    PLAYER_FOCUS_CHANGED = function() OnTargetChange("focus") end,
+    PLAYER_SOFT_ENEMY_CHANGED = OnSoftTargetChange,
+    PLAYER_SOFT_FRIEND_CHANGED = OnSoftTargetChange,
+    PLAYER_SOFT_INTERACT_CHANGED = OnInteractableChange,
     PLAYER_REGEN_DISABLED = function() OnCombatChange(true) end,
     PLAYER_REGEN_ENABLED = function() OnCombatChange(false) end,
     PLAYER_ENTERING_WORLD = OnInstanceChange,
@@ -1572,7 +1651,6 @@ function main.frame:OnEvent(event, ...)
     EVENT_HANDLER[event](...)
 end
 
-
-
 main.frame:SetScript("OnEvent", main.frame.OnEvent)
 systemFrame:SetScript("OnEvent", systemFrame.OnEvent)
+

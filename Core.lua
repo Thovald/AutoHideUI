@@ -35,7 +35,11 @@ local isMissingHealth = false
 local maxHealthChangeTime = 0
 local healthTimer
 
+-- frame fader
 local FADE_QUEUE = {}
+local totalElapsed = 0
+local FADE_THROTTLE = 0.02
+
 local inCombat = InCombatLockdown()
 local hasHostileTarget, hasFriendlyTarget, hasHostileFocus, hasFriendlyFocus
 local isMounted = IsMounted()
@@ -50,7 +54,7 @@ local pendingFades = {}
 local runAfterCombat = {} -- {{fn, arg1, arg2, ...}, ...}
 local framesThatToggleVisibility = {} -- {frame = {threshold = 0.1, group = groupTable }, ...}
 local minimapHelperFrame -- mouseover helper frame when minimap is hidden
-main.helperFrames = {}
+main.helperFrames = {} -- generic helper frames for mouseover
 
 local DRUID_FORMS= {
     {
@@ -1248,39 +1252,42 @@ end
 
 -- slightly trimmed version of Blizzard's code. we also use SetAlpha differently
 function AutoHide_FrameFade_OnUpdate(self, elapsed)
-	local index = 1;
-	local frame, fadeInfo;
-	while FADE_QUEUE[index] do
-		frame = FADE_QUEUE[index];
-		fadeInfo = FADE_QUEUE[index].fadeInfo;
-		-- Reset the timer if there isn't one, this is just an internal counter
-		if ( not fadeInfo.fadeTimer ) then
-			fadeInfo.fadeTimer = 0;
-		end
-		fadeInfo.fadeTimer = fadeInfo.fadeTimer + elapsed;
+    totalElapsed = totalElapsed + elapsed
+    if totalElapsed < FADE_THROTTLE then
+        return
+    end
 
-		-- If the fadeTimer is less then the desired fade time then set the alpha otherwise hold the fade state, call the finished function, or just finish the fade
+    -- if throttle is lower than current framerate, we need to adjust the alphaStep for that
+    local framerateDiff = totalElapsed/FADE_THROTTLE
+
+    local index = 1
+	local frame, fadeInfo, newAlpha
+
+	while FADE_QUEUE[index] do
+		frame = FADE_QUEUE[index]
+		fadeInfo = FADE_QUEUE[index].fadeInfo
+		fadeInfo.fadeTimer = fadeInfo.fadeTimer + totalElapsed
+
 		if ( fadeInfo.fadeTimer < fadeInfo.timeToFade ) then
-			if ( fadeInfo.mode == "IN" ) then
-				fadeInfo.fadeMethod(frame, (fadeInfo.fadeTimer / fadeInfo.timeToFade) * (fadeInfo.endAlpha - fadeInfo.startAlpha) + fadeInfo.startAlpha);
-			elseif ( fadeInfo.mode == "OUT" ) then
-				fadeInfo.fadeMethod(frame, ((fadeInfo.timeToFade - fadeInfo.fadeTimer) / fadeInfo.timeToFade) * (fadeInfo.startAlpha - fadeInfo.endAlpha)  + fadeInfo.endAlpha);
-			end
+            newAlpha = fadeInfo.currentAlpha + (fadeInfo.alphaStep * framerateDiff)
+            fadeInfo.fadeMethod(frame, newAlpha)
+            fadeInfo.currentAlpha = newAlpha
 		else
 			fadeInfo.fadeMethod(frame, fadeInfo.endAlpha)
-            -- Complete the fade and call the finished function if there is one
             tDeleteItem(FADE_QUEUE, frame)
-            if ( fadeInfo.finishedFunc ) then
-                fadeInfo.finishedFunc(fadeInfo.finishedArg1, fadeInfo.finishedArg2, fadeInfo.finishedArg3, fadeInfo.finishedArg4);
-                fadeInfo.finishedFunc = nil;
+            if fadeInfo.finishedFunc then
+                fadeInfo.finishedFunc(fadeInfo.finishedArg1, fadeInfo.finishedArg2, fadeInfo.finishedArg3, fadeInfo.finishedArg4)
+                fadeInfo.finishedFunc = nil
             end
 		end
 
-		index = index + 1;
+		index = index + 1
 	end
 
+    totalElapsed = 0
+
 	if ( #FADE_QUEUE == 0 ) then
-		self:SetScript("OnUpdate", nil);
+		self:SetScript("OnUpdate", nil)
 	end
 end
 
@@ -1352,6 +1359,38 @@ local function CancelPendingFade(group)
     end
 end
 
+local function PlayFadeAnimation(group, alphaStep)
+    for _, frame in pairs(group.frames) do
+        tDeleteItem(FADE_QUEUE, frame) -- for safety if timeToFade is set to 0 and fades trigger within one frame
+        frame.fadeInfo = {
+            mode = group.states.fadeMode,
+            timeToFade = group.config.timeToFade,
+            startAlpha = group.states.startAlpha,
+            endAlpha = group.states.endAlpha,
+            fadeMethod = frame._origSetAlpha or frame.SetAlpha,
+            currentAlpha = group.states.startAlpha,
+            fadeTimer = 0,
+            alphaStep = alphaStep
+        }
+        HandleVisibilityForFade(frame, frame.fadeInfo)
+        tinsert(FADE_QUEUE, frame)
+    end
+
+    main.frame:SetScript("OnUpdate", AutoHide_FrameFade_OnUpdate)
+end
+
+local function FadeImmediately(group)
+    for _, frame in pairs(group.frames) do
+        local fadeMethod = frame._origSetAlpha or frame.SetAlpha
+        fadeMethod(frame, group.states.endAlpha)
+
+        local frameVisibilityInfo = framesThatToggleVisibility[frame]
+        if frameVisibilityInfo then
+            UpdateFrameVisibility(frame, frameVisibilityInfo)
+        end
+    end
+end
+
 local function ApplyFade(group, targetAlpha)
     CancelPendingFade(group)
 
@@ -1366,20 +1405,16 @@ local function ApplyFade(group, targetAlpha)
     states.endAlpha = targetAlpha
     states.fadeEndTime = GetTime() + group.config.timeToFade
 
-    for _, frame in pairs(group.frames) do
-        tDeleteItem(FADE_QUEUE, frame) -- for safety if timeToFade is set to 0 and fades trigger within one frame
-        frame.fadeInfo = {
-            mode = group.states.fadeMode,
-            timeToFade = group.config.timeToFade,
-            startAlpha = group.states.startAlpha,
-            endAlpha = group.states.endAlpha,
-            fadeMethod = frame._origSetAlpha or frame.SetAlpha
-        }
-        HandleVisibilityForFade(frame, frame.fadeInfo)
-        tinsert(FADE_QUEUE, frame)
+    local requiredSteps = max(1, group.config.timeToFade / FADE_THROTTLE)
+
+    if requiredSteps >= 2 then
+        local alphaDiff = states.endAlpha - states.startAlpha
+        local alphaStep =  alphaDiff / requiredSteps
+        PlayFadeAnimation(group, alphaStep)
+    else
+        FadeImmediately(group)
     end
 
-    main.frame:SetScript("OnUpdate", AutoHide_FrameFade_OnUpdate)
 end
 
 local function ScheduleFade(group, targetAlpha, delay, fadeMode)

@@ -414,6 +414,21 @@ local function IsFrameSelectedElsewhere(frameString)
     return false
 end
 
+local function DisableSelectedGroupConditions()
+    for _, info in pairs(Private.db.profile[selectedGroup].conditions) do
+        info.enabled = false
+    end
+end
+
+local function SetSelectedGroupToDefault()
+    for _, defaultInfo in pairs(config.CONDITION_DEFINITIONS) do
+        local name = defaultInfo.name
+        for k,v in pairs(defaultInfo.db) do
+            Private.db.profile[selectedGroup].conditions[name][k] = v
+        end
+    end
+end
+
 StaticPopupDialogs["AUTOHIDEUI_CREATE_GROUP"] = {
     text = L["popup_createGroup"],
     button1 = L["button_create"],
@@ -711,7 +726,31 @@ local OPTIONS_TAB_CONDITIONS = {
             type = "group",
             inline = true,
             order = 15,
-            args = {}, -- filled in later
+            args = {
+                buttonDisable = {
+                    name = L["button_disableAll"],
+                    type = "execute",
+                    confirm = true,
+                    width = 0.7,
+                    func = DisableSelectedGroupConditions,
+                    order = 1,
+                },
+                buttonReset = {
+                    name = L["button_reset"],
+                    type = "execute",
+                    confirm = true,
+                    width = 1,
+                    func = SetSelectedGroupToDefault,
+                    order = 2,
+                },
+                spacer1 = {
+                    type = "description",
+                    name = " ",
+                    width = 0.5,
+                    order = 3,
+                }
+                -- rest is filled in later
+            }, 
         },
     },
     order = 23
@@ -960,7 +999,7 @@ end
 
 local function SetupConditionSelection()
     local path = OPTIONS_MENU.args.setup.args.tabConditions.args.group_conditionSelect.args
-    local order = 1
+    local order = 5
     for index, info in ipairs(config.CONDITION_DEFINITIONS) do
         order = SetElementForConditionSelection(path, info, order)
     end

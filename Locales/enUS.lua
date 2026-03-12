@@ -127,6 +127,6 @@ L["label_interactable"] = "Can interact"
 L["descr_interactable"] = "When something interactable is in reach of the player character."
 L["checkbox_excludeNPCs"] = "Exclude NPCs"
 L["descr_excludeNPCs"] = "Will ignore interactable objects that can be targeted, like NPCs."
-
-
+L["button_disableAll"] = "Disable All"
+L["button_reset"] = "Reset Group to Default"
 

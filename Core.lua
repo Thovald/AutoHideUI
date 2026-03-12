@@ -1250,14 +1250,13 @@ end
 -- Fade Stuff
 ------------------
 
--- slightly trimmed version of Blizzard's code. we also use SetAlpha differently
 function AutoHide_FrameFade_OnUpdate(self, elapsed)
     totalElapsed = totalElapsed + elapsed
     if totalElapsed < FADE_THROTTLE then
         return
     end
 
-    -- if throttle is lower than current framerate, we need to adjust the alphaStep for that
+    -- if throttle is lower than current framerate, we use this to adjust alphaStep
     local framerateDiff = totalElapsed/FADE_THROTTLE
 
     local index = 1
@@ -1268,12 +1267,12 @@ function AutoHide_FrameFade_OnUpdate(self, elapsed)
 		fadeInfo = FADE_QUEUE[index].fadeInfo
 		fadeInfo.fadeTimer = fadeInfo.fadeTimer + totalElapsed
 
-		if ( fadeInfo.fadeTimer < fadeInfo.timeToFade ) then
+		if fadeInfo.fadeTimer < fadeInfo.timeToFade then
             newAlpha = fadeInfo.currentAlpha + (fadeInfo.alphaStep * framerateDiff)
-            fadeInfo.fadeMethod(frame, newAlpha)
+            fadeInfo.alphaFunc(frame, newAlpha)
             fadeInfo.currentAlpha = newAlpha
 		else
-			fadeInfo.fadeMethod(frame, fadeInfo.endAlpha)
+			fadeInfo.alphaFunc(frame, fadeInfo.endAlpha)
             tDeleteItem(FADE_QUEUE, frame)
             if fadeInfo.finishedFunc then
                 fadeInfo.finishedFunc(fadeInfo.finishedArg1, fadeInfo.finishedArg2, fadeInfo.finishedArg3, fadeInfo.finishedArg4)
@@ -1286,7 +1285,7 @@ function AutoHide_FrameFade_OnUpdate(self, elapsed)
 
     totalElapsed = 0
 
-	if ( #FADE_QUEUE == 0 ) then
+	if #FADE_QUEUE == 0 then
 		self:SetScript("OnUpdate", nil)
 	end
 end
@@ -1361,13 +1360,13 @@ end
 
 local function PlayFadeAnimation(group, alphaStep)
     for _, frame in pairs(group.frames) do
-        tDeleteItem(FADE_QUEUE, frame) -- for safety if timeToFade is set to 0 and fades trigger within one frame
+        tDeleteItem(FADE_QUEUE, frame) -- in case user managed to add frames to multiple groups
         frame.fadeInfo = {
             mode = group.states.fadeMode,
             timeToFade = group.config.timeToFade,
             startAlpha = group.states.startAlpha,
             endAlpha = group.states.endAlpha,
-            fadeMethod = frame._origSetAlpha or frame.SetAlpha,
+            alphaFunc = frame._origSetAlpha or frame.SetAlpha,
             currentAlpha = group.states.startAlpha,
             fadeTimer = 0,
             alphaStep = alphaStep
@@ -1381,8 +1380,8 @@ end
 
 local function FadeImmediately(group)
     for _, frame in pairs(group.frames) do
-        local fadeMethod = frame._origSetAlpha or frame.SetAlpha
-        fadeMethod(frame, group.states.endAlpha)
+        local alphaFunc = frame._origSetAlpha or frame.SetAlpha
+        alphaFunc(frame, group.states.endAlpha)
 
         local frameVisibilityInfo = framesThatToggleVisibility[frame]
         if frameVisibilityInfo then

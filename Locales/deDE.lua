@@ -128,3 +128,6 @@ L["label_interactable"] = "Kann interagieren"
 L["descr_interactable"] = "Wenn sich etwas interagierbares in der Reichweite des Spielers befindet."
 L["checkbox_excludeNPCs"] = "NPCs ausschliessen"
 L["descr_excludeNPCs"] = "Ignoriert interagierbare Objekte, die nicht anvisiert werden können, wie zB NPCs."
+L["button_disableAll"] = "Alle Aus"
+L["button_reset"] = "Gruppe zurücksetzen"
+

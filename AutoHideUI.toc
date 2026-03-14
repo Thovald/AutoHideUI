@@ -13,4 +13,9 @@ embeds.xml
 Locales/Locales.xml
 
 Core.lua
+Modules\Alpha.lua
+Modules\Conditions.lua
+Modules\Fading.lua
+Modules\Frames.lua
+Modules\FrameFinder.lua
 Options.lua

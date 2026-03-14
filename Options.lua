@@ -1,7 +1,7 @@
 local _, Private = ...
 -- namespaces for functions that are called between files
-local main = Private.main
-local config = Private.config
+local Main = Private.Main
+local Config = Private.Config
 -- namespace for functions that are referenced before they are defined
 local internal = {}
 
@@ -31,16 +31,16 @@ AceGUI:RegisterWidgetType("AutoHideUI_CheckboxWithHooks", function()
 
     widget.frame:HookScript("OnEnter", function(self)
         local frameString = self.obj.userdata.option.arg.frameString
-        local frameList = main.FetchFramesFromString(frameString)
+        local frameList = Main.FetchFramesFromString(frameString)
         if frameList then
             for _,frame in pairs(frameList) do
-                config.ShowHighlight(frame)
+                Config.ShowHighlight(frame)
             end
         end
     end)
 
     widget.frame:HookScript("OnLeave", function()
-        config.HideAllHighlights()
+        Config.HideAllHighlights()
     end)
 
     return widget
@@ -51,7 +51,7 @@ end, 1)
 ------------------
 
 -- same order as these will appear in the options
-config.DEFAULT_FRAMES = {
+Config.DEFAULT_FRAMES = {
     -- unitframes
     { frame = "PlayerFrame", label = L["Player Frame"], enabled = true },
     { frame = "TargetFrame", label = L["Target Frame"], enabled = true },
@@ -89,14 +89,14 @@ config.DEFAULT_FRAMES = {
 
 local function GetCommonFrames()
     local frameList = {}
-    for _, frameInfo in ipairs(config.DEFAULT_FRAMES) do
+    for _, frameInfo in ipairs(Config.DEFAULT_FRAMES) do
         frameList[frameInfo.frame] = frameInfo.enabled
     end
     return frameList
 end
 
 -- same order as these will appear in the options
-config.CONDITION_DEFINITIONS = {
+Config.CONDITION_DEFINITIONS = {
     {
         name = "combat",
         db = {
@@ -259,7 +259,7 @@ config.CONDITION_DEFINITIONS = {
 }
 
 -- also accessed in Core to reset states after loading screens
-config.DEFAULT_STATES = {
+Config.DEFAULT_STATES = {
     startAlpha = 1,
     endAlpha = 1,
     fadeEndTime = 0, -- if GetTime() < fadeEndTime we measure and use currentAlpha as startAlpha
@@ -298,15 +298,15 @@ local ALPHA_PREF = {
 -- UI Logic
 ------------------
 
-function config.PrintOptionsOpenError()
-    local title = main.GetErrorTitleString()
-    local message = main.ColorString(L["error_optionsOpen"], "red")
+function Config.PrintOptionsOpenError()
+    local title = Main.GetErrorTitleString()
+    local message = Main.ColorString(L["error_optionsOpen"], "red")
     print(title..message)
 end
 
 local function GetDefaultConditions()
     local conditions = {}
-    for _, condition in ipairs(config.CONDITION_DEFINITIONS) do
+    for _, condition in ipairs(Config.CONDITION_DEFINITIONS) do
         conditions[condition.name] = CopyTable(condition.db)
     end
     return conditions
@@ -341,8 +341,8 @@ local function GetNextHighlight()
     return newInfo.frame
 end
 
-function config.ShowHighlight(frame)
-    if main.helperFrames[frame] then
+function Config.ShowHighlight(frame)
+    if Main.helperFrames[frame] then
         return
     end
 
@@ -358,7 +358,7 @@ function config.ShowHighlight(frame)
     highlight:Show()
 end
 
-function config.HideAllHighlights()
+function Config.HideAllHighlights()
     for i, info in pairs(highlightFrames) do
         if info.frame then
             info.frame:Hide()
@@ -375,7 +375,7 @@ local function GetGroupNames()
     return groupNames
 end
 
-function config.SetSelectedGroup(profileChanged)
+function Config.SetSelectedGroup(profileChanged)
     -- keeping last selection
     if profileChanged then
         selectedGroup = 1
@@ -401,7 +401,7 @@ end
 local function DeleteGroup()
     if selectedGroup then
         table.remove(Private.db.profile, selectedGroup)
-        config.SetSelectedGroup()
+        Config.SetSelectedGroup()
     end
 end
 
@@ -421,7 +421,7 @@ local function DisableSelectedGroupConditions()
 end
 
 local function SetSelectedGroupToDefault()
-    for _, defaultInfo in pairs(config.CONDITION_DEFINITIONS) do
+    for _, defaultInfo in pairs(Config.CONDITION_DEFINITIONS) do
         local name = defaultInfo.name
         for k,v in pairs(defaultInfo.db) do
             Private.db.profile[selectedGroup].conditions[name][k] = v
@@ -445,7 +445,7 @@ StaticPopupDialogs["AUTOHIDEUI_CREATE_GROUP"] = {
 
     OnAccept = function(self)
         if not isOptionsOpen then
-            config.PrintOptionsOpenError()
+            Config.PrintOptionsOpenError()
             return
         end
 
@@ -483,7 +483,7 @@ StaticPopupDialogs["AUTOHIDEUI_RENAME_GROUP"] = {
 
     OnAccept = function(self)
         if not isOptionsOpen then
-            config.PrintOptionsOpenError()
+            Config.PrintOptionsOpenError()
             return
         end
 
@@ -520,7 +520,7 @@ StaticPopupDialogs["AUTOHIDEUI_DELETE_GROUP"] = {
 
     OnAccept = function(self)
         if not isOptionsOpen then
-            config.PrintOptionsOpenError()
+            Config.PrintOptionsOpenError()
             return
         end
 
@@ -579,11 +579,26 @@ local OPTIONS_TAB_FRAMES = {
             inline = true,
             order = 10,
             args = {
+                button_frameFinder = {
+                    name = L["button_frameFinder"],
+                    desc = L["descr_frameFinder"],
+                    type = "execute",
+                    width = 1,
+                    func = Private.FrameFinder.Start,
+                    order = 1,
+                },
+                spacer1 = {
+                    type = "description",
+                    name = " ",
+                    width = 0.05,
+                    order = 2
+                },
                 descr_customFrames = {
                     type = "description",
                     fontSize = "medium",
                     name = L["descr_customFrames"].."|n",
-                    order = 1,
+                    width = 1.95,
+                    order = 3,
                 },
                 editbox_customFrames = {
                     type = "input",
@@ -592,6 +607,7 @@ local OPTIONS_TAB_FRAMES = {
                     get = function(info) return Private.db.profile[selectedGroup].config.customFrames end,
                     set = function(info, value) Private.db.profile[selectedGroup].config.customFrames = value end,
                     multiline = true,
+                    order = 5,
                 },
             },
         },
@@ -842,7 +858,7 @@ local OPTIONS_MENU = {
                 header_groups = {
                     type = "header",
                     --fontSize = "large",
-                    name = main.ColorString(L["descr_groups"], "gold"),
+                    name = Main.ColorString(L["descr_groups"], "gold"),
                     order = 1,
                 },
                 groupSelection = {
@@ -910,7 +926,7 @@ local function SetupFrameSelection()
     local order = 1
     local spacerCount = 1
 
-    for _, frameInfo in ipairs(config.DEFAULT_FRAMES) do
+    for _, frameInfo in ipairs(Config.DEFAULT_FRAMES) do
         local name, checkbox = GetElementForFrameSelection(order, frameInfo)
         path[name] = checkbox
         order = order + 1
@@ -1000,12 +1016,12 @@ end
 local function SetupConditionSelection()
     local path = OPTIONS_MENU.args.setup.args.tabConditions.args.group_conditionSelect.args
     local order = 5
-    for index, info in ipairs(config.CONDITION_DEFINITIONS) do
+    for index, info in ipairs(Config.CONDITION_DEFINITIONS) do
         order = SetElementForConditionSelection(path, info, order)
     end
 end
 
-function config.CreateOptionsMenu()
+function Config.CreateOptionsMenu()
     SetupFrameSelection()
     SetupConditionSelection()
 end
@@ -1030,7 +1046,7 @@ function internal.GetNewGroup(name, useDefaultFrameSelection)
     return newGroup
 end
 
-function config.CheckGroupsForMissingEntries(defaultGroup)
+function Config.CheckGroupsForMissingEntries(defaultGroup)
     -- ensuring new conditions or new sub-options for existing conditions are added to user profile.
     -- AceDB will not handle additional groups the user may have created, so we have to.
     for _, group in ipairs(Private.db.profile) do
@@ -1048,37 +1064,37 @@ function config.CheckGroupsForMissingEntries(defaultGroup)
     end
 end
 
-function config.GetDefaultGroup(name)
+function Config.GetDefaultGroup(name)
     local useDefaultFrameSelection = true
     local defaultGroup = internal.GetNewGroup(name, useDefaultFrameSelection)
     return defaultGroup
 end
 
 local function OnOptionsClose()
-    if main.blizzFrame:IsVisible() then
+    if Main.blizzFrame:IsVisible() then
         return
     end
 
-    config.HideAllHighlights()
+    Config.HideAllHighlights()
     CloseAllPopups()
     isOptionsOpen = false
-    main.ResumeAddon()
+    Main.ResumeAddon()
 end
 
 local function OnOptionsOpen(frame)
     -- stopping Ace menu while Blizz menu is open.
-    if frame ~= main.blizzFrame and main.blizzFrame:IsVisible() then
+    if frame ~= Main.blizzFrame and Main.blizzFrame:IsVisible() then
         frame:Hide()
         return
     end
 
     isOptionsOpen = true
-    main.SuspendAddon()
+    Main.SuspendAddon()
 end
 
 local function SetHooksForBlizzard()
-    main.blizzFrame:HookScript("OnShow", function() OnOptionsOpen(main.blizzFrame) end)
-    main.blizzFrame:HookScript("OnHide", function() OnOptionsClose() end)
+    Main.blizzFrame:HookScript("OnShow", function() OnOptionsOpen(Main.blizzFrame) end)
+    Main.blizzFrame:HookScript("OnHide", function() OnOptionsClose() end)
 end
 
 local function SetHooksForAce()
@@ -1111,13 +1127,13 @@ local function SetHooksForMenus()
     SetHooksForAce()
 end
 
-function config.RegisterOptions()
+function Config.RegisterOptions()
     -- setting profiles tab in options menu
     OPTIONS_MENU.args.profiles = AceDBOptions:GetOptionsTable(Private.db)
 
     AceConfig:RegisterOptionsTable("AutoHideUI", OPTIONS_MENU)
     AceConfigDialog:SetDefaultSize("AutoHideUI", MENU_WIDTH, MENU_HEIGHT)
-    main.blizzFrame = AceConfigDialog:AddToBlizOptions("AutoHideUI", "Auto Hide UI")
+    Main.blizzFrame = AceConfigDialog:AddToBlizOptions("AutoHideUI", "Auto Hide UI")
 
     SLASH_AUTOHIDEUI1 = "/autohide"
     SLASH_AUTOHIDEUI2 = "/autohideui"

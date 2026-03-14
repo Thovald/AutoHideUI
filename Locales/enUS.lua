@@ -3,7 +3,7 @@ local L = LibStub("AceLocale-3.0"):NewLocale("AutoHideUI", "enUS", true)
 -- misc
 L["error_optionsOpen"] = "Options Window needs to be open to change options!"
 
--- main menu
+-- Main menu
 L["descr_groups"] = "Create Groups to assign different settings to different Frames"
 L["tab_setup"] = "Setup"
 L["dropdown_groupSelect"] = "Group Selection"
@@ -24,7 +24,7 @@ L["tab_frameSelect"] = "Frame Selection"
 L["descr_frames"] = "The same Frame can't be assigned to multiple Groups.|nElvUI, Details, UUF and Dominos will automatically be detected. Bartender won't work."
 L["group_defaultFrames"] = "Common Frames"
 L["group_customFrames"] = "Custom Frames"
-L["descr_customFrames"] = "Add the names of any other Frame here. Separate them with commas."
+L["descr_customFrames"] = "Use the Frame Finder or manually add the names of other Frames here. Separate them with commas."
 L["descr_Minimap"] = "The minimap is a special case!|n|nFor best results, set it to be at full Alpha when in combat and at 0 Alpha when faded out."
 
 L["Player Frame"] = true
@@ -129,4 +129,7 @@ L["checkbox_excludeNPCs"] = "Exclude NPCs"
 L["descr_excludeNPCs"] = "Will ignore interactable objects that can be targeted, like NPCs."
 L["button_disableAll"] = "Disable All"
 L["button_reset"] = "Reset Group to Default"
+
+L["button_frameFinder"] = "Frame Finder"
+L["descr_frameFinder"] = "Launches a Tool to help you find and add Frames that aren't listed above."
 

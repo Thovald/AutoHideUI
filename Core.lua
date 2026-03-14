@@ -1,18 +1,19 @@
 local _, Private = ...
 local L = LibStub("AceLocale-3.0"):GetLocale("AutoHideUI")
-Private.main = {}
-Private.config = {}
+Private.Main = {}
+Private.Config = {}
+Private.FrameFinder = {}
 Private.isAceHooked = false
 
 local db
 -- namespaces for functions that are called between files
-local main = Private.main
-local config = Private.config
+local Main = Private.Main
+local Config = Private.Config
 -- namespace for functions that are referenced before they are defined
 local internal = {}
 
--- unlike systemFrame, main.frame's events are registered based on which conditions are enabled
-main.frame = CreateFrame("Frame")
+-- unlike systemFrame, Main.frame's events are registered based on which conditions are enabled
+Main.frame = CreateFrame("Frame")
 local systemFrame = CreateFrame("Frame")
 systemFrame:RegisterEvent("PLAYER_LOGIN")
 systemFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
@@ -54,7 +55,7 @@ local pendingFades = {}
 local runAfterCombat = {} -- {{fn, arg1, arg2, ...}, ...}
 local framesThatToggleVisibility = {} -- {frame = {threshold = 0.1, group = groupTable }, ...}
 local minimapHelperFrame -- mouseover helper frame when minimap is hidden
-main.helperFrames = {} -- generic helper frames for mouseover
+Main.helperFrames = {} -- generic helper frames for mouseover
 
 local DRUID_FORMS= {
     {
@@ -84,34 +85,34 @@ local GetShapeshiftFormID, UnitInVehicle, UnitCastingInfo, UnitChannelInfo, IsRe
 
 function Private:OnProfileChanged()
     db = Private.db.profile
-    config.SetSelectedGroup(true)
+    Config.SetSelectedGroup(true)
 end
 
 local function InitDB()
-    local defaultGroup = config.GetDefaultGroup(L["name_defaultGroup"])
+    local defaultGroup = Config.GetDefaultGroup(L["name_defaultGroup"])
     local defaultProfile = { profile = {defaultGroup} }
 
     Private.db = LibStub("AceDB-3.0"):New("AutoHideUIDB", defaultProfile, true)
     db = Private.db.profile
-    config.CheckGroupsForMissingEntries(defaultGroup)
+    Config.CheckGroupsForMissingEntries(defaultGroup)
 
     Private.db.RegisterCallback(Private, "OnProfileChanged", "OnProfileChanged")
     Private.db.RegisterCallback(Private, "OnProfileCopied", "OnProfileChanged")
     Private.db.RegisterCallback(Private, "OnProfileReset", "OnProfileChanged")
 
-    config.RegisterOptions()
+    Config.RegisterOptions()
 end
 
 local function InitOptions()
-    config.SetSelectedGroup()
-    config.CreateOptionsMenu()
+    Config.SetSelectedGroup()
+    Config.CreateOptionsMenu()
 end
 
 local function RegisterEventsInCondition(condition)
-    for _, info in pairs(config.CONDITION_DEFINITIONS) do
+    for _, info in pairs(Config.CONDITION_DEFINITIONS) do
         if info.name == condition then
             for _, event in pairs(info.events) do
-                main.frame:RegisterEvent(event)
+                Main.frame:RegisterEvent(event)
             end
         end
     end
@@ -126,22 +127,22 @@ local function RegisterEventsInGroup(group)
 end
 
 local function RegisterAllEvents()
-    main.frame:UnregisterAllEvents()
+    Main.frame:UnregisterAllEvents()
     for _, group in ipairs(activeGroups) do
         RegisterEventsInGroup(group)
     end
 end
 
 local function UnregisterAllEvents()
-    main.frame:UnregisterAllEvents()
+    Main.frame:UnregisterAllEvents()
 end
 
 local function ResetGroupStates(states)
     for k, v in pairs(states) do
         if type(v) == "table" then
-            states[k] = CopyTable(config.DEFAULT_STATES[k])
+            states[k] = CopyTable(Config.DEFAULT_STATES[k])
         else
-            states[k] = config.DEFAULT_STATES[k]
+            states[k] = Config.DEFAULT_STATES[k]
         end
     end
 end
@@ -216,23 +217,23 @@ local function InitAddon()
     internal.ToggleHelperFrames()
 end
 
-function main.SuspendAddon()
+function Main.SuspendAddon()
     UnregisterAllEvents()
     CancelTickers()
     ClearQueues()
     internal.SetAllAlpha(1)
 end
 
-function main.ResumeAddon()
+function Main.ResumeAddon()
     ResetAddon()
     InitAddon()
 end
 
-function main.GetErrorTitleString()
+function Main.GetErrorTitleString()
     return "|cff80ffffAuto Hide UI: |r"
 end
 
-function main.ColorString(string, clr)
+function Main.ColorString(string, clr)
     local clrTable = {
         red = "|cffff3b3b",
         green = "|cff3bff3b",
@@ -296,7 +297,7 @@ local function MINIMAPCLUSTER_CUSTOMGETTER(frameString)
         -- local t = minimapHelperFrame:CreateTexture()
         -- t:SetAllPoints()
         -- t:SetColorTexture(0,1,0,0.25)
-        main.helperFrames[minimapHelperFrame] = {dependency = frameString}
+        Main.helperFrames[minimapHelperFrame] = {dependency = frameString}
     end
     tinsert(frameList, minimapHelperFrame)
 
@@ -468,7 +469,7 @@ local SPECIAL_FRAMES = {
 }
 
 function internal.ToggleHelperFrames()
-    for frame, info in pairs(main.helperFrames) do
+    for frame, info in pairs(Main.helperFrames) do
         local frameString = info.dependency
         if activeStrings[frameString] then
             if not activeStrings[frameString].args.isInUse then
@@ -482,7 +483,7 @@ function internal.ToggleHelperFrames()
     end
 end
 
-function main.FetchFramesFromString(frameString)
+function Main.FetchFramesFromString(frameString)
     if not activeStrings[frameString] then
         return
     end
@@ -619,7 +620,7 @@ local function CreateFrameGroup(groupDB)
         name = groupDB.name,
         frames = {},
         config = CopyTable(groupDB.config),
-        states = CopyTable(config.DEFAULT_STATES),
+        states = CopyTable(Config.DEFAULT_STATES),
         conditions = CopyTable(groupDB.conditions),
     }
     return groupInfo
@@ -640,7 +641,7 @@ local function GetAddOnFrames(frameStringList)
     end
 
     local frameList = {}
-    -- specifically checking if first frame was found because that's the main one.
+    -- specifically checking if first frame was found because that's the Main one.
     -- no point in returning TargetOfTarget if Target couldn't be found.
     local firstFrameFound
     for index, frameString in ipairs(frameStringList) do
@@ -709,7 +710,7 @@ local function CheckForAddOnFrames(frameString, groupDB)
 end
 
 local function IsDefaultFrame(frameString)
-    for _, info in ipairs(config.DEFAULT_FRAMES) do
+    for _, info in ipairs(Config.DEFAULT_FRAMES) do
         if frameString == info.frame then
             return true
         end
@@ -1375,7 +1376,7 @@ local function PlayFadeAnimation(group, alphaStep)
         tinsert(FADE_QUEUE, frame)
     end
 
-    main.frame:SetScript("OnUpdate", AutoHide_FrameFade_OnUpdate)
+    Main.frame:SetScript("OnUpdate", AutoHide_FrameFade_OnUpdate)
 end
 
 local function FadeImmediately(group)
@@ -1681,10 +1682,10 @@ function systemFrame:OnEvent(event, ...)
     SYSTEM_EVENT_HANDLER[event]()
 end
 
-function main.frame:OnEvent(event, ...)
+function Main.frame:OnEvent(event, ...)
     EVENT_HANDLER[event](...)
 end
 
-main.frame:SetScript("OnEvent", main.frame.OnEvent)
+Main.frame:SetScript("OnEvent", Main.frame.OnEvent)
 systemFrame:SetScript("OnEvent", systemFrame.OnEvent)
 

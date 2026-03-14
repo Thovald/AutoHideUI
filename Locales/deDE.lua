@@ -4,7 +4,7 @@ if not L then return end
 -- misc
 L["error_optionsOpen"] = "Das Options Menü muss geöffnet sein um Optionen zu ändern!"
 
--- main menu
+-- Main menu
 L["descr_groups"] = "Erstelle Gruppierungen um andere Einstellungen für andere Frames zu verwenden"
 L["tab_setup"] = "Konfiguration"
 L["dropdown_groupSelect"] = "Gruppierungen"

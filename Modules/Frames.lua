@@ -1,5 +1,4 @@
 local _, Private = ...
--- namespaces for functions that are called between files
 local Main = Private.Main
 local Config = Private.Config
 local Frames = Private.Frames
@@ -340,10 +339,11 @@ function Frames.ResetFrames()
     WipeActiveFramesLists()
 end
 
-local function CreateFrameGroup(groupDB)
+local function CreateFrameGroup(groupDB, dbIndex)
     local groupInfo = {
         name = groupDB.name,
         frames = {},
+        index = dbIndex,
         config = CopyTable(groupDB.config),
         states = CopyTable(Config.DEFAULT_STATES),
         conditions = CopyTable(groupDB.conditions),
@@ -505,6 +505,7 @@ local function GetAllCommonFrames(groupDB)
         if frameInfo then
             frameList[frameString] = frameInfo
             frameInfo.args.isInUse = isChecked
+            frameInfo.args.isCustom = false
         end
     end
 
@@ -521,6 +522,7 @@ local function GetAllCustomFrames(groupDB)
             if frameInfo then
                 frameInfo.args.forceAlpha = groupDB.config.forceAlpha
                 frameInfo.args.isInUse = true
+                frameInfo.args.isCustom = true
                 frameList[frameString] = frameInfo
             end
         end
@@ -531,13 +533,14 @@ end
 
 local function CreateActiveFramesList()
     for frameString, info in pairs(Main.activeStrings) do
-        local isInUse = info.args.isInUse
         for _, frame in pairs(info.frames) do
             if not Main.activeFrames[frame] or not Main.activeFrames[frame].isInUse then
                 Main.activeFrames[frame] = {
                     frameString = frameString,
                     group = info.group,
-                    isInUse = isInUse
+                    isInUse = info.args.isInUse,
+                    isCustom = info.args.isCustom,
+                    name = frame:GetName()
                 }
             end
         end
@@ -603,7 +606,7 @@ local function HandleAllGroupFrames(dbIndex, groupDB)
         return
     end
 
-    Main.activeGroups[dbIndex] = CreateFrameGroup(groupDB)
+    Main.activeGroups[dbIndex] = CreateFrameGroup(groupDB, dbIndex)
 
     -- helper tables to assemble final tables
     local framesInUse = {}

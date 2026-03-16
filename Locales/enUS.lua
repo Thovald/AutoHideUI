@@ -130,6 +130,17 @@ L["descr_excludeNPCs"] = "Will ignore interactable objects that can be targeted,
 L["button_disableAll"] = "Disable All"
 L["button_reset"] = "Reset Group to Default"
 
-L["button_frameFinder"] = "Frame Finder"
+L["frameFinder"] = "Frame Finder"
 L["descr_frameFinder"] = "Launches a Tool to help you find and add Frames that aren't listed above."
-
+L["ffButton_clear"] = "Clear Selection"
+L["ffDescr_howTo"] =    "Mouseover a Frame".."|n"..
+                        "Use Mousewheel to cycle".."|n"..
+                        "Cycle until correct Frame is fading".."|n"..
+                        "Click to select/deselect".."|n|n"..
+                        "or".."|n|n"..
+                        "Browse the list on the left".."|n"..
+                        "Click to select/deselect".."|n"
+L["ffButton_confirm"] = "Confirm Selection"
+L["ffButton_cancel"] = "Cancel"
+L["ffTitle_available"] = "Available Custom Frames"
+L["ffTitle_howTo"] = "How to Use"

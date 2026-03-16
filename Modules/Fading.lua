@@ -1,7 +1,5 @@
 local _, Private = ...
--- namespaces for functions that are called between files
 local Main = Private.Main
-local Config = Private.Config
 local Fading = Private.Fading
 
 local FADE_QUEUE = {}
@@ -79,7 +77,7 @@ end
 -- Fade Stuff
 ------------------
 
-function AutoHide_FrameFade_OnUpdate(self, elapsed)
+local function AutoHide_FrameFade_OnUpdate(self, elapsed)
     totalElapsed = totalElapsed + elapsed
     if totalElapsed < FADE_THROTTLE then
         return
@@ -117,6 +115,14 @@ function AutoHide_FrameFade_OnUpdate(self, elapsed)
 	if #FADE_QUEUE == 0 then
 		self:SetScript("OnUpdate", nil)
 	end
+end
+
+function Fading.StartFadeScript()
+    Main.frame:SetScript("OnUpdate", AutoHide_FrameFade_OnUpdate)
+end
+
+function Fading.AddToFadeQueue(frame)
+    tinsert(FADE_QUEUE, frame)
 end
 
 function Fading.StopFadeAnimations()
@@ -204,7 +210,7 @@ local function PlayFadeAnimation(group, alphaStep)
         tinsert(FADE_QUEUE, frame)
     end
 
-    Main.frame:SetScript("OnUpdate", AutoHide_FrameFade_OnUpdate)
+    Fading:StartFadeScript()
 end
 
 local function FadeImmediately(group)
@@ -217,6 +223,10 @@ local function FadeImmediately(group)
             UpdateFrameVisibility(frame, frameVisibilityInfo)
         end
     end
+end
+
+function Fading.GetRequiredSteps(timeToFade)
+    return max(1, timeToFade / FADE_THROTTLE)
 end
 
 local function ApplyFade(group, targetAlpha)
@@ -233,7 +243,7 @@ local function ApplyFade(group, targetAlpha)
     states.endAlpha = targetAlpha
     states.fadeEndTime = GetTime() + group.config.timeToFade
 
-    local requiredSteps = max(1, group.config.timeToFade / FADE_THROTTLE)
+    local requiredSteps = Fading.GetRequiredSteps(group.config.timeToFade)
 
     if requiredSteps >= 2 then
         local alphaDiff = states.endAlpha - states.startAlpha

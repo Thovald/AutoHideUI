@@ -580,11 +580,11 @@ local OPTIONS_TAB_FRAMES = {
             order = 10,
             args = {
                 button_frameFinder = {
-                    name = L["button_frameFinder"],
+                    name = L["frameFinder"],
                     desc = L["descr_frameFinder"],
                     type = "execute",
                     width = 1,
-                    func = Private.FrameFinder.Start,
+                    func = function() Private.FrameFinder.Start(selectedGroup) end,
                     order = 1,
                 },
                 spacer1 = {
@@ -1140,7 +1140,7 @@ function Config.RegisterOptions()
     SlashCmdList["AUTOHIDEUI"] = function()
         if AceConfigDialog.OpenFrames["AutoHideUI"] then
             AceConfigDialog:Close("AutoHideUI")
-        else
+        elseif not AutoHideUIFrameFinderFrame:IsShown() then
             AceConfigDialog:Open("AutoHideUI")
         end
     end

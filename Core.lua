@@ -7,13 +7,11 @@ Private.Fading = {}
 Private.FrameFinder = {}
 Private.isAceHooked = false
 
-local db
 -- namespaces for functions that are called between files
 local Main = Private.Main
 local Config = Private.Config
 local Frames = Private.Frames
 local Fading = Private.Fading
--- namespace for functions that are referenced before they are defined
 local internal = {}
 
 -- unlike systemFrame, Main.frame's events are registered based on which conditions are enabled
@@ -26,7 +24,7 @@ systemFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
 -- these are what we read and write to on runtime
 Main.activeStrings = {} -- [frameString] = { frames = {frameObject, ...}, args = {} , group = reference to parent group}
 Main.activeGroups = {} -- [1] = { frames = {frameObject, ...}, config = {}, states = {}, conditions = {combat = {}, ...}}
-Main.activeFrames = {} -- {frameObject = {isInUse = bool, group = groupTable, frameString = string}, ...}
+Main.activeFrames = {} -- {frameObject = {isInUse = bool, isCustom = bool, group = groupTable, frameString = string}, ...}
 
 -- used to only create and run mouseover stuff where it's needed
 local mouseoverTicker
@@ -80,7 +78,6 @@ local GetShapeshiftFormID, UnitInVehicle, UnitCastingInfo, UnitChannelInfo, IsRe
 ------------------
 
 function Private:OnProfileChanged()
-    db = Private.db.profile
     Config.SetSelectedGroup(true)
 end
 
@@ -89,7 +86,6 @@ local function InitDB()
     local defaultProfile = { profile = {defaultGroup} }
 
     Private.db = LibStub("AceDB-3.0"):New("AutoHideUIDB", defaultProfile, true)
-    db = Private.db.profile
     Config.CheckGroupsForMissingEntries(defaultGroup)
 
     Private.db.RegisterCallback(Private, "OnProfileChanged", "OnProfileChanged")

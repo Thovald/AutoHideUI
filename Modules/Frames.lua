@@ -152,6 +152,57 @@ local ADDON_FRAME_MAPPING = {
             return frameList
         end
     },
+    {
+        name = "EllesmereUI",
+        isLoaded = function() return C_AddOns.IsAddOnLoaded("EllesmereUIActionBars") end,
+        frames = {
+            MainActionBar = {"EABBar_MainBar"},
+            MultiBarBottomLeft = {"EABBar_Bar2"},
+            MultiBarBottomRight = {"EABBar_Bar3"},
+            MultiBarRight = {"EABBar_Bar4"},
+            MultiBarLeft = {"EABBar_Bar5"},
+            MultiBar5 = {"EABBar_Bar6"},
+            MultiBar6 = {"EABBar_Bar7"},
+            MultiBar7 = {"EABBar_Bar8"},
+            StanceBar = {"EABBar_StanceBar"},
+            PetActionBar = {"EABBar_PetBar"},
+            MicroMenu = {"EllesmereEAB_MicroBar"},
+            BagsBar = {"EllesmereEAB_BagBar"},
+            MainStatusTrackingBarContainer = {"EllesmereEAB_XPBar"},
+
+        },
+        args = {forceAlpha = true},
+    },
+    {
+        name = "EllesmereUI",
+        isLoaded = function() return C_AddOns.IsAddOnLoaded("EllesmereUIUnitFrames") end,
+        frames = {
+            PlayerFrame = {"EllesmereUIUnitFrames_Player", "ERB_PrimaryBar"},
+            TargetFrame = {"EllesmereUIUnitFrames_Target", "EllesmereUIUnitFrames_TargetTarget"},
+            FocusFrame = {"EllesmereUIUnitFrames_Focus", "EllesmereUIUnitFrames_FocusTarget"},
+            PetFrame = {"EllesmereUIUnitFrames_Pet"},
+        },
+        args = {forceAlpha = true},
+    },
+    {
+        name = "EllesmereUI",
+        isLoaded = function() return C_AddOns.IsAddOnLoaded("EllesmereUICooldownManager") end,
+        frames = {
+            EssentialCooldownViewer = {"ECME_CDMBar_cooldowns"},
+            UtilityCooldownViewer = {"ECME_CDMBar_utility"},
+            BuffIconCooldownViewer = {"ECME_CDMBar_buffs"},
+            BuffBarCooldownViewer = {"ECME_CDMBar_buffs"},
+        },
+        args = {forceAlpha = true},
+    },
+    {
+        name = "EllesmereUI",
+        isLoaded = function() return C_AddOns.IsAddOnLoaded("EllesmereUIResourceBars") end,
+        frames = {
+            PlayerCastingBarFrame = {"ERB_CastBar"},
+        },
+        args = {forceAlpha = true},
+    },
 }
 
 -- used for frames in the GUI's frame selector
@@ -406,7 +457,7 @@ local function CheckForAddOnStrings(frameString, addonInfo)
 end
 
 local function CheckForAddOnFrames(frameString, groupDB)
-    for _, addonInfo in ipairs(ADDON_FRAME_MAPPING) do
+    for addonName, addonInfo in ipairs(ADDON_FRAME_MAPPING) do
         if addonInfo:isLoaded() then
             local frameList, args
 

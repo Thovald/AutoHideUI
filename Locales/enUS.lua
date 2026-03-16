@@ -21,7 +21,7 @@ L["popup_createGroup"] = "Name of new Group:"
 
 -- tab: frame selection
 L["tab_frameSelect"] = "Frame Selection"
-L["descr_frames"] = "The same Frame can't be assigned to multiple Groups.|nElvUI, Details, UUF and Dominos will automatically be detected. Bartender won't work."
+L["descr_frames"] = "The same Frame can't be assigned to multiple Groups."
 L["group_defaultFrames"] = "Common Frames"
 L["group_customFrames"] = "Custom Frames"
 L["descr_customFrames"] = "Use the Frame Finder or manually add the names of other Frames here. Separate them with commas."

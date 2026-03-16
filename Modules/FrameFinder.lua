@@ -62,6 +62,11 @@ function FrameFinder.HideWindow()
     ffWindow:Hide()
 end
 
+function FrameFinder.Cancel()
+    FrameFinder.HideWindow()
+    AceConfigDialog:Open("AutoHideUI")
+end
+
 function FrameFinder.ConfirmSelection()
     -- building new Custom Frames string from selection
     -- preserving user's strings that were not found at all, ie from unloaded addons
@@ -141,6 +146,15 @@ local BLACK_LIST = {
         ignoreFrame = true,
         ignoreChildren = false,
     },
+    StarCursorMain = {
+        ignoreFrame = true,
+        ignoreChildren = true,
+    },
+    EllesmereUICursorFrame = {
+        ignoreFrame = true,
+        ignoreChildren = true,
+    },
+
 }
 
 -- mouseoverFrame
@@ -794,7 +808,7 @@ do
     cancelButton:SetText(L["ffButton_cancel"])
 
     cancelButton:SetScript("OnClick", function()
-        FrameFinder:HideWindow()
+        FrameFinder:Cancel()
     end)
 
     ------------------

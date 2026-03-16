@@ -17,7 +17,7 @@ local pairs, ipairs  = pairs, ipairs
 local selectedGroup
 local isOptionsOpen
 local MENU_WIDTH = 630
-local MENU_HEIGHT = 700
+local MENU_HEIGHT = 780
 local MENU_HEIGHT_MIN = 400
 local MENU_HEIGHT_MAX = 1000
 local highlightFrames = {}
@@ -554,18 +554,18 @@ local OPTIONS_TAB_FRAMES = {
             fontSize = "small",
             order = 1,
         },
-        descr_frames = {
-            type = "description",
-            name = L["descr_frames"],
-            fontSize = "medium",
-            order = 2,
-        },
-        spacer_frames2 = {
-            type = "description",
-            name = "",
-            fontSize = "small",
-            order = 4,
-        },
+        -- descr_frames = {
+        --     type = "description",
+        --     name = L["descr_frames"],
+        --     fontSize = "medium",
+        --     order = 2,
+        -- },
+        -- spacer_frames2 = {
+        --     type = "description",
+        --     name = "",
+        --     fontSize = "small",
+        --     order = 4,
+        -- },
         group_defaultFrames = {
             name = L["group_defaultFrames"],
             type = "group",

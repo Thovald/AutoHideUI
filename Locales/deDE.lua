@@ -22,7 +22,7 @@ L["popup_createGroup"] = "Name für neue Gruppierung:"
 
 -- tab: frame selection
 L["tab_frameSelect"] = "Frame Auswahl"
-L["descr_frames"] = "Ein Frame kann nicht mehreren Gruppierung zugewiesen werden.|nElvUI, Details, UUF und Dominos werden automatisch erkannt. Bartender ist inkompatibel."
+L["descr_frames"] = "Ein Frame kann nicht mehreren Gruppierung zugewiesen werden."
 L["group_defaultFrames"] = "Gewöhnliche Frames"
 L["group_customFrames"] = "Benutzerdefinierte Frames"
 L["descr_customFrames"] = "Gebe hier die Namen beliebiger Frames ein. Trenne sie mit einem Komma."

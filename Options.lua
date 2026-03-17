@@ -319,6 +319,12 @@ function Config.CheckTextBounds(frame)
         return
     end
 
+    -- idk why but DetailsWaitFrameBG is larger than 0 when we add it, but is 0 here.
+    local w,h = frame:GetSize()
+    if w*h < 10 then
+        return
+    end
+
     local x, y = 0, 0
 
     local leftBorder = 0 + UI_PADDING

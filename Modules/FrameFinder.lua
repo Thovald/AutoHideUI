@@ -242,7 +242,7 @@ local function StopAnimation(frame)
     if frame then
         Main.frame:SetScript("OnUpdate", nil)
         Fading.WipeFadeQueue()
-        frame.frame:SetAlpha(1)
+        frame.frame:SetAlpha(frame.alpha)
     end
 end
 
@@ -492,7 +492,7 @@ local function CreateHelperFrame()
     bg:SetAllPoints()
     f.bg = bg
     f:EnableMouseMotion(true)
-    f:SetPropagateMouseClicks(true)
+    --f:SetPropagateMouseClicks(true)
     f:SetPropagateMouseMotion(true)
     f:SetScript("OnEnter", function(self) HighlightHelperFrameAtCursor(0, self) end )
     f:SetScript("OnLeave", function(self) HighlightHelperFrameAtCursor(0) end )
@@ -579,6 +579,7 @@ local function ShowHelperFrame(frame, i)
     helperFrame.frame = frame
     helperFrame.level = i
     helperFrame.name = name
+    helperFrame.alpha = frame:GetAlpha()
     tinsert(helperFrameList, helperFrame)
     ffWindow:AddEntry(helperFrame.name)
     ffWindow.entries[name].helperFrame = helperFrame

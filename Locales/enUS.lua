@@ -144,3 +144,6 @@ L["ffButton_confirm"] = "Confirm Selection"
 L["ffButton_cancel"] = "Cancel"
 L["ffTitle_available"] = "Available Custom Frames"
 L["ffTitle_howTo"] = "How to Use"
+L["descr_ActionBar1"] = "This bar includes all other extra bars an AddOn may include.|n|n"..
+                        "You can disable this bar and manually add their names in the Custom Frames section below.|n|n"..
+                        "Useful if you want some of those bars to not fade or to assign them to a different group."

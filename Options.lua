@@ -20,6 +20,8 @@ local MENU_WIDTH = 630
 local MENU_HEIGHT = 780
 local MENU_HEIGHT_MIN = 400
 local MENU_HEIGHT_MAX = 1000
+local UI_WIDTH, UI_HEIGHT
+local UI_PADDING = 5
 local highlightFrames = {}
 
 ------------------
@@ -60,7 +62,7 @@ Config.DEFAULT_FRAMES = {
     { frame = "PartyFrame", label = L["Party Frame"], enabled = false },
     { frame = "PlayerCastingBarFrame", label = L["Player Castbar"], enabled = false },
     -- actionbars
-    { frame = "MainActionBar", label = L["ActionBar 1"], enabled = true },
+    { frame = "MainActionBar", label = L["ActionBar 1"], enabled = true, description = L["descr_ActionBar1"] },
     { frame = "MultiBarBottomLeft", label = L["ActionBar 2"], enabled = true },
     { frame = "MultiBarBottomRight", label = L["ActionBar 3"], enabled = true },
     { frame = "MultiBarRight", label = L["ActionBar 4"], enabled = true },
@@ -312,17 +314,53 @@ local function GetDefaultConditions()
     return conditions
 end
 
+function Config.CheckTextBounds(frame)
+    if not frame.text then
+        return
+    end
+
+    local x, y = 0, 0
+
+    local leftBorder = 0 + UI_PADDING
+    local rightBorder = UI_WIDTH - UI_PADDING
+    local topBorder = UI_HEIGHT - UI_PADDING
+    local bottomBorder = 0 + UI_PADDING
+
+    frame.text:SetPointsOffset(0, 0)
+    local left = frame.text:GetLeft()
+    local right = frame.text:GetRight()
+    local top = frame.text:GetTop()
+    local bottom = frame.text:GetBottom()
+
+    if left < leftBorder then
+        x = math.abs(leftBorder - left)
+    elseif right > rightBorder then
+        x = (rightBorder - right)
+    end
+
+    if top > topBorder then
+        y = (topBorder - top)
+    elseif bottom < bottomBorder then
+        y = math.abs(bottomBorder - bottom)
+    end
+
+    frame.text:SetPointsOffset(x, y)
+end
+
 local function CreateNewHighlight()
     -- to highlight frames when user hovers over frame selection options.
-    local hl = CreateFrame("Frame")
-    local tex = hl:CreateTexture()
-    tex:SetAllPoints()
-    tex:SetColorTexture(0, 1, 0, 1)
-    hl.tex = tex
-    hl:Hide()
-    hl:SetFrameStrata("HIGH")
-    hl:SetAlpha(0.6)
-    local hlInfo = {frame = hl, inUse = false}
+    local frame = CreateFrame("Frame", nil, UIParent)
+    local texture = frame:CreateTexture()
+    texture:SetAllPoints()
+    texture:SetColorTexture(1, 1, 1, 0.6)
+    frame.texture = texture
+    frame:Hide()
+    frame:SetFrameStrata("HIGH")
+    local text = frame:CreateFontString()
+    text:SetFont(GameFontNormal:GetFont(), 35, "THICKOUTLINE")
+    text:SetPoint("BOTTOM", frame, "TOP")
+    frame.text = text
+    local hlInfo = {frame = frame, inUse = false}
     tinsert(highlightFrames, hlInfo)
 
     return hlInfo
@@ -349,12 +387,14 @@ function Config.ShowHighlight(frame)
     local highlight = GetNextHighlight()
 
     if frame:IsVisible() then
-        highlight.tex:SetColorTexture(0, 1, 0, 1)
+        highlight.texture:SetVertexColor(0, 1, 0)
     else
-        highlight.tex:SetColorTexture(1, 1, 0, 1)
+        highlight.texture:SetVertexColor(1, 1, 0)
     end
 
     highlight:SetAllPoints(frame)
+    highlight.text:SetText(frame:GetName())
+    Config.CheckTextBounds(highlight)
     highlight:Show()
 end
 
@@ -1087,6 +1127,8 @@ local function OnOptionsOpen(frame)
         frame:Hide()
         return
     end
+
+    UI_WIDTH, UI_HEIGHT = UIParent:GetSize()
 
     isOptionsOpen = true
     Main.SuspendAddon()

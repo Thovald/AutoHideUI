@@ -15,7 +15,6 @@ local mouseoverFrame
 local helperFrameList = {}
 local lastVisibility = {}
 local ignoredFrames = {}
-local UI_MARGIN = 5
 local SEARCH_DEPTH = 3
 local collectedFrames = {}
 local uiSurface = UIParent:GetWidth() * UIParent:GetHeight()
@@ -181,36 +180,6 @@ do
     f:Hide()
 end
 
-local function CheckTextBounds(text)
-    local UI_WIDTH, UI_HEIGHT = UIParent:GetSize()
-    local x, y = 0, 0
-
-    local leftBorder = 0 + UI_MARGIN
-    local rightBorder = UI_WIDTH - UI_MARGIN
-    local topBorder = UI_HEIGHT - UI_MARGIN
-    local bottomBorder = 0 + UI_MARGIN
-
-    text:SetPointsOffset(0, 0)
-    local left = mouseoverFrame.text:GetLeft()
-    local right = mouseoverFrame.text:GetRight()
-    local top = mouseoverFrame.text:GetTop()
-    local bottom = mouseoverFrame.text:GetBottom()
-
-    if left < leftBorder then
-        x = math.abs(leftBorder - left)
-    elseif right > rightBorder then
-        x = (rightBorder - right)
-    end
-
-    if top > topBorder then
-        y = (topBorder - top)
-    elseif bottom < bottomBorder then
-        y = math.abs(bottomBorder - bottom)
-    end
-
-    text:SetPointsOffset(x, y)
-end
-
 local function UpdateMouseoverColor(helperFrame)
     if helperFrame.selected then
         mouseoverFrame.texture:SetVertexColor(unpack(COLORS.selected))
@@ -288,7 +257,7 @@ local function AttachMouseoverFrame(frame, index)
     mouseoverFrame.frame = frame
     mouseoverFrame.level = frame.level
     mouseoverFrame.text:SetText("#"..index ..": ".. frame.name)
-    CheckTextBounds(mouseoverFrame.text)
+    Config.CheckTextBounds(mouseoverFrame, mouseoverFrame.text)
     StartAnimation(frame.frame)
 end
 

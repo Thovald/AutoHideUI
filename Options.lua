@@ -342,7 +342,7 @@ local function GetNextHighlight()
 end
 
 function Config.ShowHighlight(frame)
-    if Main.helperFrames[frame] then
+    if Main.helperFrames[frame] and not Main.helperFrames[frame].isAnchor then
         return
     end
 

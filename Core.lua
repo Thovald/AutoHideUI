@@ -179,7 +179,7 @@ end
 
 local function ClearQueues()
     Fading.ResetPendingFades()
-    Fading.StopFadeAnimations()
+    Fading.WipeFadeQueue()
     wipe(Main.runAfterCombat)
 end
 

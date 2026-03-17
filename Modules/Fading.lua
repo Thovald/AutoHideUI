@@ -20,7 +20,7 @@ local function GetCurrentAlpha(group)
     local idleAlpha = group.config.idleAlpha
 
     for _, frame in pairs(group.frames) do
-        if frame:IsVisible() then
+        if frame:IsVisible() and not Main.helperFrames[frame] then
             if alphaFrame then
                 return min(alphaFrame, frame:GetAlpha())
             end
@@ -91,7 +91,7 @@ local function AutoHide_FrameFade_OnUpdate(self, elapsed)
 
 	while FADE_QUEUE[index] do
 		frame = FADE_QUEUE[index]
-		fadeInfo = FADE_QUEUE[index].fadeInfo
+		fadeInfo = FADE_QUEUE[index].ahui_fadeInfo
 		fadeInfo.fadeTimer = fadeInfo.fadeTimer + totalElapsed
 
 		if fadeInfo.fadeTimer < fadeInfo.timeToFade then
@@ -125,7 +125,7 @@ function Fading.AddToFadeQueue(frame)
     tinsert(FADE_QUEUE, frame)
 end
 
-function Fading.StopFadeAnimations()
+function Fading.WipeFadeQueue()
     wipe(FADE_QUEUE)
 end
 
@@ -195,19 +195,21 @@ end
 
 local function PlayFadeAnimation(group, alphaStep)
     for _, frame in pairs(group.frames) do
-        tDeleteItem(FADE_QUEUE, frame) -- in case user managed to add frames to multiple groups
-        frame.fadeInfo = {
-            mode = group.states.fadeMode,
-            timeToFade = group.config.timeToFade,
-            startAlpha = group.states.startAlpha,
-            endAlpha = group.states.endAlpha,
-            alphaFunc = frame._origSetAlpha or frame.SetAlpha,
-            currentAlpha = group.states.startAlpha,
-            fadeTimer = 0,
-            alphaStep = alphaStep
-        }
-        HandleVisibilityForFade(frame, frame.fadeInfo)
-        tinsert(FADE_QUEUE, frame)
+        if not Main.helperFrames[frame] then
+            tDeleteItem(FADE_QUEUE, frame) -- in case user managed to add frames to multiple groups
+            frame.ahui_fadeInfo = {
+                mode = group.states.fadeMode,
+                timeToFade = group.config.timeToFade,
+                startAlpha = group.states.startAlpha,
+                endAlpha = group.states.endAlpha,
+                alphaFunc = frame._origSetAlpha or frame.SetAlpha,
+                currentAlpha = group.states.startAlpha,
+                fadeTimer = 0,
+                alphaStep = alphaStep
+            }
+            HandleVisibilityForFade(frame, frame.ahui_fadeInfo)
+            tinsert(FADE_QUEUE, frame)
+        end
     end
 
     Fading:StartFadeScript()
@@ -215,12 +217,14 @@ end
 
 local function FadeImmediately(group)
     for _, frame in pairs(group.frames) do
-        local alphaFunc = frame._origSetAlpha or frame.SetAlpha
-        alphaFunc(frame, group.states.endAlpha)
+        if not Main.helperFrames[frame] then
+            local alphaFunc = frame._origSetAlpha or frame.SetAlpha
+            alphaFunc(frame, group.states.endAlpha)
 
-        local frameVisibilityInfo = Main.framesThatToggleVisibility[frame]
-        if frameVisibilityInfo then
-            UpdateFrameVisibility(frame, frameVisibilityInfo)
+            local frameVisibilityInfo = Main.framesThatToggleVisibility[frame]
+            if frameVisibilityInfo then
+                UpdateFrameVisibility(frame, frameVisibilityInfo)
+            end
         end
     end
 end

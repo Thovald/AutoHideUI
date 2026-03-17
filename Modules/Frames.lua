@@ -21,11 +21,108 @@ local function MINIMAPCLUSTER_CUSTOMGETTER(frameString)
         -- local t = minimapHelperFrame:CreateTexture()
         -- t:SetAllPoints()
         -- t:SetColorTexture(0,1,0,0.25)
-        Main.helperFrames[minimapHelperFrame] = {dependency = frameString}
+        Main.helperFrames[minimapHelperFrame] = {frameString = frameString}
     end
     tinsert(frameList, minimapHelperFrame)
 
     Main.framesThatToggleVisibility[minimapFrame] = {threshold = 0.1}
+
+    return frameList
+end
+
+local function BARTENDER_CUSTOMGETTER(frameString)
+    local MAPPING = {
+        MainActionBar = {
+            bar = {"BT4Bar1", "BT4Bar2", "BT4Bar7", "BT4Bar8", "BT4Bar9", "BT4Bar10"},
+            firstButton = {"BT4Button1","BT4Button13", "BT4Button73", "BT4Button85", "BT4Button97", "BT4Button109"}
+        },
+        MultiBarBottomLeft = {
+            bar = {"BT4Bar6"},
+            firstButton = {"BT4Button61"}
+        },
+        MultiBarBottomRight = {
+            bar = {"BT4Bar5"},
+            firstButton = {"BT4Button49"}
+        },
+        MultiBarRight = {
+            bar = {"BT4Bar3"},
+            firstButton = {"BT4Button25"}
+        },
+        MultiBarLeft = {
+            bar = {"BT4Bar4"},
+            firstButton = {"BT4Button37"}
+        },
+        MultiBar5 = {
+            bar = {"BT4Bar13"},
+            firstButton = {"BT4Button145"}
+        },
+        MultiBar6 = {
+            bar = {"BT4Bar14"},
+            firstButton = {"BT4Button157"}
+        },
+        MultiBar7 = {
+            bar = {"BT4Bar15"},
+            firstButton = {"BT4Button169"}
+        },
+        PetActionBar = {
+            bar = {"BT4BarPetBar"},
+            firstButton = {"BT4PetButton1"},
+        },
+        MicroMenu = {
+            bar = {"BT4BarMicroMenu"},
+            firstButton = {"CharacterMicroButton"},
+        },
+        BagsBar = {
+            bar = {"BT4BarBagBar"},
+            firstButton = {"CharacterReagentBag0Slot"},
+        },
+        -- /dump BT4Button79:GetParent():GetName()
+    }
+            
+    local frameList = {}
+
+    if frameString == "MainActionBar" then
+        local artBar = Frames.GetFrameObjectFromString("BT4BarBlizzardArt")
+        if artBar then
+            tinsert(frameList, artBar)
+        end
+    end
+
+    local function HandleBar(barString, buttonString)
+        local barFrame = Frames.GetFrameObjectFromString(barString)
+        local buttonFrame = Frames.GetFrameObjectFromString(buttonString)
+        if not barFrame or not buttonFrame then
+            return
+        end
+
+        local helper
+        for frame, info in pairs(Main.helperFrames) do
+            if info.frameString and info.frameString == barString then
+                helper = frame
+                break
+            end
+        end
+
+        if not helper then
+            helper = CreateFrame("Frame", nil, buttonFrame)
+            helper:SetPoint("LEFT")
+            helper:SetSize(barFrame:GetSize())
+            Main.helperFrames[helper] = {
+                frameString = frameString,
+                isAnchor = true,
+            }
+            helper:Show()
+        end
+
+        tinsert(frameList, barFrame)
+        tinsert(frameList, helper)
+
+    end
+
+    for i, barString in ipairs(MAPPING[frameString].bar) do
+        local buttonString = MAPPING[frameString].firstButton[i]
+        HandleBar(barString, buttonString)
+    end
 
     return frameList
 end
@@ -61,6 +158,27 @@ local ADDON_FRAME_MAPPING = {
             MainStatusTrackingBarContainer = {"DominosFrameexp"},
         },
         args = {},
+    },
+    {
+        name = "Bartender",
+        isLoaded = function() return C_AddOns.IsAddOnLoaded("Bartender4") end,
+        frames = {
+            MainActionBar = {},
+            MultiBarBottomLeft = {},
+            MultiBarBottomRight = {},
+            MultiBarRight = {},
+            MultiBarLeft = {},
+            MultiBar5 = {},
+            MultiBar6 = {},
+            MultiBar7 = {},
+            -- StanceBar = {"DominosFrameclass"},
+            PetActionBar = {},
+            MicroMenu = {},
+            BagsBar = {},
+            -- MainStatusTrackingBarContainer = {"DominosFrameexp"},
+        },
+        customGetter = function(frameString) return BARTENDER_CUSTOMGETTER(frameString) end,
+        args = {forceAlpha = true},
     },
     {
         name = "ElvUI",
@@ -177,7 +295,7 @@ local ADDON_FRAME_MAPPING = {
         name = "EllesmereUI",
         isLoaded = function() return C_AddOns.IsAddOnLoaded("EllesmereUIUnitFrames") end,
         frames = {
-            PlayerFrame = {"EllesmereUIUnitFrames_Player", "ERB_PrimaryBar"},
+            PlayerFrame = {"EllesmereUIUnitFrames_Player", "ERB_PrimaryBar", "ERB_SecondaryFrame"},
             TargetFrame = {"EllesmereUIUnitFrames_Target", "EllesmereUIUnitFrames_TargetTarget"},
             FocusFrame = {"EllesmereUIUnitFrames_Focus", "EllesmereUIUnitFrames_FocusTarget"},
             PetFrame = {"EllesmereUIUnitFrames_Pet"},
@@ -245,7 +363,7 @@ local SPECIAL_FRAMES = {
 
 function Frames.ToggleHelperFrames()
     for frame, info in pairs(Main.helperFrames) do
-        local frameString = info.dependency
+        local frameString = info.frameString
         if Main.activeStrings[frameString] then
             if not Main.activeStrings[frameString].args.isInUse then
                 frame:Hide()

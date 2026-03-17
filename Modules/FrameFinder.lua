@@ -59,6 +59,7 @@ function FrameFinder.HideWindow()
     if VISIBILITY_TICKER then
         VISIBILITY_TICKER:Cancel()
     end
+    FrameFinder.WipeLists()
     ffWindow:Hide()
 end
 
@@ -226,12 +227,12 @@ function FrameFinder.FadeOut(frame)
     local timeToFade = 0.3
     local requiredSteps = Fading.GetRequiredSteps(timeToFade)
     local alphaStep =  -0.75 / requiredSteps
-    frame.fadeInfo = {
+    frame.ahui_fadeInfo = {
         mode = "OUT",
         timeToFade = timeToFade,
         startAlpha = 1,
         endAlpha = 0.25,
-        alphaFunc = frame.SetAlpha,
+        alphaFunc = frame._origSetAlpha or frame.SetAlpha,
         currentAlpha = 1,
         fadeTimer = 0,
         alphaStep = alphaStep,
@@ -246,12 +247,12 @@ function FrameFinder.FadeIn(frame)
     local timeToFade = 0.3
     local requiredSteps = Fading.GetRequiredSteps(timeToFade)
     local alphaStep =  0.75 / requiredSteps
-    frame.fadeInfo = {
+    frame.ahui_fadeInfo = {
         mode = "IN",
         timeToFade = timeToFade,
         startAlpha = 0.25,
         endAlpha = 1,
-        alphaFunc = frame.SetAlpha,
+        alphaFunc = frame._origSetAlpha or frame.SetAlpha,
         currentAlpha = 0.25,
         fadeTimer = 0,
         alphaStep = alphaStep,
@@ -271,7 +272,7 @@ end
 local function StopAnimation(frame)
     if frame then
         Main.frame:SetScript("OnUpdate", nil)
-        Fading.StopFadeAnimations()
+        Fading.WipeFadeQueue()
         frame.frame:SetAlpha(1)
     end
 end
@@ -404,7 +405,7 @@ end
 
 local function IsValidFrame(frame)
     if frame:IsForbidden() or frame:IsAnchoringSecret() or frame:HasAnySecretAspect()
-    or not frame.IsObjectType or not frame:IsObjectType("Frame") then
+    or frame:IsAnchoringRestricted() or not frame.IsObjectType or not frame:IsObjectType("Frame") then
         return false
     else
         return true
@@ -556,6 +557,7 @@ function FrameFinder.WipeLists()
     wipe(helperFrameList)
     wipe(lastVisibility)
     wipe(ignoredFrames)
+    Fading.WipeFadeQueue()
 end
 
 local function ReleaseHelperFrame(frame)

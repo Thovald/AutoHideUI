@@ -134,7 +134,7 @@ L["frameFinder"] = "Frame Finder"
 L["descr_frameFinder"] = "Launches a Tool to help you find and add Frames that aren't listed above."
 L["ffButton_clear"] = "Clear Selection"
 L["ffDescr_howTo"] =    "Mouseover a Frame".."|n"..
-                        "Use Mousewheel to cycle".."|n"..
+                        "Use Mousewheel to cycle Frames".."|n"..
                         "Cycle until correct Frame is fading".."|n"..
                         "Click to select/deselect".."|n|n"..
                         "or".."|n|n"..

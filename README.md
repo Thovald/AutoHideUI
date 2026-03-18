@@ -1,5 +1,10 @@
 <h1>Auto Hide UI</h1>
 
+<h3><font color="83ff94">Notable recent changes:</font></h3>
+
+- Added support for EllesmereUI and Bartender.
+- New Frame Finder tool to find and add Custom Frames more easily.
+
 <h2><font color="83d2ff">What this does:</font></h2>
 
 Fades out UI Elements and brings them back when certain conditions (like mouseover or combat) are met.<br>
@@ -31,17 +36,21 @@ And have that one ActionBar with toys and mounts only fade in when you mouse ove
 
 <h2><font color="83d2ff">Supports other AddOns:</font></h2>
 
-Supports <b>ElvUI</b>, <b>Unhalted Unit Frames</b>, <b>Details</b> and <b>Dominos</b>.<br>
+Supports <b>ElvUI</b>, <b>EllesmereUI</b>, <b>Unhalted Unit Frames</b>, <b>Details</b>, <b>Bartender</b> and <b>Dominos</b>.<br>
 Will automatically detect and use their Frames over the default Blizzard ones.<br>
-I can't add support for Bartender, but it has its own fade system built in.<br>
 <br>
 There is a setting in the "Fade Settings" tab to override the Alpha of these AddOns. It's enabled by default.<br>
-If you want these AddOns to remain in control of their Alpha (for range checks or their own fade system), either remove their Frames from <b>Auto Hide UI</b> or disable this setting.
+If you want these AddOns to remain in control of their Alpha (for range checks or their own fade system), either remove their Frames from <b>Auto Hide UI</b> or disable this setting.<br>
+<br>
+If your AddOn isn't listed, you can add its Frames as Custom Frames.<br>
 
 
 <h2><font color="83d2ff">How to add Custom Frames:</font></h2>
 
-If the provided Frame selection doesn't include the Frame you wish to hide, you must first find out that Frame's name:
+If the provided Frame selection doesn't include the Frame you wish to hide, use the included <b>Frame Finder tool</b> to find and add it. Make sure your Frame is visible when launching the Tool.<br>
+<br>
+Alternatively, you can add a Frame manually, but you will need to find out its name.<br>
+Here's how:
 - Type /fstack in your chat.
 - Hover your mouse over the Frame you want to hide.
 - The Tooltip is most likely highlighting some sub-element, like a button or a texture.  

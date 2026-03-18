@@ -757,7 +757,7 @@ do
 
 
     local description = rightGroup:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    description:SetFontHeight(14)
+    description:SetFontHeight(12)
     description:SetPoint("TOPLEFT", 10, -10)
     description:SetPoint("BOTTOMRIGHT", -10, 10)
     description:SetJustifyH("CENTER")
@@ -931,6 +931,7 @@ do
         RefreshList()
     end
 
+    frame:Hide()
     Private.FrameFinder.frame = frame
     ffWindow = frame
 end

@@ -134,16 +134,17 @@ L["frameFinder"] = "Frame Finder"
 L["descr_frameFinder"] = "Launches a Tool to help you find and add Frames that aren't listed above."
 L["ffButton_clear"] = "Clear Selection"
 L["ffDescr_howTo"] =    "Mouseover a Frame".."|n"..
-                        "Use Mousewheel to cycle Frames".."|n"..
+                        "Mousewheel to cycle through Frames".."|n"..
                         "Cycle until correct Frame is fading".."|n"..
                         "Click to select/deselect".."|n|n"..
                         "or".."|n|n"..
                         "Browse the list on the left".."|n"..
                         "Click to select/deselect".."|n"
-L["ffButton_confirm"] = "Confirm Selection"
+L["ffButton_confirm"] = "Accept Selection"
 L["ffButton_cancel"] = "Cancel"
 L["ffTitle_available"] = "Available Custom Frames"
 L["ffTitle_howTo"] = "How to Use"
-L["descr_ActionBar1"] = "This bar includes all other extra bars an AddOn may include.|n|n"..
-                        "You can disable this bar and manually add their names in the Custom Frames section below.|n|n"..
-                        "Useful if you want some of those bars to not fade or to assign them to a different group."
+L["descr_ActionBar1"] = "This bar includes all extra-bars an AddOn may include.".."|n|n"..
+                        "If unwanted, disable this bar and manually add the names of the bars you want in the Custom Frames section below.".."|n|n"..
+                        "Useful if you want some extra-bars to not fade or to assign them to a different group."
+

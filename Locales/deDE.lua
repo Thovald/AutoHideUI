@@ -25,7 +25,7 @@ L["tab_frameSelect"] = "Frame Auswahl"
 L["descr_frames"] = "Ein Frame kann nicht mehreren Gruppierung zugewiesen werden."
 L["group_defaultFrames"] = "Gewöhnliche Frames"
 L["group_customFrames"] = "Benutzerdefinierte Frames"
-L["descr_customFrames"] = "Gebe hier die Namen beliebiger Frames ein. Trenne sie mit einem Komma."
+L["descr_customFrames"] = "Benutze den Frame Sucher oder gebe hier die Namen beliebiger Frames ein. Trenne sie mit einem Komma."
 L["descr_Minimap"] = "Die Minikarte ist ein Sonderfall!|n|nAm besten sollte sie im Kampf einen Alpha Wert von 1 haben und wenn sie ausgeblendet wird, sollte sie auf einen Alpha Wert von 0 gehen."
 
 L["Player Frame"] = "Spieler"
@@ -130,4 +130,23 @@ L["checkbox_excludeNPCs"] = "NPCs ausschliessen"
 L["descr_excludeNPCs"] = "Ignoriert interagierbare Objekte, die nicht anvisiert werden können, wie zB NPCs."
 L["button_disableAll"] = "Alle Aus"
 L["button_reset"] = "Gruppe zurücksetzen"
+
+L["frameFinder"] = "Frame Sucher"
+L["descr_frameFinder"] = "Started ein Tool, das dabei hilft Frames zu finden, die nicht oben aufgelistet sind."
+L["ffButton_clear"] = "Auswahl zurücksetzen"
+L["ffDescr_howTo"] =    "Maus über ein Frame fahren".."|n"..
+                        "Mausrad um durch die Frames zu blättern".."|n"..
+                        "Suche bis das gewünschte Element blinkt".."|n"..
+                        "Mausklick zum aus-/abwählen".."|n|n"..
+                        "oder".."|n|n"..
+                        "Benutze die Liste auf der linken Seite".."|n"..
+                        "Mausklick zum aus-/abwählen".."|n"
+L["ffButton_confirm"] = "Auswahl übernehmen"
+L["ffButton_cancel"] = "Abbrechen"
+L["ffTitle_available"] = "Verfügbare Frames"
+L["ffTitle_howTo"] = "Anleitung"
+L["descr_ActionBar1"] = "Dieser Balken wählt ebenfalls alle eventuellen Sonder-Balken aus.".."|n|n"..
+                        "Falls unerwünscht, kann dieser Balken abgeschaltet und die entsprechenden Balken einzeln als Benutzerdefinierte Frames manuell eingetragen werden.".."|n|n"..
+                        "Nützlich etwa wenn diese Sonder-Balken einer anderen Gruppe zugewiesen werden sollen."
+
 

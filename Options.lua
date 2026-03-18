@@ -1194,8 +1194,4 @@ function Config.RegisterOptions()
     end
 
     SetHooksForMenus()
-
-    -- C_Timer.After(1, function()
-    --     AceConfigDialog:Open("AutoHideUI")
-    -- end)
 end

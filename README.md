@@ -4,7 +4,8 @@
 
 - Added support for EllesmereUI and Bartender.
 - New Frame Finder tool to find and add Custom Frames more easily.
-
+___
+<br>
 <h2><font color="83d2ff">What this does:</font></h2>
 
 Fades out UI Elements and brings them back when certain conditions (like mouseover or combat) are met.<br>
@@ -49,7 +50,7 @@ If your AddOn isn't listed, you can add its Frames as Custom Frames.<br>
 
 If the provided Frame selection doesn't include the Frame you wish to hide, use the included <b>Frame Finder tool</b> to find and add it. Make sure your Frame is visible when launching the Tool.<br>
 <br>
-Alternatively, you can add a Frame manually, but you will need to find out its name.<br>
+Alternatively, you can add a Frame manually, but you will need to find out its name first.<br>
 Here's how:
 - Type /fstack in your chat.
 - Hover your mouse over the Frame you want to hide.

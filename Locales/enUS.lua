@@ -148,3 +148,15 @@ L["descr_ActionBar1"] = "This bar includes all extra-bars an AddOn may include."
                         "If unwanted, disable this bar and manually add the names of the bars you want in the Custom Frames section below.".."|n|n"..
                         "Useful if you want some extra-bars to not fade or to assign them to a different group."
 
+L["dropdown_mouseover"] = "Triggered by"
+L["dropdownOption_mouseover1"] = "this Group only"
+L["dropdownOption_mouseover2"] = "any Group"
+L["descr_mouseover"] = "Should this only respond to mousing over Frames of this Group?".."|n|n"..
+                        "Or should this respond to mouseover events from any Group?"
+
+L["description_priority"] = "The Alpha of active Priority Conditions always wins out against the Alpha of normal Conditions".."|n|n"..
+                            "For example, if the 'Instance' Condition is a priority and its Alpha is 0, your Frames will fade out when you're in a Dungeon.".."|n|n"..
+                            "Even when Combat or Mouseover want to set it to 1, it will remain at 0.".."|n|n"..
+                            "Only another Priority Condition can fight this 'Instance' Condition on the Alpha.".."|n|n"..
+                            "You could use this to always hide your CooldownManager when in a vehicle, while having it fade normally when not in a vehicle."
+

@@ -4,6 +4,8 @@
 
 - Added support for EllesmereUI and Bartender.
 - New Frame Finder tool to find and add Custom Frames more easily.
+- The Mouseover Condition can now respond to mouseover events of other Groups as well.<br>
+Configure it in the Conditions. By default it only responds to events from its own Group.
 ___
 <br>
 <h2><font color="83d2ff">What this does:</font></h2>
@@ -21,7 +23,7 @@ Frames will fade out or remain hidden until any of these conditions are true:
 - you have a <b>target</b>
 - you are <b>in an instance</b>
 - you <b>mouseover</b> a hidden frame
-- you are <b>below 35% health</b>
+- you are <b>missing health</b>
 - you are <b>in a vehicle</b>
 
 <h2><font color="83d2ff">Customizability:</font></h2>
@@ -42,13 +44,11 @@ Will automatically detect and use their Frames over the default Blizzard ones.<b
 <br>
 There is a setting in the "Fade Settings" tab to override the Alpha of these AddOns. It's enabled by default.<br>
 If you want these AddOns to remain in control of their Alpha (for range checks or their own fade system), either remove their Frames from <b>Auto Hide UI</b> or disable this setting.<br>
-<br>
-If your AddOn isn't listed, you can add its Frames as Custom Frames.<br>
 
 
 <h2><font color="83d2ff">How to add Custom Frames:</font></h2>
 
-If the provided Frame selection doesn't include the Frame you wish to hide, use the included <b>Frame Finder tool</b> to find and add it. Make sure your Frame is visible when launching the Tool.<br>
+If the provided Frame selection doesn't include the Frame you wish to hide, use the included <b>Frame Finder</b> tool to find and add it. Make sure your Frame is visible when launching the tool.<br>
 <br>
 Alternatively, you can add a Frame manually, but you will need to find out its name first.<br>
 Here's how:

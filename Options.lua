@@ -130,6 +130,7 @@ Config.CONDITION_DEFINITIONS = {
             enabled = true,
             alpha = 1,
             priority = false,
+            trigger = 1,
         },
         events = {
             "WORLD_CURSOR_TOOLTIP_UPDATE",
@@ -267,7 +268,7 @@ Config.DEFAULT_STATES = {
     fadeEndTime = 0, -- if GetTime() < fadeEndTime we measure and use currentAlpha as startAlpha
     lastMouseover = nil, -- mouseover is polled constantly. only updating when current and last are different.
     fadeMode = "",
-    priorityFade = false, -- if fadeMode == "OUT" and priority, we fade out without delay 
+    priorityFade = false, -- if fadeMode == "OUT" and priority, we fade out without delay
     activeConditions = { -- key: name of condition -- value: false or alpha of condition
         normal = {},
         priority = {},
@@ -600,18 +601,6 @@ local OPTIONS_TAB_FRAMES = {
             fontSize = "small",
             order = 1,
         },
-        -- descr_frames = {
-        --     type = "description",
-        --     name = L["descr_frames"],
-        --     fontSize = "medium",
-        --     order = 2,
-        -- },
-        -- spacer_frames2 = {
-        --     type = "description",
-        --     name = "",
-        --     fontSize = "small",
-        --     order = 4,
-        -- },
         group_defaultFrames = {
             name = L["group_defaultFrames"],
             type = "group",
@@ -773,16 +762,16 @@ local OPTIONS_TAB_CONDITIONS = {
     args = {
         descrConditions = {
             type = "description",
-            name = "|n"..L["descr_conditions"].."|n",
+            name = "|n"..L["descr_conditions"].."|n|n",
             fontSize = "medium",
             order = 5,
         },
-        descrPrioConditions = {
-            type = "description",
-            name = "|n"..L["descr_prioConditions"].."|n|n",
-            fontSize = "medium",
-            order = 6,
-        },
+        -- descrPrioConditions = {
+        --     type = "description",
+        --     name = "|n"..L["descr_prioConditions"].."|n|n",
+        --     fontSize = "medium",
+        --     order = 6,
+        -- },
         group_conditionSelect = {
             name = L["group_conditions"],
             type = "group",
@@ -812,7 +801,7 @@ local OPTIONS_TAB_CONDITIONS = {
                     order = 3,
                 }
                 -- rest is filled in later
-            }, 
+            },
         },
     },
     order = 23
@@ -820,6 +809,18 @@ local OPTIONS_TAB_CONDITIONS = {
 
 local EXTRA_CONDITION_ELEMENTS = {
     -- default elements occupy order 5-7
+    mouseover = {
+        dropdown_mouseover = {
+            name = L["dropdown_mouseover"],
+            desc = L["descr_mouseover"],
+            type = "select",
+            width = 0.8,
+            values = function() return {L["dropdownOption_mouseover1"], L["dropdownOption_mouseover2"]} end,
+            get = function() return Private.db.profile[selectedGroup].conditions.mouseover.trigger end,
+            set = function(_, value) Private.db.profile[selectedGroup].conditions.mouseover.trigger = value end,
+            order = 10,
+        },
+    },
     mounted = {
         druidForms = {
             name = L["dropdown_druidForms"],
@@ -1032,6 +1033,7 @@ local function SetElementForConditionSelection(path, info, order)
         type = "toggle",
         get = function(info) return pathDB.profile[selectedGroup].conditions[name].priority end,
         set = function(info, value) pathDB.profile[selectedGroup].conditions[name].priority = value end,
+        desc = L["description_priority"],
         disabled = DisabledFunc,
         width = 0.35,
         order = order,

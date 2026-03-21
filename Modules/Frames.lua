@@ -272,6 +272,14 @@ local ADDON_FRAME_MAPPING = {
     },
     {
         name = "EllesmereUI",
+        isLoaded = function() return C_AddOns.IsAddOnLoaded("EllesmereUI") end,
+        frames = {
+            ObjectiveTrackerFrame = {"EUI_QuestTrackerFrame"},
+        },
+        args = {forceAlpha = true},
+    },
+    {
+        name = "EllesmereUI_ActionBars",
         isLoaded = function() return C_AddOns.IsAddOnLoaded("EllesmereUIActionBars") end,
         frames = {
             MainActionBar = {"EABBar_MainBar"},
@@ -292,7 +300,7 @@ local ADDON_FRAME_MAPPING = {
         args = {forceAlpha = true},
     },
     {
-        name = "EllesmereUI",
+        name = "EllesmereUI_UnitFrames",
         isLoaded = function() return C_AddOns.IsAddOnLoaded("EllesmereUIUnitFrames") end,
         frames = {
             PlayerFrame = {"EllesmereUIUnitFrames_Player", "ERB_PrimaryBar", "ERB_SecondaryFrame", "EllesmereUIResourceBarsFrame"},
@@ -303,7 +311,7 @@ local ADDON_FRAME_MAPPING = {
         args = {forceAlpha = true},
     },
     {
-        name = "EllesmereUI",
+        name = "EllesmereUI_CDM",
         isLoaded = function() return C_AddOns.IsAddOnLoaded("EllesmereUICooldownManager") end,
         frames = {
             EssentialCooldownViewer = {"ECME_CDMBar_cooldowns"},
@@ -314,7 +322,7 @@ local ADDON_FRAME_MAPPING = {
         args = {forceAlpha = true},
     },
     {
-        name = "EllesmereUI",
+        name = "EllesmereUI_ResourceBars",
         isLoaded = function() return C_AddOns.IsAddOnLoaded("EllesmereUIResourceBars") end,
         frames = {
             PlayerCastingBarFrame = {"ERB_CastBar"},

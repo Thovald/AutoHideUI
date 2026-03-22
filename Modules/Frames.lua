@@ -3,8 +3,8 @@ local Main = Private.Main
 local Config = Private.Config
 local Frames = Private.Frames
 
-
-local minimapHelperFrame -- mouseover helper frame when minimap is hidden
+local minimapHelperFrameList = {} -- mouseover helpers for when minimap is hidden
+local addonLoadedStates = {}
 local FRAME_INFO_TEMPLATE = {frames = {}, args = {}}
 
 local function MINIMAPCLUSTER_CUSTOMGETTER(frameString)
@@ -15,15 +15,24 @@ local function MINIMAPCLUSTER_CUSTOMGETTER(frameString)
     end
     tinsert(frameList, minimapFrame)
 
-    if not minimapHelperFrame then
-        minimapHelperFrame = CreateFrame("Frame", "minimapHelperFrame", UIParent)
-        minimapHelperFrame:SetAllPoints(minimapFrame)
-        -- local t = minimapHelperFrame:CreateTexture()
-        -- t:SetAllPoints()
-        -- t:SetColorTexture(0,1,0,0.25)
-        Main.helperFrames[minimapHelperFrame] = {frameString = frameString}
+    local helperFrame = minimapHelperFrameList[frameString]
+    if not helperFrame then
+        helperFrame = CreateFrame("Frame", "AHUI_"..frameString, UIParent)
+        helperFrame:SetPoint("CENTER", minimapFrame,"CENTER", 0,0)
+        local w, h = minimapFrame:GetSize()
+        local padding = 40 -- to account for elements around the minimap, like buttons
+        helperFrame:SetSize(w + padding, h + padding)
+
+        local t = helperFrame:CreateTexture()
+        t:SetAllPoints()
+        t:SetColorTexture(0,1,0,0.25)
+        helperFrame.texture = t
+        helperFrame.texture:Hide()
+
+        Main.helperFrames[helperFrame] = {frameString = "MinimapCluster"}
+        minimapHelperFrameList[frameString] = helperFrame
     end
-    tinsert(frameList, minimapHelperFrame)
+    tinsert(frameList, helperFrame)
 
     Main.framesThatToggleVisibility[minimapFrame] = {threshold = 0.1}
 
@@ -271,11 +280,42 @@ local ADDON_FRAME_MAPPING = {
         end
     },
     {
-        name = "EllesmereUI",
-        isLoaded = function() return C_AddOns.IsAddOnLoaded("EllesmereUI") end,
+        name = "EllesmereUI_ObjectivesTracker",
+        isLoaded = function()
+                local isLoaded = false
+                if EllesmereUI and C_AddOns.IsAddOnLoaded("EllesmereUIBasics") then
+                    for _, info in ipairs(EllesmereUI.Lite._dbRegistry) do
+                        if info.folder == "EllesmereUIBasics" then
+                            isLoaded = info.profile.questTracker.enabled
+                            break
+                        end
+                    end
+                end
+                return isLoaded
+            end,
         frames = {
             ObjectiveTrackerFrame = {"EUI_QuestTrackerFrame"},
         },
+        args = {forceAlpha = true},
+    },
+    {
+        name = "EllesmereUI_Minimap",
+        isLoaded = function()
+                local isLoaded = false
+                if EllesmereUI and C_AddOns.IsAddOnLoaded("EllesmereUIBasics") then
+                    for _, info in ipairs(EllesmereUI.Lite._dbRegistry) do
+                        if info.folder == "EllesmereUIBasics" then
+                            isLoaded = info.profile.minimap.enabled
+                            break
+                        end
+                    end
+                end
+                return isLoaded
+            end,
+        frames = {
+            MinimapCluster = {},
+        },
+        customGetter = function() return MINIMAPCLUSTER_CUSTOMGETTER("Minimap") end,
         args = {forceAlpha = true},
     },
     {
@@ -582,9 +622,21 @@ local function CheckForAddOnStrings(frameString, addonInfo)
     return {frameObject}, args
 end
 
+local function GetAddonLoadedState(addonName, addonInfo)
+    local isLoaded = addonLoadedStates[addonName]
+
+    if isLoaded == nil then
+        isLoaded = addonInfo:isLoaded()
+        addonLoadedStates[addonName] = isLoaded
+    end
+
+    return isLoaded
+end
+
 local function CheckForAddOnFrames(frameString, groupDB)
     for addonName, addonInfo in ipairs(ADDON_FRAME_MAPPING) do
-        if addonInfo:isLoaded() then
+        local isLoaded = GetAddonLoadedState(addonName, addonInfo)
+        if isLoaded then
             local frameList, args
 
             frameList, args = CheckForAddOnStrings(frameString, addonInfo)
@@ -776,6 +828,7 @@ local function HasFrames(frameList)
 end
 
 local function HandleAllGroupFrames(dbIndex, groupDB)
+    wipe(addonLoadedStates)
     local commonFrames = GetAllCommonFrames(groupDB)
     local customFrames = GetAllCustomFrames(groupDB)
 

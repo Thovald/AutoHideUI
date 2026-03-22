@@ -564,10 +564,15 @@ end
 
 local function OnLogin()
     -- deferred to ensure all AddOn frames have been created.
-    C_Timer.After(1, function()
+    C_Timer.After(3, function()
         InitDB()
         InitOptions()
         InitAddon()
+    end)
+
+    -- on very slow logins minimap pins don't remain hidden.
+    C_Timer.After(10, function()
+        Fading.UpdateAllFrameVisibility()
     end)
 end
 

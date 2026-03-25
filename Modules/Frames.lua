@@ -77,6 +77,10 @@ local function BARTENDER_CUSTOMGETTER(frameString)
             bar = {"BT4BarPetBar"},
             firstButton = {"BT4PetButton1"},
         },
+        StanceBar = {
+            bar = {"BT4BarStanceBar"},
+            firstButton = {"BT4StanceButton1"},
+        },
         MicroMenu = {
             bar = {"BT4BarMicroMenu"},
             firstButton = {"CharacterMicroButton"},
@@ -180,7 +184,7 @@ local ADDON_FRAME_MAPPING = {
             MultiBar5 = {},
             MultiBar6 = {},
             MultiBar7 = {},
-            -- StanceBar = {"DominosFrameclass"},
+            StanceBar = {},
             PetActionBar = {},
             MicroMenu = {},
             BagsBar = {},
@@ -190,7 +194,7 @@ local ADDON_FRAME_MAPPING = {
         args = {forceAlpha = true},
     },
     {
-        name = "ElvUI",
+        name = "ElvUI_XpBar",
         isLoaded = function() return ElvUI and ElvUI[1] and ElvUI[1].db and ElvUI[1].DataBars and ElvUI[1].DataBars.db and ElvUI[1].DataBars.db.experience and ElvUI[1].DataBars.db.experience.enable end,
         frames = {
             MainStatusTrackingBarContainer = {"ElvUI_ExperienceBarHolder"},
@@ -198,7 +202,7 @@ local ADDON_FRAME_MAPPING = {
         args = {},
     },
     {
-        name = "ElvUI",
+        name = "ElvUI_Minimap",
         isLoaded = function() return ElvUI and ElvUI[1] and ElvUI[1]:GetModule("Minimap") and ElvUI[1]:GetModule("Minimap").Initialized end,
         frames = {
             MinimapCluster = {},
@@ -214,7 +218,7 @@ local ADDON_FRAME_MAPPING = {
         end,
     },
     {
-        name = "ElvUI",
+        name = "ElvUI_PlayerAuras",
         isLoaded = function() return ElvUI and ElvUI[1] and ElvUI[1]:GetModule("Auras") and ElvUI[1]:GetModule("Auras").Initialized end,
         frames = {
             BuffFrame = {"ElvUIPlayerBuffs"},
@@ -223,7 +227,7 @@ local ADDON_FRAME_MAPPING = {
         args = {},
     },
     {
-        name = "ElvUI",
+        name = "ElvUI_UnitFrames",
         isLoaded = function() return ElvUI and ElvUI[1] and ElvUI[1]:GetModule("UnitFrames") and ElvUI[1]:GetModule("UnitFrames").Initialized end,
         frames = {
             PlayerFrame = {"ElvUF_Player"},
@@ -236,7 +240,7 @@ local ADDON_FRAME_MAPPING = {
         args = {forceAlpha = true},
     },
     {
-        name = "ElvUI",
+        name = "ElvUI_ActionBars",
         isLoaded = function() return ElvUI and ElvUI[1] and ElvUI[1]:GetModule("ActionBars") and ElvUI[1]:GetModule("ActionBars").Initialized end,
         frames = {
             MainActionBar = {"ElvUI_Bar1", "ElvUI_Bar2", "ElvUI_Bar7", "ElvUI_Bar8", "ElvUI_Bar9", "ElvUI_Bar10"}, -- stealth and shapeshift bars
@@ -350,17 +354,17 @@ local ADDON_FRAME_MAPPING = {
         },
         args = {forceAlpha = true},
     },
-    {
-        name = "EllesmereUI_CDM",
-        isLoaded = function() return C_AddOns.IsAddOnLoaded("EllesmereUICooldownManager") end,
-        frames = {
-            EssentialCooldownViewer = {"ECME_CDMBar_cooldowns"},
-            UtilityCooldownViewer = {"ECME_CDMBar_utility"},
-            BuffIconCooldownViewer = {"ECME_CDMBar_buffs"},
-            BuffBarCooldownViewer = {"ECME_CDMBar_buffs"},
-        },
-        args = {forceAlpha = true},
-    },
+    -- {
+    --     name = "EllesmereUI_CDM",
+    --     isLoaded = function() return C_AddOns.IsAddOnLoaded("EllesmereUICooldownManager") end,
+    --     frames = {
+    --         EssentialCooldownViewer = {"ECME_CDMBar_cooldowns"},
+    --         UtilityCooldownViewer = {"ECME_CDMBar_utility"},
+    --         BuffIconCooldownViewer = {"ECME_CDMBar_buffs"},
+    --         BuffBarCooldownViewer = {"ECME_CDMBar_buffs"},
+    --     },
+    --     args = {forceAlpha = true},
+    -- },
     {
         name = "EllesmereUI_ResourceBars",
         isLoaded = function() return C_AddOns.IsAddOnLoaded("EllesmereUIResourceBars") end,

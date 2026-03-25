@@ -56,7 +56,6 @@ L["Damage Meter"] = true
 L["Minimap"] = true
 L["Experience Bar"] = true
 
-
 -- tab: fade behavior
 L["tab_fadeSetup"] = "Fade Settings"
 L["group_fadeAnimation"] = "Fade Animation"
@@ -156,7 +155,7 @@ L["descr_mouseover"] = "Should this only respond to mousing over Frames of this 
 
 L["description_priority"] = "The Alpha of active Priority Conditions always wins out against the Alpha of normal Conditions".."|n|n"..
                             "For example, if the 'Instance' Condition is a priority and its Alpha is 0, your Frames will fade out when you're in a Dungeon.".."|n|n"..
-                            "Even when Combat or Mouseover want to set it to 1, it will remain at 0.".."|n|n"..
-                            "Only another Priority Condition can fight this 'Instance' Condition on the Alpha.".."|n|n"..
+                            "Even when 'Combat' or 'Mouseover' want to set it to 1, it will remain at 0.".."|n|n"..
+                            "Only another Priority Condition can now fight this 'Instance' Condition on the Alpha.".."|n|n"..
                             "You could use this to always hide your CooldownManager when in a vehicle, while having it fade normally when not in a vehicle."
-
+L["label_housing"] = "Housing/Neighborhood"

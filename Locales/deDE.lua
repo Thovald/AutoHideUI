@@ -73,7 +73,7 @@ L["descr_alphaPref"] = "Die unteren Einstellungen bestimmen für welche Alpha si
 L["dropdown_alphaPref"] = "Alpha Vorzug bei normalen Bedingungen"
 L["tooltip_alphaPref"] = "Welcher Bedingungs-Alpha-Wert gewählt werden soll wenn mehrere Bedingungen aktiv sind."
 L["dropdown_prioAlphaPref"] = "Alpha Vorzug bei Prio-Bedingungen"
-L["tooltip_prioAlphaPref"] = "Welcher Priorität-Bedingungs-Alpha-Wert gewählt werden soll wenn mehrere Priorität-Bedingungen aktiv sind."
+L["tooltip_prioAlphaPref"] = "Welcher Prioritäts-Bedingungs-Alpha-Wert gewählt werden soll wenn mehrere Prioritäts-Bedingungen aktiv sind."
 L["Highest"] = "Höchste"
 L["Lowest"] = "Niedrigste"
 
@@ -145,8 +145,20 @@ L["ffButton_confirm"] = "Auswahl übernehmen"
 L["ffButton_cancel"] = "Abbrechen"
 L["ffTitle_available"] = "Verfügbare Frames"
 L["ffTitle_howTo"] = "Anleitung"
-L["descr_ActionBar1"] = "Dieser Balken wählt ebenfalls alle eventuellen Sonder-Balken aus.".."|n|n"..
+L["descr_ActionBar1"] = "Diese Leiste wählt ebenfalls alle eventuellen Sonder-Balken aus.".."|n|n"..
                         "Falls unerwünscht, kann dieser Balken abgeschaltet und die entsprechenden Balken einzeln als Benutzerdefinierte Frames manuell eingetragen werden.".."|n|n"..
                         "Nützlich etwa wenn diese Sonder-Balken einer anderen Gruppe zugewiesen werden sollen."
+
+L["dropdown_mouseover"] = "Auslöser"
+L["dropdownOption_mouseover1"] = "nur diese Gruppierung"
+L["dropdownOption_mouseover2"] = "alle Gruppierungen"
+L["descr_mouseover"] = "Bestimmt ob nur diese oder ob alle Mouseover Ereignisse als Auslöser gelten sollen."
+
+L["description_priority"] = "Die Alpha aktiver Prioritäts-Bedingungen hat immer Vorrang gegenüber normalen Bedingungen.".."|n|n"..
+                            "Zum Beispiel, falls die 'Instanz' Bedingung eine Priorität ist und deren Alpha auf 0 steht, würden die Frames in Dungeons immer ausblenden.".."|n|n"..
+                            "Selbst wenn 'Kampf' oder 'Mouseover' die Alpha auf 1 setzen möchten, würden die Frames ausgeblendet bleiben.".."|n|n"..
+                            "Nur eine andere Prioritäts-Bedingung kann nun die Alpha der 'Instanz' Bedingung anfechten.".."|n|n"..
+                            "Nützlich um zB den CooldownManager immer in einem Fahrzeug auszublenden, aber ansonsten wie alle anderen Frames verhalten zu lassen."
+L["label_housing"] = "Behausung/Nachbarschaft"
 
 

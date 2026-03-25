@@ -66,12 +66,12 @@ local DRUID_FORMS= {
     {}, -- user selected "None"
 }
 
-local GetTime, pairs, ipairs, max, min, C_Timer
-    = GetTime, pairs, ipairs, max, min, C_Timer
-local IsInInstance, InCombatLockdown, IsOnNeighborhoodMap, IsInsideHouse, IsMounted
-    = IsInInstance, InCombatLockdown, C_Housing.IsOnNeighborhoodMap, C_Housing.IsInsideHouse, IsMounted
-local GetShapeshiftFormID, UnitInVehicle, UnitCastingInfo, UnitChannelInfo, IsResting, IsFlying, UnitExists, UnitCanAttack
-    = GetShapeshiftFormID, UnitInVehicle, UnitCastingInfo, UnitChannelInfo, IsResting, IsFlying, UnitExists, UnitCanAttack
+local GetTime, pairs, ipairs, C_Timer
+    = GetTime, pairs, ipairs, C_Timer
+local IsInInstance, IsMounted, GetShapeshiftFormID, UnitInVehicle
+    = IsInInstance, IsMounted, GetShapeshiftFormID, UnitInVehicle
+local UnitCastingInfo, UnitChannelInfo, IsResting, IsFlying, UnitExists, UnitCanAttack
+    = UnitCastingInfo, UnitChannelInfo, IsResting, IsFlying, UnitExists, UnitCanAttack
 
 ------------------
 -- Setup
@@ -375,9 +375,11 @@ local function ConditionInteractable(canInteract)
 end
 
 local function ConditionInstance()
-    local isInInstance = IsInInstance()
-    local isHousing = IsOnNeighborhoodMap() or IsInsideHouse()
+    local isInInstance, instanceType = IsInInstance()
+    isInInstance = isInInstance or instanceType == "scenario"
+    local isHousing = instanceType == "neighborhood" or instanceType == "interior"
     UpdateConditionForAllGroups("instance", isInInstance and not isHousing)
+    UpdateConditionForAllGroups("housing", isHousing)
 end
 
 local function ConditionMouseover()

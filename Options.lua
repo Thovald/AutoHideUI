@@ -125,6 +125,19 @@ Config.CONDITION_DEFINITIONS = {
         },
     },
     {
+        name = "housing",
+        db = {
+            enabled = false,
+            alpha = 0,
+            priority = true,
+        },
+        events = {
+            "PLAYER_ENTERING_WORLD",
+            "LOADING_SCREEN_DISABLED",
+            "ZONE_CHANGED_NEW_AREA",
+        },
+    },
+    {
         name = "mouseover",
         db = {
             enabled = true,

@@ -607,7 +607,7 @@ function FrameFinder.UpdateIgnoredFrames()
     for frame, frameInfo in pairs(Main.activeFrames) do
         local isInSelectedGroup = frameInfo.group.index == selectedGroup
         local isCustomFrame = frameInfo.isCustom
-        if frameInfo.name and not isCustomFrame or not isInSelectedGroup then
+        if frameInfo.name and (not isCustomFrame or not isInSelectedGroup) then
             ignoredFrames[frameInfo.name] = {
                 ignoreFrame = true,
                 ignoreChildren = true,

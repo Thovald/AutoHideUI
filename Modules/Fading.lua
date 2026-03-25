@@ -2,6 +2,8 @@ local _, Private = ...
 local Main = Private.Main
 local Fading = Private.Fading
 
+local  max, min = max, min
+
 local FADE_QUEUE = {}
 local totalElapsed = 0
 local FADE_THROTTLE = 0.02

@@ -186,6 +186,7 @@ end
 
 local function ResetStates()
     ResetAllGroupStates()
+    isMissingHealth = false
     Fading.ResetPendingFades()
 end
 
@@ -480,7 +481,7 @@ end
 
 local function ConditionHealth()
     for _, group in ipairs(Main.activeGroups) do
-        local healthState 
+        local healthState
         if group.conditions.health.style == 1 then
             healthState = lastLowHealthVis
         else 

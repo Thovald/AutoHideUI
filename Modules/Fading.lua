@@ -128,6 +128,7 @@ end
 
 function Fading.WipeFadeQueue()
     wipe(FADE_QUEUE)
+    Main.frame:SetScript("OnUpdate", nil)
 end
 
 function Fading.SetVisibilityFromAlpha(frame, endAlpha, threshold)

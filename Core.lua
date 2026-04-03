@@ -185,6 +185,7 @@ local function CreateMouseoverLists()
 end
 
 local function ResetStates()
+    Fading.WipeFadeQueue()
     ResetAllGroupStates()
     isMissingHealth = false
     Fading.ResetPendingFades()

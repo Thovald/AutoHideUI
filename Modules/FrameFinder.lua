@@ -240,7 +240,6 @@ end
 
 local function StopAnimation(frame)
     if frame then
-        Main.frame:SetScript("OnUpdate", nil)
         Fading.WipeFadeQueue()
         frame.frame:SetAlpha(frame.alpha)
     end

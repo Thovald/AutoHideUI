@@ -389,6 +389,19 @@ local SPECIAL_FRAMES = {
             end
         end
     },
+    PartyFrame = {
+        onAdded = function()
+            if not C_AddOns.IsAddOnLoaded("BetterBlizzFrames") then return end
+            for i = 1, 5 do
+                local frame = _G["CompactPartyFrameMember" .. i]
+                if frame and frame.background then
+                    frame.background:SetIgnoreParentAlpha(false)
+                    frame.background._orig_SetIgnoreParentAlpha = frame.background.SetIgnoreParentAlpha
+                    frame.background.SetIgnoreParentAlpha = function(_, _) end
+                end
+            end
+        end
+    },
     DamageMeter = {
         customGetter = function()
             -- to add all secondary windows

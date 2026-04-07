@@ -5,6 +5,7 @@ Private.Config = {}
 Private.Frames = {}
 Private.Fading = {}
 Private.FrameFinder = {}
+Private.MouseRegions = {}
 Private.isAceHooked = false
 
 -- namespaces for functions that are called between files

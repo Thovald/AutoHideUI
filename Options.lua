@@ -635,19 +635,27 @@ local OPTIONS_TAB_FRAMES = {
                     func = function() Private.FrameFinder.Start(selectedGroup) end,
                     order = 1,
                 },
-                spacer1 = {
-                    type = "description",
-                    name = " ",
-                    width = 0.05,
-                    order = 2
+                button_mouseoverRegions = {
+                    name = L["mouseRegions"],
+                    desc = L["descr_mouseRegions"],
+                    type = "execute",
+                    width = 1,
+                    func = function() Private.MouseRegions.Start(selectedGroup) end,
+                    order = 2,
                 },
-                descr_customFrames = {
-                    type = "description",
-                    fontSize = "medium",
-                    name = L["descr_customFrames"].."|n",
-                    width = 1.95,
-                    order = 3,
-                },
+                -- spacer1 = {
+                --     type = "description",
+                --     name = " ",
+                --     width = 0.05,
+                --     order = 2
+                -- },
+                -- descr_customFrames = {
+                --     type = "description",
+                --     fontSize = "medium",
+                --     name = L["descr_customFrames"].."|n",
+                --     width = 1.95,
+                --     order = 3,
+                -- },
                 editbox_customFrames = {
                     type = "input",
                     name = "",
@@ -1209,4 +1217,32 @@ function Config.RegisterOptions()
     end
 
     SetHooksForMenus()
+end
+
+------------------
+-- Misc
+------------------
+function Config.CreateAceLikeGroup(parent, titleText, width, height)
+    local group = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    group:SetSize(width, height)
+
+    group:SetBackdrop({
+        bgFile = "Interface/Buttons/WHITE8x8",
+        edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+        tile = true,
+        tileSize = 8,
+        edgeSize = 12,
+        insets = { left = 3, right = 3, top = 3, bottom = 3 }
+    })
+
+    group:SetBackdropColor(0.1, 0.1, 0.1, 0.5)
+    group:SetBackdropBorderColor(0.4, 0.4, 0.4)
+
+    local title = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    title:SetPoint("BOTTOMLEFT", group, "TOPLEFT", 6, 3)
+    title:SetText(titleText)
+
+    group.Title = title
+
+    return group
 end

@@ -13,7 +13,9 @@ embeds.xml
 Locales/Locales.xml
 
 Core.lua
+Options.lua
 Modules\Fading.lua
 Modules\Frames.lua
 Modules\FrameFinder.lua
-Options.lua
+Modules\MouseRegions.lua
+

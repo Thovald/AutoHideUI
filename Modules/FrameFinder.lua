@@ -10,7 +10,7 @@ local L = LibStub("AceLocale-3.0"):GetLocale("AutoHideUI")
 
 local selectedGroup
 local HELPER_FRAME_POOL = {}
-local VISIBILITY_TICKER
+local VISIBILITY_TICKER -- periodically checks frame visibility to toggle helper frames
 local mouseoverFrame
 local helperFrameList = {}
 local lastVisibility = {}
@@ -627,31 +627,6 @@ end
 -- FrameFinder Window
 ------------------
 do
-    local function CreateAceLikeGroup(parent, titleText, width, height)
-        local group = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-        group:SetSize(width, height)
-
-        group:SetBackdrop({
-            bgFile = "Interface/Buttons/WHITE8x8",
-            edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-            tile = true,
-            tileSize = 8,
-            edgeSize = 12,
-            insets = { left = 3, right = 3, top = 3, bottom = 3 }
-        })
-
-        group:SetBackdropColor(0.1, 0.1, 0.1, 0.5)
-        group:SetBackdropBorderColor(0.4, 0.4, 0.4)
-
-        local title = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        title:SetPoint("BOTTOMLEFT", group, "TOPLEFT", 6, 3)
-        title:SetText(titleText)
-
-        group.Title = title
-
-        return group
-    end
-
     local frame = CreateFrame("Frame", "AutoHideUIFrameFinderFrame", UIParent, "BackdropTemplate")
     frame:SetSize(590, 300)
     frame:SetPoint("CENTER")
@@ -724,7 +699,7 @@ do
     -- Left Container
     ------------------
 
-    local leftGroup = CreateAceLikeGroup(frame, L["ffTitle_available"], 240, 228)
+    local leftGroup = Config.CreateAceLikeGroup(frame, L["ffTitle_available"], 240, 228)
     leftGroup:SetPoint("TOPLEFT", 20, -50)
 
     local scrollFrame = CreateFrame("ScrollFrame", nil, leftGroup, "UIPanelScrollFrameTemplate")
@@ -751,7 +726,7 @@ do
     -- Right Container
     ------------------
 
-    local rightGroup = CreateAceLikeGroup(frame, L["ffTitle_howTo"], 290, 190)
+    local rightGroup = Config.CreateAceLikeGroup(frame, L["ffTitle_howTo"], 290, 190)
     rightGroup:SetPoint("TOPLEFT", leftGroup, "TOPRIGHT", 20, 0)
 
 

@@ -406,7 +406,7 @@ local SPECIAL_FRAMES = {
         customGetter = function()
             -- to add all secondary windows
             local frameList = {}
-            local count = 2
+            local count = 1
             local frameString = "DamageMeterSessionWindow"..count
 
             local frameObject = Frames.GetFrameObjectFromString(frameString)

@@ -9,6 +9,16 @@ local AceConfigDialog = LibStub("AceConfigDialog-3.0")
 local L = LibStub("AceLocale-3.0"):GetLocale("AutoHideUI")
 
 local selectedGroup
+local MOUSEOVER_FRAME_POOL = {}
+
+local COLORS = {
+    bodySelected = {0.5, 1, 1, 0.4},
+    bodyUnselected = {0.5, 1, 1, 0.2},
+    borderSelected = {0.5, 1, 1, 1},
+    borderUnselected = {0.5, 1, 1, 0.5},
+    selected = {1, 1, 1},
+    unselected = {0.5, 1, 1},
+}
 
 ------------------
 -- Toggle MouseRegions Window
@@ -16,6 +26,9 @@ local selectedGroup
 
 function MouseRegions.Start(groupID)
     selectedGroup = groupID
+    if not selectedGroup then
+        return
+    end
 
     if Main.blizzFrame and Main.blizzFrame:IsVisible() then
         HideUIPanel(SettingsPanel)
@@ -26,6 +39,7 @@ function MouseRegions.Start(groupID)
     RunNextFrame(function()
         Main.SuspendAddon()
         MouseRegions:ShowWindow()
+        MouseRegions:ShowRegions()
     end)
 end
 
@@ -41,6 +55,200 @@ function MouseRegions.HideWindow()
     mrWindow:Hide()
 end
 
+------------------
+-- MouseRegion Frames
+------------------
+
+local function HighlightFrame(self, show)
+    if show then
+        self.border:SetVertexColor(unpack(COLORS.borderSelected))
+        self.fg:Show()
+    else
+        self.border:SetVertexColor(unpack(COLORS.borderUnselected))
+        self.fg:Hide()
+    end
+end
+
+local function OnMouseDown(self)
+    --FrameFinder:SelectFrame(self)
+end
+
+local function UpdateRegionDB(frame)
+    local db = Private.db.profile[selectedGroup].mouseRegions[frame.index]
+
+    if not db then
+        return
+    end
+
+    local w,h = frame:GetSize()
+    local point,_,relativePoint,x,y = frame:GetPoint()
+
+    db.width = w
+    db.height = h
+    db.point = point
+    db.relativePoint = relativePoint
+    db.xOffset = x
+    db.yOffset = y
+end
+
+local function AddRegionToDB(frame)
+    local db = Private.db.profile[selectedGroup].mouseRegions
+
+    local regionData = {
+        width = frame:GetWidth(),
+        height = frame:GetHeight(),
+        point = "CENTER",
+        relativePoint = "CENTER",
+        xOffset = 0,
+        yOffset = 0,
+    }
+
+    table.insert(db, regionData)
+
+    frame.index = #db
+end 
+
+local CreateMouseoverFrame = function()
+    local f = CreateFrame("Frame", nil, UIParent)
+    f:SetPoint("CENTER")
+    f:SetFrameStrata("HIGH")
+    local b = CreateFrame ("Frame", nil, f, "NamePlateFullBorderTemplate")
+    b:SetVertexColor(unpack(COLORS.borderUnselected))
+    f.border = b
+    local fg = f:CreateTexture()
+    fg:SetColorTexture(unpack(COLORS.bodySelected))
+    fg:SetAllPoints()
+    fg:Hide()
+    f.fg = fg
+    local bg = f:CreateTexture()
+    bg:SetColorTexture(unpack(COLORS.bodyUnselected))
+    bg:SetAllPoints()
+    f.bg = bg
+
+    f:EnableMouseMotion(true)
+    f:SetClampedToScreen(true)
+    f:SetScript("OnEnter", function(self) HighlightFrame(self, true) end )
+    f:SetScript("OnLeave", function(self) HighlightFrame(self, false) end )
+    f:SetScript("OnMouseDown", function(self) OnMouseDown(self) end)
+
+    -- dragging
+    f:RegisterForDrag("LeftButton")
+    f:SetMovable(true)
+    f:SetScript("OnDragStart", function(self) self:StartMoving() end)
+    f:SetScript("OnDragStop", function(self)
+        self:StopMovingOrSizing()
+        UpdateRegionDB(self)
+    end)
+
+    -- resizing
+    f:SetResizeBounds(50, 50)
+    f:SetResizable(true)
+
+    local resizeButtonContainer = CreateFrame("Frame", nil, f)
+    resizeButtonContainer:SetAllPoints()
+    f.resizeButtons = resizeButtonContainer
+
+    local resizeButtonMapping = {
+        { point = "BOTTOMRIGHT", name = "br", rotation = 0, tex = "resizeCorner"},
+        { point = "BOTTOMLEFT", name = "bl", rotation = 3 * math.pi / 2, tex = "resizeCorner"},
+        { point = "TOPLEFT", name = "tl", rotation = math.pi, tex = "resizeCorner"},
+        { point = "TOPRIGHT", name = "tr", rotation = math.pi / 2, tex = "resizeCorner"},
+        { point = "BOTTOM", name = "b", rotation = math.pi, anchors = {"BOTTOMLEFT", "BOTTOMRIGHT", "bl", "TOPRIGHT", "TOPLEFT", "br"}, tex = "resizeEdgeH"},
+        { point = "TOP", name = "t", rotation = 0, anchors = {"TOPLEFT", "TOPRIGHT", "tl", "BOTTOMRIGHT", "BOTTOMLEFT", "tr"}, tex = "resizeEdgeH"},
+        { point = "LEFT", name = "l", rotation = math.pi, anchors = {"BOTTOMLEFT", "TOPLEFT", "bl", "TOPRIGHT", "BOTTOMRIGHT", "tl"}, tex = "resizeEdgeV" },
+        { point = "RIGHT", name = "r", rotation = 0, anchors = {"BOTTOMRIGHT", "TOPRIGHT", "br", "TOPLEFT", "BOTTOMLEFT", "tr"}, tex = "resizeEdgeV" },
+    }
+
+    for _, info in ipairs(resizeButtonMapping) do
+        local btn = CreateFrame("Button", nil, resizeButtonContainer)
+        if info.anchors then
+            local relativeTo1 = resizeButtonContainer[info.anchors[3]]
+            local relativeTo2 = resizeButtonContainer[info.anchors[6]]
+            btn:SetPoint(info.anchors[1], relativeTo1, info.anchors[2], 0, 0)
+            btn:SetPoint(info.anchors[4], relativeTo2, info.anchors[5], 0, 0)
+        else
+            btn:SetPoint(info.point)
+            btn:SetSize(20,20)
+        end
+        btn:SetNormalTexture("Interface\\AddOns\\AutoHideUI\\Media\\"..info.tex..".tga")
+        btn:SetHighlightTexture("Interface\\AddOns\\AutoHideUI\\Media\\"..info.tex.."_highlight.tga")
+        btn:SetPushedTexture("Interface\\AddOns\\AutoHideUI\\Media\\"..info.tex.."_pressed.tga")
+
+        local normalTex = btn:GetNormalTexture()
+        normalTex:SetRotation(info.rotation)
+        normalTex:SetVertexColor(unpack(COLORS.unselected))
+
+        local highlightTex = btn:GetHighlightTexture()
+        highlightTex:SetRotation(info.rotation)
+        highlightTex:SetVertexColor(unpack(COLORS.unselected))
+
+        local pushedTex = btn:GetPushedTexture()
+        pushedTex:SetRotation(info.rotation)
+        pushedTex:SetVertexColor(unpack(COLORS.unselected))
+
+        btn:SetScript("OnMouseDown", function(self)
+            f:StartSizing(info.point)
+        end)
+
+        btn:SetScript("OnMouseUp", function(self)
+            f:StopMovingOrSizing()
+            UpdateRegionDB(f)
+        end)
+        resizeButtonContainer[info.name] = btn
+    end
+
+    return f
+end
+
+local function GetNextFrame()
+    local frame
+    for i, f in ipairs(MOUSEOVER_FRAME_POOL) do
+        if not f.isInUse then
+            frame = f
+            break
+        end
+    end
+
+    if not frame then
+        frame = CreateMouseoverFrame()
+        tinsert(MOUSEOVER_FRAME_POOL, frame)
+    end
+
+    frame.selected = false
+    frame.isInUse = true
+
+    return frame
+end
+
+function MouseRegions:CreateRegion()
+    local frame = GetNextFrame()
+    frame:SetPointsOffset(0, -200)
+    frame:SetSize(200,200)
+    frame:Show()
+    AddRegionToDB(frame)
+end
+
+function MouseRegions:DeleteRegion()
+
+end
+
+
+function MouseRegions:ShowRegions()
+    local db = Private.db.profile[selectedGroup].mouseRegions
+
+    if not db then
+        return
+    end
+
+    for i, regionData in ipairs(db) do
+        local frame = GetNextFrame()
+        frame:ClearAllPoints()
+        frame:SetSize(regionData.width, regionData.height)
+        frame:SetPoint(regionData.point, UIParent, regionData.relativePoint, regionData.xOffset, regionData.yOffset)
+        frame:Show()
+        frame.index = i
+    end
+end
 
 ------------------
 -- MouseRegions Window
@@ -138,7 +346,7 @@ do
     createButton:SetText(L["button_create"])
 
     createButton:SetScript("OnClick", function()
-        --FrameFinder:ConfirmSelection()
+        MouseRegions:CreateRegion()
     end)
 
     local renameButton = CreateFrame("Button", nil, leftGroup, "UIPanelButtonTemplate")
@@ -156,7 +364,7 @@ do
     deleteButton:SetText(L["button_delete"])
 
     renameButton:SetScript("OnClick", function()
-        --FrameFinder:Cancel()
+        MouseRegions:DeleteRegion()
     end)
 
     ------------------

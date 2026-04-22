@@ -304,6 +304,7 @@ local GROUP_TEMPLATE = {
         forceAlpha = true,
     },
     states = {},
+    mouseRegions = {},
 }
 
 local ALPHA_PREF = {
@@ -1119,6 +1120,12 @@ function Config.CheckGroupsForMissingEntries(defaultGroup)
     -- ensuring new conditions or new sub-options for existing conditions are added to user profile.
     -- AceDB will not handle additional groups the user may have created, so we have to.
     for _, group in ipairs(Private.db.profile) do
+        for k,v in pairs(defaultGroup) do
+            if not group[k] then
+                group[k] = CopyTable(v)
+            end
+        end
+
         for conditionName, conditionInfo in pairs(defaultGroup.conditions) do
             if not group.conditions[conditionName] then
                 group.conditions[conditionName] = CopyTable(conditionInfo)

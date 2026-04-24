@@ -268,6 +268,7 @@ Config.CONDITION_DEFINITIONS = {
         events = {
             "UNIT_ENTERED_VEHICLE",
             "UNIT_EXITED_VEHICLE",
+            "UPDATE_OVERRIDE_ACTIONBAR"
         },
     },
 

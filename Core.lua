@@ -68,8 +68,8 @@ local DRUID_FORMS= {
 
 local GetTime, pairs, ipairs, C_Timer
     = GetTime, pairs, ipairs, C_Timer
-local IsInInstance, IsMounted, GetShapeshiftFormID, UnitInVehicle
-    = IsInInstance, IsMounted, GetShapeshiftFormID, UnitInVehicle
+local IsInInstance, IsMounted, GetShapeshiftFormID, UnitInVehicle, HasOverrideActionBar
+    = IsInInstance, IsMounted, GetShapeshiftFormID, UnitInVehicle, C_ActionBar.HasOverrideActionBar
 local UnitCastingInfo, UnitChannelInfo, IsResting, IsFlying, UnitExists, UnitCanAttack
     = UnitCastingInfo, UnitChannelInfo, IsResting, IsFlying, UnitExists, UnitCanAttack
 
@@ -526,7 +526,7 @@ local function CheckMissingHealthChange()
 end
 
 local function ConditionVehicle()
-    UpdateConditionForAllGroups("inVehicle", UnitInVehicle("player"))
+    UpdateConditionForAllGroups("inVehicle", UnitInVehicle("player") or HasOverrideActionBar())
 end
 
 local function ConditionCasting(castState)
@@ -674,6 +674,11 @@ local function OnVehicleChange()
     Fading.FadeAllGroups()
 end
 
+local function OnActionbarChange()
+    ConditionVehicle()
+    Fading.FadeAllGroups()
+end
+
 local function OnHealthChange(unit)
     if unit ~= "player" then
         return
@@ -747,6 +752,7 @@ local EVENT_HANDLER = {
     PLAYER_IS_GLIDING_CHANGED = OnGlideChange,
     UNIT_ENTERED_VEHICLE = OnVehicleChange,
     UNIT_EXITED_VEHICLE = OnVehicleChange,
+    UPDATE_OVERRIDE_ACTIONBAR = OnActionbarChange,
     UNIT_HEALTH = OnHealthChange,
     UNIT_MAXHEALTH = OnMaxHealthChange,
     UNIT_MAX_HEALTH_MODIFIERS_CHANGED = OnMaxHealthModifierChange,

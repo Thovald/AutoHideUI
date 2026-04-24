@@ -354,17 +354,16 @@ local ADDON_FRAME_MAPPING = {
         },
         args = {forceAlpha = true},
     },
-    -- {
-    --     name = "EllesmereUI_CDM",
-    --     isLoaded = function() return C_AddOns.IsAddOnLoaded("EllesmereUICooldownManager") end,
-    --     frames = {
-    --         EssentialCooldownViewer = {"ECME_CDMBar_cooldowns"},
-    --         UtilityCooldownViewer = {"ECME_CDMBar_utility"},
-    --         BuffIconCooldownViewer = {"ECME_CDMBar_buffs"},
-    --         BuffBarCooldownViewer = {"ECME_CDMBar_buffs"},
-    --     },
-    --     args = {forceAlpha = true},
-    -- },
+    {
+        name = "EllesmereUI_CDM",
+        isLoaded = function() return C_AddOns.IsAddOnLoaded("EllesmereUICooldownManager") end,
+        frames = {
+            EssentialCooldownViewer = {"ECME_CDMBar_cooldowns"},
+            UtilityCooldownViewer = {"ECME_CDMBar_utility"},
+            BuffIconCooldownViewer = {"ECME_CDMBar_buffs"},
+        },
+        args = {forceAlpha = true, includeDefaultFrames = true},
+    },
     {
         name = "EllesmereUI_ResourceBars",
         isLoaded = function() return C_AddOns.IsAddOnLoaded("EllesmereUIResourceBars") end,
@@ -668,6 +667,13 @@ local function CheckForAddOnFrames(frameString, groupDB)
             else
                 frameList = GetAddOnFrames(addonInfo.frames[frameString])
                 args = CopyTable(addonInfo.args)
+            end
+
+            if frameList and args.includeDefaultFrames then
+                local defaultFrame = Frames.GetFrameObjectFromString(frameString)
+                if defaultFrame then
+                    tinsert(frameList, defaultFrame)
+                end
             end
 
             if frameList then

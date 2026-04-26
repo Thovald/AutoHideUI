@@ -347,7 +347,7 @@ local ADDON_FRAME_MAPPING = {
         name = "EllesmereUI_UnitFrames",
         isLoaded = function() return C_AddOns.IsAddOnLoaded("EllesmereUIUnitFrames") end,
         frames = {
-            PlayerFrame = {"EllesmereUIUnitFrames_Player", "ERB_PrimaryBar", "ERB_SecondaryFrame", "EllesmereUIResourceBarsFrame"},
+            PlayerFrame = {"EllesmereUIUnitFrames_Player"},
             TargetFrame = {"EllesmereUIUnitFrames_Target", "EllesmereUIUnitFrames_TargetTarget"},
             FocusFrame = {"EllesmereUIUnitFrames_Focus", "EllesmereUIUnitFrames_FocusTarget"},
             PetFrame = {"EllesmereUIUnitFrames_Pet"},
@@ -365,10 +365,72 @@ local ADDON_FRAME_MAPPING = {
         args = {forceAlpha = true, includeDefaultFrames = true},
     },
     {
-        name = "EllesmereUI_ResourceBars",
+        name = "EllesmereUI_PlayerCastBar",
         isLoaded = function() return C_AddOns.IsAddOnLoaded("EllesmereUIResourceBars") end,
         frames = {
             PlayerCastingBarFrame = {"ERB_CastBar"},
+        },
+        args = {forceAlpha = true},
+    },
+    {
+        name = "EllesmereUI_ResourceBars",
+        isLoaded = function() return C_AddOns.IsAddOnLoaded("EllesmereUIResourceBars") end,
+        frames = {
+            PersonalResourceDisplayFrame = {},
+        },
+        customGetter = function()
+            local frameList = {}
+
+            for _,frameString in pairs({"ERB_PrimaryBar", "ERB_SecondaryFrame", "EllesmereUIResourceBarsFrame"}) do
+                local frame = Frames.GetFrameObjectFromString(frameString)
+                if frame then
+                    tinsert(frameList, frame)
+                end
+            end
+
+            return frameList
+        end,
+        args = {forceAlpha = true, includeDefaultFrames = true},
+    },
+    {
+        name = "BasicMinimap",
+        isLoaded = function() return C_AddOns.IsAddOnLoaded("BasicMinimap") end,
+        frames = {
+            MinimapCluster = {},
+        },
+        args = {},
+        customGetter = function()
+            local frameList = MINIMAPCLUSTER_CUSTOMGETTER("Minimap")
+            return frameList
+        end,
+    },
+    {
+        name = "AyijeCDM_ResourceBars",
+        isLoaded = function() return C_AddOns.IsAddOnLoaded("Ayije_CDM") end,
+        frames = {
+            PersonalResourceDisplayFrame = {},
+        },
+        customGetter = function()
+            local Ayije_CDM = _G["Ayije_CDM"]
+            local frameList = {}
+
+            if not Ayije_CDM or not Ayije_CDM.resourceBars then
+                return frameList
+            end
+
+            for _,frame in pairs(Ayije_CDM.resourceBars) do
+                tinsert(frameList, frame)
+            end
+
+            return frameList
+        end,
+        args = {forceAlpha = true, includeDefaultFrames = true},
+    },
+    {
+        name = "DandersFrames",
+        isLoaded = function() return C_AddOns.IsAddOnLoaded("DandersFrames") end,
+        frames = {
+            PartyFrame = {"DandersFramesContainer"},
         },
         args = {forceAlpha = true},
     },

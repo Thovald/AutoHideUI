@@ -161,4 +161,6 @@ L["description_priority"] = "Die Alpha aktiver Prioritäts-Bedingungen hat immer
                             "Nützlich um zB den CooldownManager immer in einem Fahrzeug auszublenden, aber ansonsten wie alle anderen Frames verhalten zu lassen."
 L["label_housing"] = "Behausung/Nachbarschaft"
 
+L["Personal Resource"] = "Persönliche Ressourcen"
+
 

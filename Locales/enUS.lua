@@ -159,3 +159,5 @@ L["description_priority"] = "The Alpha of active Priority Conditions always wins
                             "Only another Priority Condition can now fight this 'Instance' Condition on the Alpha.".."|n|n"..
                             "You could use this to always hide your CooldownManager when in a vehicle, while having it fade normally when not in a vehicle."
 L["label_housing"] = "Housing/Neighborhood"
+
+L["Personal Resource"] = true

@@ -79,6 +79,7 @@ Config.DEFAULT_FRAMES = {
     { frame = "BuffBarCooldownViewer", label = L["CDManager Bars"], enabled = true },
     { frame = "BuffFrame", label = L["Buff Frame"], enabled = false },
     { frame = "DebuffFrame", label = L["Debuff Frame"], enabled = false },
+    { frame = "PersonalResourceDisplayFrame", label = L["Personal Resource"], enabled = true },
     -- other
     { frame = "DamageMeter", label = L["Damage Meter"], enabled = true },
     { frame = "MinimapCluster", label = L["Minimap"], enabled = false , description = L["descr_Minimap"]},
@@ -983,7 +984,7 @@ end
 local function SetupFrameSelection()
     local path = OPTIONS_MENU.args.setup.args.tabFrames.args.group_defaultFrames.args
 
-    local spacerLocation = {PlayerCastingBarFrame = true, PetActionBar = true, DebuffFrame = true}
+    local spacerLocation = {PlayerCastingBarFrame = true, PetActionBar = true, PersonalResourceDisplayFrame = true}
     local order = 1
     local spacerCount = 1
 

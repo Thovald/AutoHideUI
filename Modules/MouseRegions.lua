@@ -69,7 +69,7 @@ local function HighlightFrame(self, show)
     end
 end
 
-local function OnMouseDown(self)
+local function OnMouseDown(self, button)
     --FrameFinder:SelectFrame(self)
 end
 
@@ -129,12 +129,15 @@ local CreateMouseoverFrame = function()
     f:SetClampedToScreen(true)
     f:SetScript("OnEnter", function(self) HighlightFrame(self, true) end )
     f:SetScript("OnLeave", function(self) HighlightFrame(self, false) end )
-    f:SetScript("OnMouseDown", function(self) OnMouseDown(self) end)
+    f:SetScript("OnMouseDown", function(self, button) OnMouseDown(self, button) end)
 
     -- dragging
     f:RegisterForDrag("LeftButton")
+    f:EnableMouse(true)
     f:SetMovable(true)
-    f:SetScript("OnDragStart", function(self) self:StartMoving() end)
+    f:SetScript("OnDragStart", function(self)
+        self:StartMoving()
+    end)
     f:SetScript("OnDragStop", function(self)
         self:StopMovingOrSizing()
         UpdateRegionDB(self)
@@ -187,7 +190,7 @@ local CreateMouseoverFrame = function()
         pushedTex:SetVertexColor(unpack(COLORS.unselected))
 
         btn:SetScript("OnMouseDown", function(self)
-            f:StartSizing(info.point)
+            f:StartSizing(info.point, true)
         end)
 
         btn:SetScript("OnMouseUp", function(self)
@@ -243,10 +246,16 @@ function MouseRegions:ShowRegions()
     for i, regionData in ipairs(db) do
         local frame = GetNextFrame()
         frame:ClearAllPoints()
-        frame:SetSize(regionData.width, regionData.height)
+        local width = math.max(regionData.width or 200, 50)
+        local height = math.max(regionData.height or 200, 50)
+        frame:SetSize(width, height)
         frame:SetPoint(regionData.point, UIParent, regionData.relativePoint, regionData.xOffset, regionData.yOffset)
         frame:Show()
         frame.index = i
+        -- Update DB with clamped size if it was changed
+        if width ~= (regionData.width or 200) or height ~= (regionData.height or 200) then
+            UpdateRegionDB(frame)
+        end
     end
 end
 

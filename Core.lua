@@ -158,7 +158,7 @@ local function GetGroupsForMouseoverFrame(frameGroup, globalGroups)
     return groupList
 end
 
-local function CreateMouseoverLists()
+function Main.CreateMouseoverLists()
     wipe(mouseoverFrames)
     wipe(mouseoverGroups)
     local globalGroups = {}
@@ -182,6 +182,10 @@ local function CreateMouseoverLists()
         end
     end
 
+end
+
+function Main.GetMouseoverFrames()
+    return mouseoverFrames
 end
 
 local function ResetStates()
@@ -219,7 +223,7 @@ local function InitAddon()
     Frames.InitFrames()
     Fading.ResetPendingFades()
     RegisterAllEvents()
-    CreateMouseoverLists()
+    Main.CreateMouseoverLists()
     internal.CreateMouseoverTicker()
     internal.UpdateAllConditions()
     Fading.SetAllAlpha()

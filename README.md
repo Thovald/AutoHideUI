@@ -39,7 +39,7 @@ And have that one ActionBar with toys and mounts only fade in when you mouse ove
 
 <h2><font color="83d2ff">Supports other AddOns:</font></h2>
 
-Supports <b>ElvUI</b>, <b>EllesmereUI</b>, <b>Unhalted Unit Frames</b>, <b>Details</b>, <b>Bartender</b> and <b>Dominos</b>.<br>
+Supports <b>ElvUI</b>, <b>EllesmereUI</b>, <b>Unhalted Unit Frames</b>, <b>Danders Frames</b>, <b>Ayije CDM</b>, <b>Details</b>, <b>Bartender</b> and <b>Dominos</b>.<br>
 Will automatically detect and use their Frames over the default Blizzard ones.<br>
 <br>
 There is a setting in the "Fade Settings" tab to override the Alpha of these AddOns. It's enabled by default.<br>

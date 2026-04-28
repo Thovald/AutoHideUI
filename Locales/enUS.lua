@@ -160,9 +160,12 @@ L["description_priority"] = "The Alpha of active Priority Conditions always wins
                             "You could use this to always hide your CooldownManager when in a vehicle, while having it fade normally when not in a vehicle."
 L["label_housing"] = "Housing/Neighborhood"
 
+L["Personal Resource"] = true
+
 L["mouseRegions"] = "Mouseover Regions"
 L["descr_mouseRegions"] = "Create custom regions that can trigger a mouseover event."
 L["button_close"] = "Close"
+
 
 
 

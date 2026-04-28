@@ -2,10 +2,10 @@
 
 <h3><font color="83ff94">Notable recent changes:</font></h3>
 
-- Added support for EllesmereUI and Bartender.
-- New Frame Finder tool to find and add Custom Frames more easily.
-- The Mouseover Condition can now respond to mouseover events of other Groups as well.<br>
-Configure it in the Conditions. By default it only responds to events from its own Group.
+- Added option for Personal Resource Display.<br>
+Includes support for ResourceBars for Ayije_CDM and EllesmereUI.<br>
+- Added support for BasicMinimap.<br>
+- Added support for DandersFrames.<br>
 ___
 <br>
 <h2><font color="83d2ff">What this does:</font></h2>
@@ -39,7 +39,7 @@ And have that one ActionBar with toys and mounts only fade in when you mouse ove
 
 <h2><font color="83d2ff">Supports other AddOns:</font></h2>
 
-Supports <b>ElvUI</b>, <b>EllesmereUI</b>, <b>Unhalted Unit Frames</b>, <b>Details</b>, <b>Bartender</b> and <b>Dominos</b>.<br>
+Supports <b>ElvUI</b>, <b>EllesmereUI</b>, <b>Unhalted Unit Frames</b>, <b>Danders Frames</b>, <b>Ayije CDM</b>, <b>Details</b>, <b>Bartender</b> and <b>Dominos</b>.<br>
 Will automatically detect and use their Frames over the default Blizzard ones.<br>
 <br>
 There is a setting in the "Fade Settings" tab to override the Alpha of these AddOns. It's enabled by default.<br>

@@ -453,7 +453,7 @@ local ADDON_FRAME_MAPPING = {
             UtilityCooldownViewer = {"ECME_CDMBar_utility"},
             BuffIconCooldownViewer = {"ECME_CDMBar_buffs"},
         },
-        args = {forceAlpha = true, includeDefaultFrames = true},
+        args = {forceAlpha = true, includeDefaultFrames = true, forceAlphaDefault = true},
     },
     {
         name = "EllesmereUI_PlayerCastBar",
@@ -526,6 +526,16 @@ local ADDON_FRAME_MAPPING = {
 
             for _, frame in ipairs(frameList) do
                 DYNAMIC_ADDON_FRAMES["AyijeCDM_ResourceBars"].knownFrames[frame] = true
+            end
+
+            -- this is for the border when the option to wrap resource bars is checked
+            for _, v in pairs(Ayije_CDM.resourceUnifiedHosts) do
+                tinsert(frameList, v.host)
+                if v.hSeparators then
+                    for _, separator in pairs(v.hSeparators) do
+                        tinsert(frameList, separator)
+                    end
+                end
             end
 
             return frameList

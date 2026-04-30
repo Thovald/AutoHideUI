@@ -103,7 +103,7 @@ L["descr_health"] = "Aufgrund von AddOn-Beschränkungen beruht dies auf provisor
                     "Benötigt, dass die folgende Blizzard-Option ausgeschaltet ist:|n"..
                     "'Bildschirm bei niedriger Gesundheit nicht aufleuchten lassen'."..
                     "|n|n"..
-                    "Bei fehlender Gesundheit:".."|n"..
+                    "Wenn verletzt:".."|n"..
                     "Funktioniert durch die Überwachung von Gesundheitsereignissen.|n"..
                     "Kein Ereignis für 3sec wird als volle Gesundheit interpretiert."
 L["dropdown_druidForms"] = "Einschl. Druidenformen"
@@ -113,9 +113,11 @@ L["dropdownOption_druid3"] = "Keine"
 
 L["chatCommands"] = "Chat Befehle:"
 
-L["dropdown_health"] = "Zeige ..."
-L["dropdownOption_health1"] = "bei unter 35% Gesundheit"
-L["dropdownOption_health2"] = "bei fehlender Gesundheit"
+L["dropdown_health"] = "Zeige wenn ..."
+L["dropdownOption_health1"] = "unter 35% Gesundheit"
+L["dropdownOption_health2"] = "Spieler verletzt"
+L["dropdownOption_health3"] = "Party verletzt"
+L["dropdownOption_health4"] = "Spieler/Party verletzt"
 L["label_flying"] = "Beim Fliegen"
 L["dropdown_flightStyle"] = "Flug Stil"
 L["dropdownOption_flight1"] = "Nur Himmelsreiten"

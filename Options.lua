@@ -781,12 +781,6 @@ local OPTIONS_TAB_CONDITIONS = {
             fontSize = "medium",
             order = 5,
         },
-        -- descrPrioConditions = {
-        --     type = "description",
-        --     name = "|n"..L["descr_prioConditions"].."|n|n",
-        --     fontSize = "medium",
-        --     order = 6,
-        -- },
         group_conditionSelect = {
             name = L["group_conditions"],
             type = "group",
@@ -864,7 +858,7 @@ local EXTRA_CONDITION_ELEMENTS = {
             desc = L["descr_health"],
             type = "select",
             width = 0.8,
-            values = function() return {L["dropdownOption_health1"], L["dropdownOption_health2"]} end,
+            values = function() return {L["dropdownOption_health1"], L["dropdownOption_health2"], L["dropdownOption_health3"], L["dropdownOption_health4"]} end,
             get = function() return Private.db.profile[selectedGroup].conditions.health.style end,
             set = function(_, value) Private.db.profile[selectedGroup].conditions.health.style = value end,
             order = 10,

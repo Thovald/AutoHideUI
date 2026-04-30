@@ -100,7 +100,7 @@ L["descr_health"] = "Due to AddOn restrictions, this relies entirely on workarou
                     "When below 35% Health:".."|n"..
                     "Requires the game option 'Do Not Flash Screen at Low Health' to be disabled."..
                     "|n|n"..
-                    "When missing Health:".."|n"..
+                    "When hurt:".."|n"..
                     "Works by monitoring health events.".."|n"..
                     "Assumes you're at full health if no health event fired for 3sec."
 
@@ -113,7 +113,10 @@ L["chatCommands"] = "Chat Commands:"
 
 L["dropdown_health"] = "Show when ..."
 L["dropdownOption_health1"] = "below 35% HP"
-L["dropdownOption_health2"] = "missing health"
+L["dropdownOption_health2"] = "player is hurt"
+L["dropdownOption_health3"] = "party is hurt"
+L["dropdownOption_health4"] = "player/party is hurt"
+
 L["label_flying"] = "Flying"
 L["dropdown_flightStyle"] = "Flight Style"
 L["dropdownOption_flight1"] = "Only Skyriding"

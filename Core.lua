@@ -35,9 +35,25 @@ local MOUSE_TICKER_INTERVAL = 0.125
 
 -- health-check stuff
 local TIME_TO_FLAG_FULL_HEALTH = 3
-local isMissingHealth = false
-local maxHealthChangeTime = 0
-local healthTimer
+local healthStates = {
+    player = {
+        isMissingHealth = false,
+        maxHealthChangeTime = 0,
+        healthTimer = nil,
+    },
+    party = {
+        isMissingHealth = false,
+        maxHealthChangeTime = 0,
+        healthTimer = nil,
+    }
+}
+local PARTY_UNITS = {
+    party1 = true,
+    party2 = true,
+    party3 = true,
+    party4 = true,
+}
+
 
 Main.inCombat = InCombatLockdown()
 local hasHostileTarget, hasFriendlyTarget, hasHostileFocus, hasFriendlyFocus
@@ -192,7 +208,8 @@ end
 local function ResetStates()
     Fading.WipeFadeQueue()
     ResetAllGroupStates()
-    isMissingHealth = false
+    healthStates.player.isMissingHealth = false
+    healthStates.party.isMissingHealth = false
     Fading.ResetPendingFades()
 end
 
@@ -490,9 +507,14 @@ local function ConditionHealth()
         local healthState
         if group.conditions.health.style == 1 then
             healthState = lastLowHealthVis
-        else 
-            healthState = isMissingHealth
+        elseif group.conditions.health.style == 2 then
+            healthState = healthStates.player.isMissingHealth
+        elseif group.conditions.health.style == 3 then
+            healthState = healthStates.party.isMissingHealth
+        else
+            healthState = healthStates.player.isMissingHealth or healthStates.party.isMissingHealth
         end
+
         UpdateActiveConditions(group, "health", healthState)
     end
 end
@@ -507,20 +529,21 @@ local function CheckLowHealthChange()
     end
 end
 
-local function CheckMissingHealthChange()
+local function CheckMissingHealthChange(key)
     local currentTime = GetTime()
-    if currentTime == maxHealthChangeTime then
+    if currentTime == healthStates[key].maxHealthChangeTime then
         return false
     end
 
-    if healthTimer then
-        healthTimer:Cancel()
+    if healthStates[key].healthTimer then
+        ---@diagnostic disable-next-line: undefined-field
+        healthStates[key].healthTimer:Cancel()
     end
 
-    isMissingHealth = true
+    healthStates[key].isMissingHealth = true
 
-    healthTimer = C_Timer.NewTimer(TIME_TO_FLAG_FULL_HEALTH, function()
-        isMissingHealth = false
+    healthStates[key].healthTimer = C_Timer.NewTimer(TIME_TO_FLAG_FULL_HEALTH, function()
+        healthStates[key].isMissingHealth = false
         ConditionHealth()
         Fading.offsetForFadeDelay = TIME_TO_FLAG_FULL_HEALTH * -1
         Fading.FadeAllGroups()
@@ -685,12 +708,16 @@ local function OnActionbarChange()
 end
 
 local function OnHealthChange(unit)
-    if unit ~= "player" then
+    local lowHealthChanged, missingHealthChanged
+
+    if unit == "player" then
+        lowHealthChanged = CheckLowHealthChange()
+        missingHealthChanged = CheckMissingHealthChange("player")
+    elseif PARTY_UNITS[unit] then
+        missingHealthChanged = CheckMissingHealthChange("party")
+    else
         return
     end
-
-    local lowHealthChanged = CheckLowHealthChange()
-    local missingHealthChanged = CheckMissingHealthChange()
 
     if lowHealthChanged or missingHealthChanged then
         ConditionHealth()
@@ -699,17 +726,19 @@ local function OnHealthChange(unit)
 end
 
 local function OnMaxHealthChange(unit)
-    if unit ~= "player" then
-        return
+    if unit == "player" then
+        healthStates.player.maxHealthChangeTime = GetTime()
+    elseif PARTY_UNITS[unit] then
+        healthStates.party.maxHealthChangeTime = GetTime()
     end
-    maxHealthChangeTime = GetTime()
 end
 
 local function OnMaxHealthModifierChange(unit)
-    if unit ~= "player" then
-        return
+    if unit == "player" then
+        healthStates.player.maxHealthChangeTime = GetTime()
+    elseif PARTY_UNITS[unit] then
+        healthStates.party.maxHealthChangeTime = GetTime()
     end
-    maxHealthChangeTime = GetTime()
 end
 
 local function OnCastStart(unit)

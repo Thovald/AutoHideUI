@@ -5,7 +5,7 @@ local Frames = Private.Frames
 
 local minimapHelperFrameList = {} -- mouseover helpers for when minimap is hidden
 local addonLoadedStates = {}
-local FRAME_INFO_TEMPLATE = {frames = {}, args = {}}
+local FRAME_INFO_TEMPLATE = {frames = {}, args = {}, frameString = ""}
 local DYNAMIC_ADDON_FRAMES = {}
 
 ------------------
@@ -453,7 +453,7 @@ local ADDON_FRAME_MAPPING = {
             UtilityCooldownViewer = {"ECME_CDMBar_utility"},
             BuffIconCooldownViewer = {"ECME_CDMBar_buffs"},
         },
-        args = {forceAlpha = true, includeDefaultFrames = true},
+        args = {forceAlpha = true, includeDefaultFrames = true, forceAlphaDefault = true},
     },
     {
         name = "EllesmereUI_PlayerCastBar",
@@ -528,6 +528,16 @@ local ADDON_FRAME_MAPPING = {
                 DYNAMIC_ADDON_FRAMES["AyijeCDM_ResourceBars"].knownFrames[frame] = true
             end
 
+            -- this is for the border when the option to wrap resource bars is checked
+            for _, v in pairs(Ayije_CDM.resourceUnifiedHosts) do
+                tinsert(frameList, v.host)
+                if v.hSeparators then
+                    for _, separator in pairs(v.hSeparators) do
+                        tinsert(frameList, separator)
+                    end
+                end
+            end
+
             return frameList
         end,
         args = {forceAlpha = true, includeDefaultFrames = true},
@@ -541,8 +551,7 @@ local ADDON_FRAME_MAPPING = {
         customGetter = function()
             local Ayije_CDM = _G["Ayije_CDM"]
             local trinketFrames = Ayije_CDM and Ayije_CDM:GetTrinketIconFrames()
-            local cdmFrame = Frames.GetFrameObjectFromString("EssentialCooldownViewer")
-            local frameList = {cdmFrame}
+            local frameList = {}
 
             if not trinketFrames then
                 return frameList
@@ -554,21 +563,21 @@ local ADDON_FRAME_MAPPING = {
 
             return frameList
         end,
-        args = {forceAlpha = false},
+        args = {forceAlpha = true, includeDefaultFrames = true, forceAlphaDefault = true,},
     },
     {
-        name = "AyijeCDM_Trinkets",
+        name = "AyijeCDM_CastBar",
         isLoaded = function() return C_AddOns.IsAddOnLoaded("Ayije_CDM") and Ayije_CDM and Ayije_CDM.db.castBarEnabled end,
         frames = {
             PlayerCastingBarFrame = {"Ayije_CDM_CastBarContainer"},
         },
-        args = {forceAlpha = false, includeDefaultFrames = true},
+        args = {forceAlpha = true, includeDefaultFrames = true},
     },
     {
         name = "DandersFrames",
         isLoaded = function() return C_AddOns.IsAddOnLoaded("DandersFrames") end,
         frames = {
-            PartyFrame = {"DandersFramesContainer"},
+            PartyFrame = {"DandersFramesContainer", "DandersPartyContainer", "DandersPartyHeader"},
         },
         args = {forceAlpha = true},
     },
@@ -668,7 +677,11 @@ local function GetFramesByArg(arg, val, includeDefault)
         local isValidFrame = includeDefault or not frameInfo.args.isDefault
         if isInUse and isValidFrame and frameInfo.args[arg] == val then
             for _, frame in pairs(frameInfo.frames) do
-                frameList[frame] = frameInfo
+                local frameString = frame:GetName()
+                -- this may be a mix of addon and default frames. don't want to operate on default frames.
+                if (not frameString or not frameInfo.args.includeDefaultFrames) or (frameString ~= frameInfo.frameString) or (frameInfo.args[arg.."Default"]) then
+                    frameList[frame] = frameInfo
+                end
             end
         end
     end
@@ -784,8 +797,9 @@ local function CreateFrameGroup(groupDB, dbIndex)
     return groupInfo
 end
 
-local function CreateFrameInfo(frameList, args)
+local function CreateFrameInfo(frameList, frameString, args)
     local frameInfo = CopyTable(FRAME_INFO_TEMPLATE)
+    frameInfo.frameString = frameString
     frameInfo.frames = frameList
     if args then
         frameInfo.args = args
@@ -857,7 +871,7 @@ local function CheckForAddOnFrames(frameString, groupDB)
 
             frameList, args = CheckForAddOnStrings(frameString, addonInfo)
             if frameList then
-                local frameInfo = CreateFrameInfo(frameList, args)
+                local frameInfo = CreateFrameInfo(frameList, frameString, args)
                 return frameInfo
             end
 
@@ -877,7 +891,7 @@ local function CheckForAddOnFrames(frameString, groupDB)
             end
 
             if frameList then
-                local frameInfo = CreateFrameInfo(frameList, args)
+                local frameInfo = CreateFrameInfo(frameList, frameString, args)
                 frameInfo.args.forceAlpha = frameInfo.args.forceAlpha and groupDB.config.forceAlpha
                 return frameInfo
             end
@@ -917,7 +931,7 @@ local function HandleSpecialFrame(frameString, specialFrame)
         specialFrame.onAdded()
     end
 
-    local frameInfo = CreateFrameInfo(frameList, args)
+    local frameInfo = CreateFrameInfo(frameList, frameString, args)
 
     return frameInfo
 end
@@ -943,7 +957,7 @@ local function GetAllFrameObjectsFromString(frameString, groupDB)
     end
 
     local frameList = {frameObject}
-    local frameInfo = CreateFrameInfo(frameList)
+    local frameInfo = CreateFrameInfo(frameList, frameString)
     frameInfo.args.isDefault = IsDefaultFrame(frameString)
 
     return frameInfo

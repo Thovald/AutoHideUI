@@ -147,9 +147,9 @@ L["ffButton_confirm"] = "Auswahl übernehmen"
 L["ffButton_cancel"] = "Abbrechen"
 L["ffTitle_available"] = "Verfügbare Frames"
 L["ffTitle_howTo"] = "Anleitung"
-L["descr_ActionBar1"] = "Diese Leiste wählt ebenfalls alle eventuellen Sonder-Balken aus.".."|n|n"..
-                        "Falls unerwünscht, kann dieser Balken abgeschaltet und die entsprechenden Balken einzeln als Benutzerdefinierte Frames manuell eingetragen werden.".."|n|n"..
-                        "Nützlich etwa wenn diese Sonder-Balken einer anderen Gruppe zugewiesen werden sollen."
+L["descr_ActionBar1"] = "Diese Leiste wählt ebenfalls alle eventuellen Sonder-Leisten aus.".."|n|n"..
+                        "Falls unerwünscht, kann diese Leiste abgeschaltet und die entsprechenden Leisten einzeln als Benutzerdefinierte Frames manuell eingetragen werden.".."|n|n"..
+                        "Nützlich etwa wenn diese Sonder-Leisten einer anderen Gruppe zugewiesen werden sollen."
 
 L["dropdown_mouseover"] = "Auslöser"
 L["dropdownOption_mouseover1"] = "nur diese Gruppierung"

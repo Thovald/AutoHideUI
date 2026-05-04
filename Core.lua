@@ -5,7 +5,7 @@ Private.Config = {}
 Private.Frames = {}
 Private.Fading = {}
 Private.FrameFinder = {}
-Private.MouseRegions = {}
+Private.MouseoverAreas = {}
 Private.isAceHooked = false
 
 -- namespaces for functions that are called between files
@@ -13,6 +13,7 @@ local Main = Private.Main
 local Config = Private.Config
 local Frames = Private.Frames
 local Fading = Private.Fading
+local MouseoverAreas = Private.MouseoverAreas
 local internal = {}
 
 -- unlike systemFrame, Main.frame's events are registered based on which conditions are enabled
@@ -199,6 +200,10 @@ function Main.CreateMouseoverLists()
         end
     end
 
+    for _, mouseoverArea in pairs(MouseoverAreas.ActiveAreas) do
+        local group = Main.activeGroups[mouseoverArea.group]
+        mouseoverFrames[mouseoverArea] = GetGroupsForMouseoverFrame(group, globalGroups)
+    end
 end
 
 function Main.GetMouseoverFrames()
@@ -233,6 +238,7 @@ end
 
 local function ResetAddon()
     Frames.ResetFrames()
+    MouseoverAreas.ClearAreas()
     ResetStates()
     wipe(Main.framesThatToggleVisibility)
 end
@@ -241,6 +247,7 @@ local function InitAddon()
     Frames.InitFrames()
     Fading.ResetPendingFades()
     RegisterAllEvents()
+    MouseoverAreas.CreateAreas()
     Main.CreateMouseoverLists()
     internal.CreateMouseoverTicker()
     internal.UpdateAllConditions()

@@ -25,7 +25,8 @@ L["tab_frameSelect"] = "Frame Auswahl"
 L["descr_frames"] = "Ein Frame kann nicht mehreren Gruppierung zugewiesen werden."
 L["group_defaultFrames"] = "Gewöhnliche Frames"
 L["group_customFrames"] = "Benutzerdefinierte Frames"
-L["descr_customFrames"] = "Benutze den Frame Sucher oder gebe hier die Namen beliebiger Frames ein. Trenne sie mit einem Komma."
+L["descr_customFrames"] =   "Benutze den Frame Sucher oder gebe hier die Namen beliebiger Frames ein.".."|n"..
+                            "Trenne die Einträge mit einem Komma."
 L["descr_Minimap"] = "Die Minikarte ist ein Sonderfall!|n|nAm besten sollte sie im Kampf einen Alpha Wert von 1 haben und wenn sie ausgeblendet wird, sollte sie auf einen Alpha Wert von 0 gehen."
 
 L["Player Frame"] = "Spieler"
@@ -146,7 +147,7 @@ L["ffDescr_howTo"] =    "Maus über ein Frame fahren".."|n"..
 L["ffButton_confirm"] = "Auswahl übernehmen"
 L["ffButton_cancel"] = "Abbrechen"
 L["ffTitle_available"] = "Verfügbare Frames"
-L["ffTitle_howTo"] = "Anleitung"
+L["title_howTo"] = "Anleitung"
 L["descr_ActionBar1"] = "Diese Leiste wählt ebenfalls alle eventuellen Sonder-Leisten aus.".."|n|n"..
                         "Falls unerwünscht, kann diese Leiste abgeschaltet und die entsprechenden Leisten einzeln als Benutzerdefinierte Frames manuell eingetragen werden.".."|n|n"..
                         "Nützlich etwa wenn diese Sonder-Leisten einer anderen Gruppe zugewiesen werden sollen."
@@ -165,4 +166,11 @@ L["label_housing"] = "Behausung/Nachbarschaft"
 
 L["Personal Resource"] = "Persönliche Ressourcen"
 
+L["mouseoverAreas"] = "Mouseover Bereiche"
+L["descr_mouseoverAreas"] = "Erstelle benutzerdefinierte Bereiche, die Mouseover-Ereignisse erfassen können."
+L["button_newArea"] = "Neuer Bereich"
+L["button_close"] = "Schließen"
+L["ffDescr_howToMouseoverAreas"] = "Erstelle einen neuen Bereich.".."|n|n"..
+                                    "Linksklick zum Bewegen/Größe ändern.".."|n|n"..
+                                    "Rechtsklick zum Löschen."
 

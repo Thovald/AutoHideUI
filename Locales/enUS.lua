@@ -24,7 +24,8 @@ L["tab_frameSelect"] = "Frame Selection"
 L["descr_frames"] = "The same Frame can't be assigned to multiple Groups."
 L["group_defaultFrames"] = "Common Frames"
 L["group_customFrames"] = "Custom Frames"
-L["descr_customFrames"] = "Use the Frame Finder or manually add the names of other Frames here. Separate them with commas."
+L["descr_customFrames"] =   "Use the Frame Finder or manually add the name of any Frame here.".."|n"..
+                            "Separate multiple entries with a comma."
 L["descr_Minimap"] = "The minimap is a special case!|n|nFor best results, set it to be at full Alpha when in combat and at 0 Alpha when faded out."
 
 L["Player Frame"] = true
@@ -145,7 +146,7 @@ L["ffDescr_howTo"] =    "Mouseover a Frame".."|n"..
 L["ffButton_confirm"] = "Accept Selection"
 L["ffButton_cancel"] = "Cancel"
 L["ffTitle_available"] = "Available Custom Frames"
-L["ffTitle_howTo"] = "How to Use"
+L["title_howTo"] = "How to Use"
 L["descr_ActionBar1"] = "This bar includes all extra-bars an AddOn may include.".."|n|n"..
                         "If unwanted, disable this bar and manually add the names of the bars you want in the Custom Frames section below.".."|n|n"..
                         "Useful if you want some extra-bars to not fade or to assign them to a different group."
@@ -165,11 +166,12 @@ L["label_housing"] = "Housing/Neighborhood"
 
 L["Personal Resource"] = true
 
-L["mouseRegions"] = "Mouseover Regions"
-L["descr_mouseRegions"] = "Create custom regions that can trigger a mouseover event."
+L["mouseoverAreas"] = "Mouseover Areas"
+L["descr_mouseoverAreas"] = "Create custom areas that can trigger a mouseover event."
+L["button_newArea"] = "New Area"
 L["button_close"] = "Close"
-
-
-
+L["ffDescr_howToMouseoverAreas"] = "Create a new area.".."|n|n"..
+                                "Left click to move/resize.".."|n|n"..
+                                "Right click to delete."
 
 

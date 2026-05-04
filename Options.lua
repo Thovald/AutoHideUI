@@ -17,7 +17,7 @@ local pairs, ipairs  = pairs, ipairs
 local selectedGroup
 local isOptionsOpen
 local MENU_WIDTH = 630
-local MENU_HEIGHT = 780
+local MENU_HEIGHT = 830
 local MENU_HEIGHT_MIN = 400
 local MENU_HEIGHT_MAX = 1000
 local UI_WIDTH, UI_HEIGHT
@@ -306,7 +306,7 @@ local GROUP_TEMPLATE = {
         forceAlpha = true,
     },
     states = {},
-    mouseRegions = {},
+    mouseoverAreas = {},
 }
 
 local ALPHA_PREF = {
@@ -316,6 +316,10 @@ local ALPHA_PREF = {
 ------------------
 -- UI Logic
 ------------------
+
+local function IsOtherWindowsShown()
+    return AutoHideUIFrameFinderFrame:IsShown() or AutoHideUIMouseoverAreasFrame:IsShown()
+end
 
 function Config.PrintOptionsOpenError()
     local title = Main.GetErrorTitleString()
@@ -638,27 +642,27 @@ local OPTIONS_TAB_FRAMES = {
                     func = function() Private.FrameFinder.Start(selectedGroup) end,
                     order = 1,
                 },
-                button_mouseoverRegions = {
-                    name = L["mouseRegions"],
-                    desc = L["descr_mouseRegions"],
+                spacer1 = {
+                    type = "description",
+                    name = " ",
+                    width = 0.1,
+                    order = 2
+                },
+                button_mouseoverArea = {
+                    name = L["mouseoverAreas"],
+                    desc = L["descr_mouseoverAreas"],
                     type = "execute",
                     width = 1,
-                    func = function() Private.MouseRegions.Start(selectedGroup) end,
-                    order = 2,
+                    func = function() Private.MouseoverAreas.Start(selectedGroup) end,
+                    order = 3,
                 },
-                -- spacer1 = {
-                --     type = "description",
-                --     name = " ",
-                --     width = 0.05,
-                --     order = 2
-                -- },
-                -- descr_customFrames = {
-                --     type = "description",
-                --     fontSize = "medium",
-                --     name = L["descr_customFrames"].."|n",
-                --     width = 1.95,
-                --     order = 3,
-                -- },
+                descr_customFrames = {
+                    type = "description",
+                    fontSize = "medium",
+                    name = L["descr_customFrames"].."|n",
+                    width = "full",
+                    order = 4,
+                },
                 editbox_customFrames = {
                     type = "input",
                     name = "",
@@ -1214,7 +1218,7 @@ function Config.RegisterOptions()
     SlashCmdList["AUTOHIDEUI"] = function()
         if AceConfigDialog.OpenFrames["AutoHideUI"] then
             AceConfigDialog:Close("AutoHideUI")
-        elseif not AutoHideUIFrameFinderFrame:IsShown() then
+        elseif not IsOtherWindowsShown() then
             AceConfigDialog:Open("AutoHideUI")
         end
     end
@@ -1225,6 +1229,50 @@ end
 ------------------
 -- Misc
 ------------------
+
+function Config.SetHeaderText(frame, title)
+    frame.header.title:SetText(title .. " - " .. Private.db.profile[selectedGroup].name)
+    local textWidth = frame.header.title:GetStringWidth()
+    frame.header.middle:SetWidth(textWidth + 20)
+end
+
+function Config.CreateHeader(frame)
+    local header = CreateFrame("Frame", nil, frame)
+    frame.header = header
+    header:SetSize(40,40)
+    header:SetPoint("TOP", 0, 0)
+
+    -- the code for positioning the header graphics was taken from the Ace3 libeary
+    -- middle 
+    header.middle = header:CreateTexture(nil, "ARTWORK")
+    header.middle:SetTexture("Interface/DialogFrame/UI-DialogBox-Header")
+    header.middle:SetTexCoord(0.31, 0.67, 0, 0.63)
+    header.middle:SetPoint("TOP", 0, 12)
+    header.middle:SetWidth(100)
+    header.middle:SetHeight(40)
+
+    -- left cap
+    header.left = header:CreateTexture(nil, "ARTWORK")
+    header.left:SetTexture("Interface/DialogFrame/UI-DialogBox-Header")
+    header.left:SetTexCoord(0.21, 0.31, 0, 0.63)
+    header.left:SetPoint("RIGHT", header.middle, "LEFT")
+    header.left:SetWidth(30)
+    header.left:SetHeight(40)
+
+    -- right cap
+    header.right = header:CreateTexture(nil, "ARTWORK")
+    header.right:SetTexture("Interface/DialogFrame/UI-DialogBox-Header")
+    header.right:SetTexCoord(0.67, 0.77, 0, 0.63)
+    header.right:SetPoint("LEFT", header.middle, "RIGHT")
+    header.right:SetWidth(30)
+    header.right:SetHeight(40)
+
+    -- title text
+    local title = header:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    title:SetPoint("CENTER", 0, 12)
+    header.title = title
+end
+
 function Config.CreateAceLikeGroup(parent, titleText, width, height)
     local group = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     group:SetSize(width, height)

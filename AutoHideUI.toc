@@ -17,5 +17,5 @@ Options.lua
 Modules\Fading.lua
 Modules\Frames.lua
 Modules\FrameFinder.lua
-Modules\MouseRegions.lua
+Modules\MouseoverAreas.lua
 

@@ -45,6 +45,7 @@ function FrameFinder.ShowWindow()
         return
     end
     FrameFinder.WipeLists()
+    Config.SetHeaderText(ffWindow, L["frameFinder"])
     ffWindow:Show()
     FrameFinder:UpdateIgnoredFrames()
     FrameFinder:CollectFrames()
@@ -627,6 +628,8 @@ end
 -- FrameFinder Window
 ------------------
 do
+    local CreateHeader = Config.CreateHeader
+
     local frame = CreateFrame("Frame", "AutoHideUIFrameFinderFrame", UIParent, "BackdropTemplate")
     frame:SetSize(590, 300)
     frame:SetPoint("CENTER")
@@ -656,44 +659,7 @@ do
     ------------------
     -- Header
     ------------------
-
-    local header = CreateFrame("Frame", nil, frame)
-    header:SetSize(40,40)
-    header:SetPoint("TOP", 0, 0)
-
-    -- the code for positioning the header graphics was taken from the Ace3 libeary
-    -- middle 
-    header.middle = header:CreateTexture(nil, "ARTWORK")
-    header.middle:SetTexture("Interface/DialogFrame/UI-DialogBox-Header")
-    header.middle:SetTexCoord(0.31, 0.67, 0, 0.63)
-    header.middle:SetPoint("TOP", 0, 12)
-    header.middle:SetWidth(100)
-    header.middle:SetHeight(40)
-
-    -- left cap
-    header.left = header:CreateTexture(nil, "ARTWORK")
-    header.left:SetTexture("Interface/DialogFrame/UI-DialogBox-Header")
-    header.left:SetTexCoord(0.21, 0.31, 0, 0.63)
-    header.left:SetPoint("RIGHT", header.middle, "LEFT")
-    header.left:SetWidth(30)
-    header.left:SetHeight(40)
-
-    -- right cap
-    header.right = header:CreateTexture(nil, "ARTWORK")
-    header.right:SetTexture("Interface/DialogFrame/UI-DialogBox-Header")
-    header.right:SetTexCoord(0.67, 0.77, 0, 0.63)
-    header.right:SetPoint("LEFT", header.middle, "RIGHT")
-    header.right:SetWidth(30)
-    header.right:SetHeight(40)
-
-    -- title text
-    local title = header:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    title:SetPoint("CENTER", 0, 12)
-    title:SetText("Auto Hide UI - " .. L["frameFinder"])
-
-    local padding = 20
-    local textWidth = title:GetStringWidth()
-    header.middle:SetWidth(textWidth + padding)
+    CreateHeader(frame)
 
     ------------------
     -- Left Container
@@ -726,7 +692,7 @@ do
     -- Right Container
     ------------------
 
-    local rightGroup = Config.CreateAceLikeGroup(frame, L["ffTitle_howTo"], 290, 190)
+    local rightGroup = Config.CreateAceLikeGroup(frame, L["title_howTo"], 290, 190)
     rightGroup:SetPoint("TOPLEFT", leftGroup, "TOPRIGHT", 20, 0)
 
 

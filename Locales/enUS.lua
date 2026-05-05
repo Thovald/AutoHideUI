@@ -174,4 +174,9 @@ L["ffDescr_howToMouseoverAreas"] = "Create a new area.".."|n|n"..
                                 "Left click to move/resize.".."|n|n"..
                                 "Right click to delete."
 
-
+L["label_instanceDungeon"] = "Dungeon"
+L["label_instanceRaid"] = "Raid"
+L["label_instanceBattleground"] = "Battleground"
+L["label_instanceArena"] = "Arena"
+L["label_instanceScenario"] = "Delve/Scenario"
+L["label_instanceHousing"] = "Housing"

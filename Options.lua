@@ -124,6 +124,62 @@ Config.CONDITION_DEFINITIONS = {
             "LOADING_SCREEN_DISABLED",
             "ZONE_CHANGED_NEW_AREA",
         },
+        children = {
+            {
+                name = "instanceDungeon",
+                db = {
+                    enabled = true,
+                    override = false,
+                    alpha = 1,
+                    priority = false,
+                },
+            },
+            {
+                name = "instanceRaid",
+                db = {
+                    enabled = true,
+                    override = false,
+                    alpha = 1,
+                    priority = false,
+                },
+            },
+            {
+                name = "instanceBattleground",
+                db = {
+                    enabled = true,
+                    override = false,
+                    alpha = 1,
+                    priority = false,
+                },
+            },
+            {
+                name = "instanceArena",
+                db = {
+                    enabled = true,
+                    override = false,
+                    alpha = 1,
+                    priority = false,
+                },
+            },
+            {
+                name = "instanceScenario",
+                db = {
+                    enabled = true,
+                    override = false,
+                    alpha = 1,
+                    priority = false,
+                },
+            },
+            {
+                name = "instanceHousing",
+                db = {
+                    enabled = false,
+                    override = false,
+                    alpha = 0,
+                    priority = true,
+                },
+            },
+        },
     },
     {
         name = "housing",
@@ -331,6 +387,11 @@ local function GetDefaultConditions()
     local conditions = {}
     for _, condition in ipairs(Config.CONDITION_DEFINITIONS) do
         conditions[condition.name] = CopyTable(condition.db)
+        if condition.children then
+            for _, child in pairs(condition.children) do
+                conditions[child.name] = CopyTable(child.db)
+            end
+        end
     end
     return conditions
 end
@@ -488,11 +549,8 @@ local function DisableSelectedGroupConditions()
 end
 
 local function SetSelectedGroupToDefault()
-    for _, defaultInfo in pairs(Config.CONDITION_DEFINITIONS) do
-        local name = defaultInfo.name
-        for k,v in pairs(defaultInfo.db) do
-            Private.db.profile[selectedGroup].conditions[name][k] = v
-        end
+    for cName, cDB in pairs(GetDefaultConditions()) do
+        Private.db.profile[selectedGroup].conditions[cName] = cDB
     end
 end
 
@@ -910,7 +968,6 @@ local EXTRA_CONDITION_ELEMENTS = {
             order = 10,
         }
     },
-
 }
 
 local OPTIONS_MENU = {
@@ -1012,19 +1069,29 @@ local function SetupFrameSelection()
     end
 end
 
-local function SetElementForConditionSelection(path, info, order)
+local function SetElementForConditionSelection(path, info, order, isChild, parentName, isLastChild)
     local name = info.name
     local label = L["label_"..name]
     local pathDB = Private.db
-    local DisabledFunc = function()
-        return not pathDB.profile[selectedGroup].conditions[name].enabled
+    local DisabledFunc
+
+    if isChild then
+        DisabledFunc = function()
+            return not pathDB.profile[selectedGroup].conditions[parentName].enabled or not pathDB.profile[selectedGroup].conditions[name].enabled
+        end
+    else
+        DisabledFunc = function()
+            return not pathDB.profile[selectedGroup].conditions[name].enabled
+        end
     end
 
     local spacer = {
         type = "description",
         name = "",
+        width = 0.3,
         order = order,
     }
+    order = order + 1
 
     local enable = {
         name = label,
@@ -1062,12 +1129,40 @@ local function SetElementForConditionSelection(path, info, order)
     }
     order = order + 1
 
-
-
-    path["spacer_"..name] = spacer
     path["enable_"..name] = enable
     path["priority_"..name] = priority
     path["slider_"..name] = slider
+
+    local maxWith = 2.95
+    local totalWidth = enable.width + priority.width + slider.width
+
+    if isChild then
+        local function hiddenFunc()
+            return not pathDB.profile[selectedGroup][parentName.."Expanded"]
+        end
+
+        spacer.hidden = hiddenFunc
+        enable.hidden = hiddenFunc
+        slider.hidden = hiddenFunc
+        priority.hidden = hiddenFunc
+        enable.disabled = function()
+            return not pathDB.profile[selectedGroup].conditions[parentName].enabled
+        end
+
+        path["spacerStart_"..name] = CopyTable(spacer)
+        path["spacerStart_"..name].width = 0.3
+        totalWidth = totalWidth + 0.3
+
+        if isLastChild then
+            path["separator_"..parentName] = {
+                type = "header",
+                name = "",
+                order = order,
+                hidden = hiddenFunc,
+            }
+            order = order + 1
+        end
+    end
 
     local extraConditionElements = EXTRA_CONDITION_ELEMENTS[name]
     if extraConditionElements then
@@ -1076,11 +1171,51 @@ local function SetElementForConditionSelection(path, info, order)
             extraElement.disabled = DisabledFunc
             path[extraName] = extraElement
             order = order + 1
+            totalWidth = totalWidth + extraElement.width
         end
     end
 
-    return order
+    local children = info.children
+    if children and not isChild then
+        local remainingWidth = maxWith - totalWidth - 0.25
+        if remainingWidth > 0 then
+            path["spacerEnd_"..name] = CopyTable(spacer)
+            path["spacerEnd_"..name].width = remainingWidth
+            path["spacerEnd_"..name].order = order
+            order = order + 1
+        end
 
+        path["expand_"..name] = {
+            type = "execute",
+            name = "...",
+            order = order,
+            width = 0.25,
+            func = function()
+                local db = Private.db.profile[selectedGroup]
+                db[info.name.."Expanded"] = not db[info.name.."Expanded"]
+                LibStub("AceConfigRegistry-3.0"):NotifyChange("AutoHideUI")
+                print(db[info.name.."Expanded"])
+            end,
+        }
+        order = order + 1
+
+        for i, childInfo in pairs(children) do
+            order = SetElementForConditionSelection(path, childInfo, order, true, info.name, i == #children)
+        end
+
+    elseif not isLastChild then
+        local remainingWidth = maxWith - totalWidth
+        if remainingWidth > 0 then
+            path["spacerEnd_"..name] = CopyTable(spacer)
+            path["spacerEnd_"..name].width = remainingWidth
+            path["spacerEnd_"..name].order = order
+            order = order + 1
+        end
+    end
+
+
+
+    return order
 end
 
 local function SetupConditionSelection()

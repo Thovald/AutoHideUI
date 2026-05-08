@@ -157,6 +157,7 @@ L["dropdownOption_mouseover1"] = "nur diese Gruppierung"
 L["dropdownOption_mouseover2"] = "alle Gruppierungen"
 L["descr_mouseover"] = "Bestimmt ob nur diese oder ob alle Mouseover Ereignisse als Auslöser gelten sollen."
 
+L["checkbox_priority"] = "Prioritäts-Bedingung"
 L["description_priority"] = "Die Alpha aktiver Prioritäts-Bedingungen hat immer Vorrang gegenüber normalen Bedingungen.".."|n|n"..
                             "Zum Beispiel, falls die 'Instanz' Bedingung eine Priorität ist und deren Alpha auf 0 steht, würden die Frames in Dungeons immer ausblenden.".."|n|n"..
                             "Selbst wenn 'Kampf' oder 'Mouseover' die Alpha auf 1 setzen möchten, würden die Frames ausgeblendet bleiben.".."|n|n"..

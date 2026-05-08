@@ -157,6 +157,7 @@ L["dropdownOption_mouseover2"] = "any Group"
 L["descr_mouseover"] = "Should this only respond to mousing over Frames of this Group?".."|n|n"..
                         "Or should this respond to mouseover events from any Group?"
 
+L["checkbox_priority"] = "Priority Condition"
 L["description_priority"] = "The Alpha of active Priority Conditions always wins out against the Alpha of normal Conditions".."|n|n"..
                             "For example, if the 'Instance' Condition is a priority and its Alpha is 0, your Frames will fade out when you're in a Dungeon.".."|n|n"..
                             "Even when 'Combat' or 'Mouseover' want to set it to 1, it will remain at 0.".."|n|n"..

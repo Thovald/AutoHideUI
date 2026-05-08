@@ -12,6 +12,11 @@
 embeds.xml
 Locales/Locales.xml
 
+AceWidgets/AceWidgetTemplate-ToggleIcon.lua
+AceWidgets/AceWidget-ToggleCog.lua
+AceWidgets/AceWidget-ToggleExpand.lua
+AceWidgets/AceWidget-ToggleStar.lua
+
 Core.lua
 Options.lua
 Modules\Fading.lua

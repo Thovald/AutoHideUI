@@ -48,6 +48,8 @@ AceGUI:RegisterWidgetType("AutoHideUI_CheckboxWithHooks", function()
     return widget
 end, 1)
 
+
+
 ------------------
 -- UI Data
 ------------------
@@ -1118,12 +1120,13 @@ local function SetElementForConditionSelection(path, info, order, isChild, paren
     order = order + 1
 
     local priority = {
-        name = L["priority"],
+        name = L["checkbox_priority"],
         type = "toggle",
         get = function(info) return pathDB.profile[selectedGroup].conditions[name].priority end,
         set = function(info, value) pathDB.profile[selectedGroup].conditions[name].priority = value end,
         desc = L["description_priority"],
         disabled = DisabledFunc,
+        dialogControl = "ToggleCog",
         width = 0.35,
         order = order,
     }

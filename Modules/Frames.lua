@@ -356,19 +356,27 @@ local ADDON_FRAME_MAPPING = {
         },
         args = {forceAlpha = true},
         customGetter = function()
-            local baseNames = {"DetailsBaseFrame", "DetailsRowFrame"}
+            local baseNames = {"DetailsBaseFrame!", "DetailsRowFrame!", "DetailsBaseFrame!FullWindowFrame"}
             local count = 1
             local frameList = {}
 
             local detailsFrame = {}
             while detailsFrame and count < 50 do
-                for i = 1,2 do
-                    detailsFrame = Frames.GetFrameObjectFromString(baseNames[i]..count)
+                for i, name in ipairs(baseNames) do
+                    detailsFrame = Frames.GetFrameObjectFromString(string.gsub(name, "!", count))
                     if detailsFrame then
                         tinsert(frameList, detailsFrame)
                     end
                 end
                 count = count + 1
+            end
+
+            count = 1
+            local tooltipFrame = Frames.GetFrameObjectFromString("GameCooltipFrame"..count)
+            while tooltipFrame do
+                tinsert(frameList, tooltipFrame)
+                count = count + 1
+                tooltipFrame = Frames.GetFrameObjectFromString("GameCooltipFrame"..count)
             end
 
             return frameList
@@ -477,6 +485,27 @@ local ADDON_FRAME_MAPPING = {
                 if frame then
                     tinsert(frameList, frame)
                 end
+            end
+
+            return frameList
+        end,
+        args = {forceAlpha = true, includeDefaultFrames = true},
+    },
+    {
+        name = "EllesmereUI_DamageMeter",
+        isLoaded = function() return C_AddOns.IsAddOnLoaded("EllesmereUIDamageMeters") end,
+        frames = {
+            DamageMeter = {},
+        },
+        customGetter = function()
+            local frameList = {}
+            local count = 1
+            local frame = Frames.GetFrameObjectFromString("EllesmereUIDMFrame" .. count)
+
+            while frame do
+                tinsert(frameList, frame)
+                count = count + 1
+                frame = Frames.GetFrameObjectFromString("EllesmereUIDMFrame" .. count)
             end
 
             return frameList

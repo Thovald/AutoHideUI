@@ -1,6 +1,6 @@
 local _, Private = ...
 
-local type = "ToggleStar"
+local type = "AutoHideUI_ToggleStar"
 local version = 1
 local texTable = {
     method = "SetTexture",

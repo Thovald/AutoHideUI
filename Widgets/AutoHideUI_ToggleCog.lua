@@ -1,6 +1,6 @@
 local _, Private = ...
 
-local type = "ToggleCog"
+local type = "AutoHideUI_ToggleCog"
 local version = 1
 local texTable = {
     method = "SetTexture",

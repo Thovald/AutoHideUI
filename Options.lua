@@ -126,6 +126,7 @@ Config.CONDITION_DEFINITIONS = {
             "LOADING_SCREEN_DISABLED",
             "ZONE_CHANGED_NEW_AREA",
         },
+        object = "parent",
         children = {
             {
                 name = "instanceDungeon",
@@ -135,6 +136,8 @@ Config.CONDITION_DEFINITIONS = {
                     alpha = 1,
                     priority = false,
                 },
+                object = "child",
+                parent = "instance",
             },
             {
                 name = "instanceRaid",
@@ -144,6 +147,8 @@ Config.CONDITION_DEFINITIONS = {
                     alpha = 1,
                     priority = false,
                 },
+                object = "child",
+                parent = "instance",
             },
             {
                 name = "instanceBattleground",
@@ -153,6 +158,8 @@ Config.CONDITION_DEFINITIONS = {
                     alpha = 1,
                     priority = false,
                 },
+                object = "child",
+                parent = "instance",
             },
             {
                 name = "instanceArena",
@@ -162,6 +169,8 @@ Config.CONDITION_DEFINITIONS = {
                     alpha = 1,
                     priority = false,
                 },
+                object = "child",
+                parent = "instance",
             },
             {
                 name = "instanceScenario",
@@ -171,6 +180,8 @@ Config.CONDITION_DEFINITIONS = {
                     alpha = 1,
                     priority = false,
                 },
+                object = "child",
+                parent = "instance",
             },
             {
                 name = "instanceHousing",
@@ -180,6 +191,9 @@ Config.CONDITION_DEFINITIONS = {
                     alpha = 0,
                     priority = true,
                 },
+                object = "child",
+                parent = "instance",
+                addSeparator = true,
             },
         },
     },
@@ -1071,7 +1085,94 @@ local function SetupFrameSelection()
     end
 end
 
+local CONDITION_ENTRY_BLUEPRINT = {
+    {
+        name = "spacerStart",
+        widget = "description",
+        width = 0.3,
+        usedFor = "child",
+    },
+    {
+        name = "enable",
+        widget = "toggle",
+        width = 1.1,
+        usedFor = "all",
+        setting = "enabled",
+        widthOffset = {
+            child =  - 0.3 - 0.2, -- subtracting spacer and override toggle width
+        }
+    },
+    {
+        name = "override",
+        widget = "toggle",
+        width = 0.2,
+        usedFor = "child",
+        setting = "override",
+        dialogControl = "AutoHideUI_ToggleStar",
+    },
+    {
+        name = "alpha",
+        widget = "range",
+        width = 0.7,
+        usedFor = "all",
+        setting = "alpha",
+        min = 0,
+        max = 1,
+        bigStep = 0.1,
+    },
+    {
+        name = "prio",
+        widget = "toggle",
+        width = 0.35,
+        usedFor = "all",
+        setting = "priority",
+        desc = L["description_priority"],
+        dialogControl = "AutoHideUI_ToggleStar",
+    },
+    {
+        -- getting widgets info from a different table
+        widget = "extraOptions",
+        usedFor = "all",
+    },
+    {
+        name = "spacerEnd",
+        widget = "description",
+        width = "remaining",
+        usedFor = "all",
+        widthOffset = {
+            parent =  - 0.25, -- subtracting width of expand toggle
+        },
+    },
+    {
+        name = "expand",
+        widget = "execute",
+        width = 0.25,
+        usedFor = "parent",
+        func = function(info)
+            local db = Private.db.profile[selectedGroup]
+            db[info.name.."Expanded"] = not db[info.name.."Expanded"]
+            LibStub("AceConfigRegistry-3.0"):NotifyChange("AutoHideUI")
+            print(db[info.name.."Expanded"])
+        end,
+    },
+}
+
 local function SetElementForConditionSelection(path, info, order, isChild, parentName, isLastChild)
+    --[[
+
+    WIDGET              ORDER       NOTES
+    (spacerStart)       5           child only
+    enable              10
+    (customize)         15          child only
+    alpha               20  
+    prio                25
+    (extraOptions)      30-40       depends on condition
+    spacerEnd           45          to fill the rest of the line
+    (expand)            50          parent only. subtract its width from spacerEnd
+    (separator)         55          last child only. full-width header on new line
+
+    ]]--
+
     local name = info.name
     local label = L["label_"..name]
     local pathDB = Private.db
@@ -1126,7 +1227,7 @@ local function SetElementForConditionSelection(path, info, order, isChild, paren
         set = function(info, value) pathDB.profile[selectedGroup].conditions[name].priority = value end,
         desc = L["description_priority"],
         disabled = DisabledFunc,
-        dialogControl = "ToggleCog",
+        dialogControl = "AutoHideUI_ToggleStar",
         width = 0.35,
         order = order,
     }

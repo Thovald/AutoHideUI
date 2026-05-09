@@ -12,10 +12,10 @@
 embeds.xml
 Locales/Locales.xml
 
-AceWidgets/AceWidgetTemplate-ToggleIcon.lua
-AceWidgets/AceWidget-ToggleCog.lua
-AceWidgets/AceWidget-ToggleExpand.lua
-AceWidgets/AceWidget-ToggleStar.lua
+Widgets/WidgetTemplate-ToggleIcon.lua
+Widgets/AutoHideUI_ToggleCog.lua
+Widgets/AutoHideUI_ToggleExpand.lua
+Widgets/AutoHideUI_ToggleStar.lua
 
 Core.lua
 Options.lua

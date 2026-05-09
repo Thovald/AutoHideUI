@@ -498,15 +498,15 @@ end
 
 local function ConditionShapeshift()
     local shapeId = GetShapeshiftFormID()
-    isMounted = DRUID_FORMS[2][shapeId]
-    RunNextFrame(HandleIsFlyingTicker)
 
     for _, group in ipairs(Main.activeGroups) do
         local formsKey = group.conditions.mounted.druidForms
         local validShapes = DRUID_FORMS[formsKey]
         local isMountShape = validShapes[shapeId]
-        UpdateActiveConditions(group, "mounted", isMountShape)
+        UpdateActiveConditions(group, "mounted", isMounted or isMountShape)
     end
+
+    RunNextFrame(HandleIsFlyingTicker)
 end
 
 local function ConditionHealth()

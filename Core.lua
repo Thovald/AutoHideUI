@@ -454,8 +454,8 @@ local MigrateDB = {
             c.focusFriendly.override = false
             c.focusHostile.override  = false
         else
-            c.target = CopyTable(tFriendly)
-            c.focus  = CopyTable(tFriendly)
+            c.target = CopyTable(Config.GetDefaultConditionByName("target").db)
+            c.focus  = CopyTable(Config.GetDefaultConditionByName("focus").db)
             c.targetFriendly = c.targetFriendly or {}
             c.targetHostile  = c.targetHostile  or {}
             c.targetFriendly.override = true

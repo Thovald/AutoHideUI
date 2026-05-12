@@ -1309,14 +1309,14 @@ local function CreateConditionWidget(widgetInfo, conditionInfo, entryInfo)
     return entryInfo
 end
 
-function Config.GetParentConditionInfo(conditionInfo)
-    local parent = conditionInfo.parent
-    for _, parentConditionInfo in ipairs(Config.CONDITION_DEFINITIONS) do
-        if parentConditionInfo.name == parent then
-            return parentConditionInfo
-        end
-    end
-end
+-- function Config.GetParentConditionInfo(conditionInfo)
+--     local parent = conditionInfo.parent
+--     for _, parentConditionInfo in ipairs(Config.CONDITION_DEFINITIONS) do
+--         if parentConditionInfo.name == parent then
+--             return parentConditionInfo
+--         end
+--     end
+-- end
 
 local function GetExtraConditionOptions(conditionInfo)
     local extraOptions = conditionInfo.extraOptions
@@ -1324,7 +1324,7 @@ local function GetExtraConditionOptions(conditionInfo)
     if extraOptions then
         return extraOptions
     elseif conditionInfo.isChild then
-        local parentConditionInfo = Config.GetParentConditionInfo(conditionInfo)
+        local parentConditionInfo = Config.GetDefaultConditionByName(conditionInfo.parent)
         if parentConditionInfo.extraOptions then
             return parentConditionInfo.extraOptions
         end
@@ -1484,6 +1484,14 @@ function Config.CheckGroupsForMissingEntries(defaultGroup)
         end
     end
 
+end
+
+function Config.GetDefaultConditionByName(conditionName)
+    for _, conditionInfo in ipairs(Config.CONDITION_DEFINITIONS) do
+        if conditionInfo.name == conditionName then
+            return conditionInfo
+        end
+    end
 end
 
 function Config.GetDefaultGroup(name)

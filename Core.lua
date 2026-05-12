@@ -15,6 +15,7 @@ local Frames = Private.Frames
 local Fading = Private.Fading
 local MouseoverAreas = Private.MouseoverAreas
 local internal = {}
+local DB_SCHEMA_VERSION = 1
 
 -- unlike systemFrame, Main.frame's events are registered based on which conditions are enabled
 Main.frame = CreateFrame("Frame")
@@ -118,13 +119,34 @@ local function InitOptions()
     Config.CreateOptionsMenu()
 end
 
+local function UpdateVersion()
+    Private.db.global.version_last = Private.db.global.version or "1.0.0"
+    Private.db.global.version = C_AddOns.GetAddOnMetadata("AutoHideUI", "version")
+end
+
 local function RegisterEventsInCondition(condition)
-    for _, info in pairs(Config.CONDITION_DEFINITIONS) do
-        if info.name == condition then
-            for _, event in pairs(info.events) do
-                Main.frame:RegisterEvent(event)
-            end
+    local events
+    local parents = {}
+
+    for _, info in ipairs(Config.CONDITION_DEFINITIONS) do
+        if info.name == condition and info.events then
+            events = info.events
+            break
+        elseif info.isParent then
+            parents[info.name] = info
+        elseif info.name == condition and info.isChild then
+            print("found parent events")
+            events = parents[info.parent].events
         end
+    end
+
+    if not events then
+        print("no events to register for", condition)
+        return
+    end
+
+    for _, event in pairs(events) do
+        Main.frame:RegisterEvent(event)
     end
 end
 
@@ -315,11 +337,172 @@ local function GetOtherTargetStates(unitToken)
     end
 end
 
+local function GetConditionRelationships(conditionName)
+    for _, conditionInfo in ipairs(Config.CONDITION_DEFINITIONS) do
+        if conditionInfo.name == conditionName then
+            return conditionInfo.isChild, conditionInfo.isParent, conditionInfo.parent
+        end
+    end
+end
+
+function Main.GetConditionsSettings(conditionsDB)
+    -- some conditions may inherit their settings from their parent-condition.
+    -- or they may use their own override settings.
+    -- so we can't use the db directly and instead need to determine the actual values first.
+    local conditions = {}
+
+    for conditionName, conditionInfo in pairs(conditionsDB) do
+        local isChild, isParent, parentName = GetConditionRelationships(conditionName)
+
+        if not isParent and not isChild then
+            conditions[conditionName] = CopyTable(conditionInfo)
+        elseif isChild then
+            local childInfo
+            local parentInfo = conditionsDB[parentName]
+            local isChildEnabled = conditionInfo.enabled and parentInfo.enabled
+            local useOverride = conditionInfo.override
+
+            if isChildEnabled and not useOverride then
+                -- inheriting parent settings
+                childInfo = CopyTable(parentInfo)
+            elseif isChildEnabled and useOverride then
+                -- using child's override settings
+                childInfo = CopyTable(conditionInfo)
+            else
+                -- child is not enabled
+                childInfo = CopyTable(conditionInfo)
+                childInfo.enabled = false
+            end
+
+            conditions[conditionName] = childInfo
+        end
+    end
+
+    return conditions
+end
+
+------------------
+-- Repairing DB
+------------------
+
+local MigrateDB = {
+    -- when parent/child conditions were introduced
+    [1] = function(db)
+        local OLD_CONDITION_DEFAULTS = {
+            housing        = { enabled = false, alpha = 0, priority = true },
+            instance       = { enabled = true,  alpha = 1, priority = false },
+            targetFriendly = { enabled = true,  alpha = 1, priority = false, softTarget = false },
+            targetHostile  = { enabled = true,  alpha = 1, priority = false, softTarget = false },
+        }
+
+        local function ResolveOldCondition(c, name)
+            local result = CopyTable(OLD_CONDITION_DEFAULTS[name])
+            if c[name] then
+                for k, v in pairs(c[name]) do
+                    result[k] = v
+                end
+            end
+            return result
+        end
+
+        local c = db.conditions
+
+        local housing  = ResolveOldCondition(c, "housing")
+        local instance = ResolveOldCondition(c, "instance")
+        local tFriendly = ResolveOldCondition(c, "targetFriendly")
+        local tHostile  = ResolveOldCondition(c, "targetHostile")
+
+        -- instance and housing
+        c.instanceNeighborhood = CopyTable(housing)
+        c.instanceHousing      = CopyTable(housing)
+
+        if housing.alpha ~= instance.alpha or housing.priority ~= instance.priority then
+            c.instanceNeighborhood.override = true
+            c.instanceHousing.override      = true
+        else
+            c.instanceNeighborhood.override = false
+            c.instanceHousing.override      = false
+        end
+
+        if housing.enabled and not instance.enabled then
+            c.instance = c.instance or {}
+            c.instance.enabled = true
+            for _, name in ipairs({ "instanceDungeon", "instanceRaid", "instanceBattleground", "instanceArena", "instanceScenario" }) do
+                c[name] = c[name] or {}
+                c[name].enabled = false
+            end
+        end
+
+        c.housing = nil
+
+        -- target and focus
+        local targetEnabled = tFriendly.enabled or tHostile.enabled
+
+        local settingsMatch = tFriendly.alpha     == tHostile.alpha
+                        and tFriendly.priority  == tHostile.priority
+                        and tFriendly.softTarget == tHostile.softTarget
+
+        if settingsMatch then
+            c.target = CopyTable(tFriendly)
+            c.focus  = CopyTable(tFriendly)
+            c.targetFriendly = c.targetFriendly or {}
+            c.targetHostile  = c.targetHostile  or {}
+            c.targetFriendly.override = false
+            c.targetHostile.override  = false
+            c.focusFriendly = CopyTable(tFriendly)
+            c.focusHostile  = CopyTable(tHostile)
+            c.focusFriendly.override = false
+            c.focusHostile.override  = false
+        else
+            c.target = CopyTable(tFriendly)
+            c.focus  = CopyTable(tFriendly)
+            c.targetFriendly = c.targetFriendly or {}
+            c.targetHostile  = c.targetHostile  or {}
+            c.targetFriendly.override = true
+            c.targetHostile.override  = true
+            c.focusFriendly = CopyTable(tFriendly)
+            c.focusHostile  = CopyTable(tHostile)
+            c.focusFriendly.override = true
+            c.focusHostile.override  = true
+        end
+
+        c.target.enabled = targetEnabled
+        c.focus.enabled  = targetEnabled
+        c.focusFriendly.softTarget = nil
+        c.focusHostile.softTarget  = nil
+    end
+}
+
+local function UpdateDB()
+    local lastSchemaVersion = Private.db.global.db_schema or 0
+
+    for i = lastSchemaVersion + 1, DB_SCHEMA_VERSION do
+        local migration = MigrateDB[i]
+        if migration then
+            print("migrating!")
+            -- migrating every profile
+            for _, profileData in pairs(Private.db.profiles) do
+                -- migrating every group in profile
+                for _, db in pairs(profileData) do
+                    migration(db)
+                end
+            end
+        end
+    end
+
+    Private.db.global.db_schema = DB_SCHEMA_VERSION
+end
+
 ------------------
 -- Conditions
 ------------------
 
 local function UpdateActiveConditions(group, condition, value)
+    if not group.conditions[condition] then
+        print("condition not found", condition)
+        return
+    end
+
     if not group.conditions[condition].enabled then
         return
     end
@@ -605,6 +788,8 @@ local function OnLogin()
     -- deferred to ensure all AddOn frames have been created.
     C_Timer.After(3, function()
         InitDB()
+        UpdateVersion()
+        UpdateDB()
         InitOptions()
         InitAddon()
     end)

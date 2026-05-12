@@ -821,7 +821,7 @@ local function CreateFrameGroup(groupDB, dbIndex)
         index = dbIndex,
         config = CopyTable(groupDB.config),
         states = CopyTable(Config.DEFAULT_STATES),
-        conditions = CopyTable(groupDB.conditions),
+        conditions = Main.GetConditionsSettings(groupDB.conditions)
     }
     return groupInfo
 end

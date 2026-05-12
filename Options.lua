@@ -22,6 +22,7 @@ local MENU_HEIGHT_MIN = 400
 local MENU_HEIGHT_MAX = 1000
 local UI_WIDTH, UI_HEIGHT
 local UI_PADDING = 5
+local CONDITION_MAXIMUM_WIDTH = 2.95
 local highlightFrames = {}
 
 ------------------
@@ -100,7 +101,8 @@ local function GetCommonFrames()
     return frameList
 end
 
--- same order as these will appear in the options
+-- same order as these will appear in the options.
+-- it's important to list parents before their children!
 Config.CONDITION_DEFINITIONS = {
     {
         name = "combat",
@@ -114,6 +116,9 @@ Config.CONDITION_DEFINITIONS = {
             "PLAYER_REGEN_DISABLED",
         },
     },
+    ----------------------
+    -- START instance
+    ----------------------
     {
         name = "instance",
         db = {
@@ -126,90 +131,89 @@ Config.CONDITION_DEFINITIONS = {
             "LOADING_SCREEN_DISABLED",
             "ZONE_CHANGED_NEW_AREA",
         },
-        object = "parent",
-        children = {
-            {
-                name = "instanceDungeon",
-                db = {
-                    enabled = true,
-                    override = false,
-                    alpha = 1,
-                    priority = false,
-                },
-                object = "child",
-                parent = "instance",
-            },
-            {
-                name = "instanceRaid",
-                db = {
-                    enabled = true,
-                    override = false,
-                    alpha = 1,
-                    priority = false,
-                },
-                object = "child",
-                parent = "instance",
-            },
-            {
-                name = "instanceBattleground",
-                db = {
-                    enabled = true,
-                    override = false,
-                    alpha = 1,
-                    priority = false,
-                },
-                object = "child",
-                parent = "instance",
-            },
-            {
-                name = "instanceArena",
-                db = {
-                    enabled = true,
-                    override = false,
-                    alpha = 1,
-                    priority = false,
-                },
-                object = "child",
-                parent = "instance",
-            },
-            {
-                name = "instanceScenario",
-                db = {
-                    enabled = true,
-                    override = false,
-                    alpha = 1,
-                    priority = false,
-                },
-                object = "child",
-                parent = "instance",
-            },
-            {
-                name = "instanceHousing",
-                db = {
-                    enabled = false,
-                    override = false,
-                    alpha = 0,
-                    priority = true,
-                },
-                object = "child",
-                parent = "instance",
-                addSeparator = true,
-            },
-        },
+        isParent = true,
     },
     {
-        name = "housing",
+        name = "instanceDungeon",
+        db = {
+            enabled = true,
+            override = false,
+            alpha = 1,
+            priority = false,
+        },
+        isChild = true,
+        parent = "instance",
+    },
+    {
+        name = "instanceRaid",
+        db = {
+            enabled = true,
+            override = false,
+            alpha = 1,
+            priority = false,
+        },
+        isChild = true,
+        parent = "instance",
+    },
+    {
+        name = "instanceBattleground",
+        db = {
+            enabled = true,
+            override = false,
+            alpha = 1,
+            priority = false,
+        },
+        isChild = true,
+        parent = "instance",
+    },
+    {
+        name = "instanceArena",
+        db = {
+            enabled = true,
+            override = false,
+            alpha = 1,
+            priority = false,
+        },
+        isChild = true,
+        parent = "instance",
+    },
+    {
+        name = "instanceScenario",
+        db = {
+            enabled = true,
+            override = false,
+            alpha = 1,
+            priority = false,
+        },
+        isChild = true,
+        parent = "instance",
+    },
+    {
+        name = "instanceNeighborhood",
         db = {
             enabled = false,
+            override = true,
             alpha = 0,
             priority = true,
         },
-        events = {
-            "PLAYER_ENTERING_WORLD",
-            "LOADING_SCREEN_DISABLED",
-            "ZONE_CHANGED_NEW_AREA",
-        },
+        isChild = true,
+        parent = "instance",
     },
+    {
+        name = "instanceHousing",
+        db = {
+            enabled = false,
+            override = true,
+            alpha = 0,
+            priority = true,
+        },
+        isChild = true,
+        parent = "instance",
+        addSeparator = true,
+    },
+    ----------------------
+    -- END instance
+    ----------------------
     {
         name = "mouseover",
         db = {
@@ -222,9 +226,24 @@ Config.CONDITION_DEFINITIONS = {
             "WORLD_CURSOR_TOOLTIP_UPDATE",
             "UPDATE_MOUSEOVER_UNIT",
         },
+        extraOptions = {
+            {
+                entryName = "dropdown_mouseover",
+                settingName = "trigger",
+                widget = {
+                    desc = L["descr_mouseover"],
+                    type = "select",
+                    width = 0.8,
+                    values = function() return {L["dropdownOption_mouseover1"], L["dropdownOption_mouseover2"]} end,
+                },
+            },
+        },
     },
+    ----------------------
+    -- START target
+    ----------------------
     {
-        name = "targetFriendly",
+        name = "target",
         db = {
             enabled = true,
             alpha = 1,
@@ -234,8 +253,30 @@ Config.CONDITION_DEFINITIONS = {
         events = {
             "PLAYER_TARGET_CHANGED",
             "PLAYER_SOFT_FRIEND_CHANGED",
-            "PLAYER_FOCUS_CHANGED",
         },
+        extraOptions = {
+            {
+                entryName = "checkbox_softTarget",
+                settingName = "softTarget",
+                widget = {
+                    desc = L["descr_softTarget"],
+                    type = "toggle",
+                    width = 0.8,
+                },
+            },
+        },
+        isParent = true,
+    },
+    {
+        name = "targetFriendly",
+        db = {
+            enabled = true,
+            alpha = 1,
+            priority = false,
+            softTarget = false,
+        },
+        isChild = true,
+        parent = "target",
     },
     {
         name = "targetHostile",
@@ -245,12 +286,53 @@ Config.CONDITION_DEFINITIONS = {
             priority = false,
             softTarget = false,
         },
+        isChild = true,
+        parent = "target",
+        addSeparator = true,
+    },
+    ----------------------
+    -- END target 
+    ----------------------
+
+    ----------------------
+    -- START focus 
+    ----------------------
+    {
+        name = "focus",
+        db = {
+            enabled = true,
+            alpha = 1,
+            priority = false,
+        },
         events = {
-            "PLAYER_TARGET_CHANGED",
-            "PLAYER_SOFT_ENEMY_CHANGED",
             "PLAYER_FOCUS_CHANGED",
         },
+        isParent = true,
     },
+    {
+        name = "focusFriendly",
+        db = {
+            enabled = true,
+            alpha = 1,
+            priority = false,
+        },
+        isChild = true,
+        parent = "focus",
+    },
+    {
+        name = "focusHostile",
+        db = {
+            enabled = true,
+            alpha = 1,
+            priority = false,
+        },
+        isChild = true,
+        parent = "focus",
+        addSeparator = true,
+    },
+    ----------------------
+    -- END focus
+    ----------------------
     {
         name = "interactable",
         db = {
@@ -262,7 +344,18 @@ Config.CONDITION_DEFINITIONS = {
         events = {
             "PLAYER_SOFT_INTERACT_CHANGED",
         },
-        description = L["descr_interactable"]
+        description = L["descr_interactable"],
+        extraOptions = {
+            {
+                entryName = "checkbox_excludeNPCs",
+                settingName = "excludeNPCs",
+                widget = {
+                    desc = L["descr_excludeNPCs"],
+                    type = "toggle",
+                    width = 0.8,
+                },
+            },
+        },
     },
     {
         name = "casting",
@@ -302,7 +395,19 @@ Config.CONDITION_DEFINITIONS = {
             "UNIT_MAXHEALTH",
             "UNIT_MAX_HEALTH_MODIFIERS_CHANGED",
         },
-        description = L["descr_health"]
+        description = L["descr_health"],
+        extraOptions = {
+            {
+                entryName = "dropdown_health",
+                settingName = "style",
+                widget = {
+                    desc = L["descr_health"],
+                    type = "select",
+                    width = 0.8,
+                    values = function() return {L["dropdownOption_health1"], L["dropdownOption_health2"], L["dropdownOption_health3"], L["dropdownOption_health4"]} end,
+                },
+            },
+        },
     },
     {
         name = "mounted",
@@ -315,6 +420,17 @@ Config.CONDITION_DEFINITIONS = {
         events = {
             "PLAYER_MOUNT_DISPLAY_CHANGED",
             "UPDATE_SHAPESHIFT_FORM",
+        },
+        extraOptions = {
+            {
+                entryName = "dropdown_druidForms",
+                settingName = "druidForms",
+                widget = {
+                    type = "select",
+                    width = 0.8,
+                    values = function() return {L["dropdownOption_druid1"], L["dropdownOption_druid2"], L["dropdownOption_druid3"]} end,
+                },
+            },
         },
     },
     {
@@ -329,6 +445,17 @@ Config.CONDITION_DEFINITIONS = {
             "PLAYER_MOUNT_DISPLAY_CHANGED",
             "UPDATE_SHAPESHIFT_FORM",
             "PLAYER_IS_GLIDING_CHANGED",
+        },
+        extraOptions = {
+            {
+                entryName = "dropdown_flightStyle",
+                settingName = "style",
+                widget = {
+                    type = "select",
+                    width = 0.8,
+                    values = function() return {L["dropdownOption_flight1"], L["dropdownOption_flight2"], L["dropdownOption_flight3"]} end,
+                },
+            },
         },
     },
     {
@@ -403,11 +530,6 @@ local function GetDefaultConditions()
     local conditions = {}
     for _, condition in ipairs(Config.CONDITION_DEFINITIONS) do
         conditions[condition.name] = CopyTable(condition.db)
-        if condition.children then
-            for _, child in pairs(condition.children) do
-                conditions[child.name] = CopyTable(child.db)
-            end
-        end
     end
     return conditions
 end
@@ -903,89 +1025,6 @@ local OPTIONS_TAB_CONDITIONS = {
     order = 23
 }
 
-local EXTRA_CONDITION_ELEMENTS = {
-    -- default elements occupy order 5-7
-    mouseover = {
-        dropdown_mouseover = {
-            name = L["dropdown_mouseover"],
-            desc = L["descr_mouseover"],
-            type = "select",
-            width = 0.8,
-            values = function() return {L["dropdownOption_mouseover1"], L["dropdownOption_mouseover2"]} end,
-            get = function() return Private.db.profile[selectedGroup].conditions.mouseover.trigger end,
-            set = function(_, value) Private.db.profile[selectedGroup].conditions.mouseover.trigger = value end,
-            order = 10,
-        },
-    },
-    mounted = {
-        druidForms = {
-            name = L["dropdown_druidForms"],
-            type = "select",
-            width = 0.8,
-            values = function() return {L["dropdownOption_druid1"], L["dropdownOption_druid2"], L["dropdownOption_druid3"]} end,
-            get = function() return Private.db.profile[selectedGroup].conditions.mounted.druidForms end,
-            set = function(_, value) Private.db.profile[selectedGroup].conditions.mounted.druidForms = value end,
-            order = 10,
-        },
-    },
-    flying = {
-        style = {
-            name = L["dropdown_flightStyle"],
-            type = "select",
-            width = 0.8,
-            values = function() return {L["dropdownOption_flight1"], L["dropdownOption_flight2"], L["dropdownOption_flight3"]} end,
-            get = function() return Private.db.profile[selectedGroup].conditions.flying.style end,
-            set = function(_, value) Private.db.profile[selectedGroup].conditions.flying.style = value end,
-            order = 10,
-        },
-    },
-    health = {
-        dropdown_health = {
-            name = L["dropdown_health"],
-            desc = L["descr_health"],
-            type = "select",
-            width = 0.8,
-            values = function() return {L["dropdownOption_health1"], L["dropdownOption_health2"], L["dropdownOption_health3"], L["dropdownOption_health4"]} end,
-            get = function() return Private.db.profile[selectedGroup].conditions.health.style end,
-            set = function(_, value) Private.db.profile[selectedGroup].conditions.health.style = value end,
-            order = 10,
-        },
-    },
-    targetFriendly = {
-        checkbox_softTargetFriendly = {
-            name = L["checkbox_softTarget"],
-            desc = L["descr_softTarget"],
-            type = "toggle",
-            get = function() return Private.db.profile[selectedGroup].conditions.targetFriendly.softTarget end,
-            set = function(_, value) Private.db.profile[selectedGroup].conditions.targetFriendly.softTarget = value end,
-            width = 0.8,
-            order = 10,
-        }
-    },
-    targetHostile = {
-        checkbox_softTargetHostile = {
-            name = L["checkbox_softTarget"],
-            desc = L["descr_softTarget"],
-            type = "toggle",
-            get = function() return Private.db.profile[selectedGroup].conditions.targetHostile.softTarget end,
-            set = function(_, value) Private.db.profile[selectedGroup].conditions.targetHostile.softTarget = value end,
-            width = 0.8,
-            order = 10,
-        }
-    },
-    interactable = {
-        checkbox_interactable = {
-            name = L["checkbox_excludeNPCs"],
-            desc = L["descr_excludeNPCs"],
-            type = "toggle",
-            get = function() return Private.db.profile[selectedGroup].conditions.interactable.excludeNPCs end,
-            set = function(_, value) Private.db.profile[selectedGroup].conditions.interactable.excludeNPCs = value end,
-            width = 0.8,
-            order = 10,
-        }
-    },
-}
-
 local OPTIONS_MENU = {
     type = "group",
     name = "Auto Hide UI",
@@ -1089,250 +1128,296 @@ local CONDITION_ENTRY_BLUEPRINT = {
     {
         name = "spacerStart",
         widget = "description",
-        width = 0.3,
-        usedFor = "child",
+        width = 0.1,
+        requiredType = "child",
     },
     {
         name = "enable",
         widget = "toggle",
-        width = 1.1,
-        usedFor = "all",
+        width = 1,
         setting = "enabled",
+        disabledKeys = {
+            child = "parent"
+        },
         widthOffset = {
-            child =  - 0.3 - 0.2, -- subtracting spacer and override toggle width
+            child =  - 0.1 - 0.2, -- subtracting spacer and override toggle width
         }
     },
     {
         name = "override",
+        label = L["override"],
         widget = "toggle",
         width = 0.2,
-        usedFor = "child",
+        requiredType = "child",
         setting = "override",
-        dialogControl = "AutoHideUI_ToggleStar",
+        disabledKeys = {
+            child = "parentChild"
+        },
+        description = L["description_override"],
+        dialogControl = "AutoHideUI_ToggleCog",
     },
     {
         name = "alpha",
+        label = L["alpha"],
         widget = "range",
         width = 0.7,
-        usedFor = "all",
         setting = "alpha",
+        disabledKeys = {
+            child = "parentChildOverride"
+        },
         min = 0,
         max = 1,
         bigStep = 0.1,
     },
     {
         name = "prio",
+        label = L["priority"],
         widget = "toggle",
-        width = 0.35,
-        usedFor = "all",
+        width = 0.2,
         setting = "priority",
-        desc = L["description_priority"],
+        disabledKeys = {
+            child = "parentChildOverride"
+        },
+        description = L["description_priority"],
         dialogControl = "AutoHideUI_ToggleStar",
     },
     {
         -- getting widgets info from a different table
         widget = "extraOptions",
-        usedFor = "all",
+        disabledKeys = {
+            child = "parentChildOverride"
+        },
     },
     {
         name = "spacerEnd",
         widget = "description",
         width = "remaining",
-        usedFor = "all",
         widthOffset = {
-            parent =  - 0.25, -- subtracting width of expand toggle
+            parent =  - 0.15, -- subtracting width of expand toggle
         },
     },
     {
         name = "expand",
         widget = "execute",
-        width = 0.25,
-        usedFor = "parent",
-        func = function(info)
-            local db = Private.db.profile[selectedGroup]
-            db[info.name.."Expanded"] = not db[info.name.."Expanded"]
-            LibStub("AceConfigRegistry-3.0"):NotifyChange("AutoHideUI")
-            print(db[info.name.."Expanded"])
-        end,
+        width = 0.15,
+        requiredType = "parent",
+        ignoreDisabled = true,
     },
 }
 
-local function SetElementForConditionSelection(path, info, order, isChild, parentName, isLastChild)
-    --[[
+local function GetConditionWidget(widgetInfo, conditionName)
+    local widgetType = widgetInfo.widget
+    local widgetName = widgetInfo.name
+    local settingName = widgetInfo.setting
 
-    WIDGET              ORDER       NOTES
-    (spacerStart)       5           child only
-    enable              10
-    (customize)         15          child only
-    alpha               20  
-    prio                25
-    (extraOptions)      30-40       depends on condition
-    spacerEnd           45          to fill the rest of the line
-    (expand)            50          parent only. subtract its width from spacerEnd
-    (separator)         55          last child only. full-width header on new line
-
-    ]]--
-
-    local name = info.name
-    local label = L["label_"..name]
-    local pathDB = Private.db
-    local DisabledFunc
-
-    if isChild then
-        DisabledFunc = function()
-            return not pathDB.profile[selectedGroup].conditions[parentName].enabled or not pathDB.profile[selectedGroup].conditions[name].enabled
-        end
-    else
-        DisabledFunc = function()
-            return not pathDB.profile[selectedGroup].conditions[name].enabled
-        end
-    end
-
-    local spacer = {
-        type = "description",
-        name = "",
-        width = 0.3,
-        order = order,
-    }
-    order = order + 1
-
-    local enable = {
-        name = label,
-        type = "toggle",
-        get = function(info) return pathDB.profile[selectedGroup].conditions[name].enabled end,
-        set = function(info, value) pathDB.profile[selectedGroup].conditions[name].enabled = value end,
-        desc = info.description,
-        width = 1.1,
-        order = order,
-    }
-    order = order + 1
-
-    local slider = {
-        type = "range",
-        name = L["alpha"],
-        width = 0.7,
-        min = 0,
-        max = 1,
-        get = function() return pathDB.profile[selectedGroup].conditions[name].alpha end,
-        set = function(_, value) pathDB.profile[selectedGroup].conditions[name].alpha = value end,
-        disabled = DisabledFunc,
-        order = order
-    }
-    order = order + 1
-
-    local priority = {
-        name = L["checkbox_priority"],
-        type = "toggle",
-        get = function(info) return pathDB.profile[selectedGroup].conditions[name].priority end,
-        set = function(info, value) pathDB.profile[selectedGroup].conditions[name].priority = value end,
-        desc = L["description_priority"],
-        disabled = DisabledFunc,
-        dialogControl = "AutoHideUI_ToggleStar",
-        width = 0.35,
-        order = order,
-    }
-    order = order + 1
-
-    path["enable_"..name] = enable
-    path["priority_"..name] = priority
-    path["slider_"..name] = slider
-
-    local maxWith = 2.95
-    local totalWidth = enable.width + priority.width + slider.width
-
-    if isChild then
-        local function hiddenFunc()
-            return not pathDB.profile[selectedGroup][parentName.."Expanded"]
-        end
-
-        spacer.hidden = hiddenFunc
-        enable.hidden = hiddenFunc
-        slider.hidden = hiddenFunc
-        priority.hidden = hiddenFunc
-        enable.disabled = function()
-            return not pathDB.profile[selectedGroup].conditions[parentName].enabled
-        end
-
-        path["spacerStart_"..name] = CopyTable(spacer)
-        path["spacerStart_"..name].width = 0.3
-        totalWidth = totalWidth + 0.3
-
-        if isLastChild then
-            path["separator_"..parentName] = {
-                type = "header",
-                name = "",
-                order = order,
-                hidden = hiddenFunc,
-            }
-            order = order + 1
-        end
-    end
-
-    local extraConditionElements = EXTRA_CONDITION_ELEMENTS[name]
-    if extraConditionElements then
-        for extraName, extraElement in pairs(extraConditionElements) do
-            extraElement.order = order
-            extraElement.disabled = DisabledFunc
-            path[extraName] = extraElement
-            order = order + 1
-            totalWidth = totalWidth + extraElement.width
-        end
-    end
-
-    local children = info.children
-    if children and not isChild then
-        local remainingWidth = maxWith - totalWidth - 0.25
-        if remainingWidth > 0 then
-            path["spacerEnd_"..name] = CopyTable(spacer)
-            path["spacerEnd_"..name].width = remainingWidth
-            path["spacerEnd_"..name].order = order
-            order = order + 1
-        end
-
-        path["expand_"..name] = {
+    if widgetType == "description" then
+        return {
+            type = "description",
+            name = ""
+        }
+    elseif widgetType == "toggle" then
+        return {
+            type = "toggle",
+            name = widgetInfo.label or L["label_"..conditionName],
+            get = function(info) return Private.db.profile[selectedGroup].conditions[conditionName][settingName] end,
+            set = function(info, value) Private.db.profile[selectedGroup].conditions[conditionName][settingName] = value end,
+        }
+    elseif widgetType == "range" then
+        return {
+            type = "range",
+            name = widgetInfo.label,
+            min = 0,
+            max = 1,
+            bigStep = 0.1,
+            get = function(info) return Private.db.profile[selectedGroup].conditions[conditionName][settingName] end,
+            set = function(info, value) Private.db.profile[selectedGroup].conditions[conditionName][settingName] = value end,
+        }
+    elseif widgetName == "expand" then
+        return {
             type = "execute",
             name = "...",
-            order = order,
-            width = 0.25,
-            func = function()
+            func = function(info)
                 local db = Private.db.profile[selectedGroup]
-                db[info.name.."Expanded"] = not db[info.name.."Expanded"]
+                db[conditionName.."Expanded"] = not db[conditionName.."Expanded"]
                 LibStub("AceConfigRegistry-3.0"):NotifyChange("AutoHideUI")
-                print(db[info.name.."Expanded"])
             end,
         }
-        order = order + 1
+    end
+end
 
-        for i, childInfo in pairs(children) do
-            order = SetElementForConditionSelection(path, childInfo, order, true, info.name, i == #children)
+local function GetConditionDisabledFunc(widgetInfo, conditionInfo, entryInfo)
+    if widgetInfo.ignoreDisabled then
+        return nil
+    end
+
+    local conditionName, parentName = conditionInfo.name, entryInfo.parentName
+    local disabledKey = widgetInfo.disabledKeys and widgetInfo.disabledKeys[entryInfo.type]
+
+    if disabledKey == "parent" then
+        return function(info)
+            return not Private.db.profile[selectedGroup].conditions[parentName].enabled
         end
+    elseif disabledKey == "parentChild" then
+        return function(info)
+            local parentEnabled = Private.db.profile[selectedGroup].conditions[parentName].enabled
+            local selfEnabled = Private.db.profile[selectedGroup].conditions[conditionName].enabled
+            return not selfEnabled or not parentEnabled
+        end
+    elseif disabledKey == "parentChildOverride" then
+        return function(info)
+            local parentEnabled = Private.db.profile[selectedGroup].conditions[parentName].enabled
+            local selfEnabled = Private.db.profile[selectedGroup].conditions[conditionName].enabled
+            local overrideEnabled = Private.db.profile[selectedGroup].conditions[conditionName].override
+            return not selfEnabled or not parentEnabled or not overrideEnabled
+        end
+    elseif widgetInfo.name ~= "enable" and not widgetInfo.ignoreDisabled  then
+        return function(info)
+            return not Private.db.profile[selectedGroup].conditions[conditionName].enabled
+        end
+    else
+        return nil
+    end
+end
 
-    elseif not isLastChild then
-        local remainingWidth = maxWith - totalWidth
-        if remainingWidth > 0 then
-            path["spacerEnd_"..name] = CopyTable(spacer)
-            path["spacerEnd_"..name].width = remainingWidth
-            path["spacerEnd_"..name].order = order
-            order = order + 1
+local function CreateConditionWidget(widgetInfo, conditionInfo, entryInfo)
+
+    local widget = GetConditionWidget(widgetInfo, conditionInfo.name)
+    widget.order = entryInfo.widgetOrder
+    widget.desc = conditionInfo.description or widgetInfo.description
+
+    if widgetInfo.width == "remaining" then
+        widget.width = CONDITION_MAXIMUM_WIDTH - entryInfo.totalWidth
+    else
+        widget.width = widgetInfo.width
+        entryInfo.totalWidth = entryInfo.totalWidth + widgetInfo.width
+    end
+
+    if widgetInfo.dialogControl then
+        widget.dialogControl = widgetInfo.dialogControl
+    end
+
+    widget.disabled = GetConditionDisabledFunc(widgetInfo, conditionInfo, entryInfo)
+
+    if widgetInfo.widthOffset and widgetInfo.widthOffset[entryInfo.type] then
+        widget.width = widget.width + widgetInfo.widthOffset[entryInfo.type]
+        entryInfo.totalWidth = entryInfo.totalWidth + widgetInfo.widthOffset[entryInfo.type]
+    end
+
+    entryInfo.conditionGroup.args[widgetInfo.name] = widget
+    entryInfo.widgetOrder = entryInfo.widgetOrder + 1
+
+    return entryInfo
+end
+
+function Config.GetParentConditionInfo(conditionInfo)
+    local parent = conditionInfo.parent
+    for _, parentConditionInfo in ipairs(Config.CONDITION_DEFINITIONS) do
+        if parentConditionInfo.name == parent then
+            return parentConditionInfo
+        end
+    end
+end
+
+local function GetExtraConditionOptions(conditionInfo)
+    local extraOptions = conditionInfo.extraOptions
+
+    if extraOptions then
+        return extraOptions
+    elseif conditionInfo.isChild then
+        local parentConditionInfo = Config.GetParentConditionInfo(conditionInfo)
+        if parentConditionInfo.extraOptions then
+            return parentConditionInfo.extraOptions
+        end
+    end
+end
+
+local function CreateExtraConditionOptions(widgetInfo, conditionInfo, entryInfo)
+    local extraOptions = GetExtraConditionOptions(conditionInfo)
+
+    if not extraOptions then
+        return entryInfo
+    end
+
+    for _, extraInfo in pairs(extraOptions) do
+        local widget = CopyTable(extraInfo.widget)
+        widget.get = function(info) return Private.db.profile[selectedGroup].conditions[conditionInfo.name][extraInfo.settingName] end
+        widget.set = function(info, value) Private.db.profile[selectedGroup].conditions[conditionInfo.name][extraInfo.settingName] = value end
+        widget.name = L[extraInfo.entryName]
+        widget.order = entryInfo.widgetOrder
+        widget.disabled = GetConditionDisabledFunc(widgetInfo, conditionInfo, entryInfo)
+        entryInfo.widgetOrder = entryInfo.widgetOrder + 1
+        entryInfo.conditionGroup.args[extraInfo.entryName] = widget
+        entryInfo.totalWidth = entryInfo.totalWidth + widget.width
+    end
+
+    return entryInfo
+end
+
+local function CreateConditionsEntry(path, conditionInfo, order)
+    local conditionName = conditionInfo.name
+    local conditionGroup = {
+        name = "",
+        type = "group",
+        inline = true,
+        order = order,
+        args = {},
+    }
+    local entryInfo = {
+        type = conditionInfo.isParent and "parent" or conditionInfo.isChild and "child",
+        totalWidth = 0,
+        widgetOrder = 1,
+        conditionGroup = conditionGroup,
+        parentName = conditionInfo.parent,
+    }
+
+
+    path["group_" .. conditionName] = conditionGroup
+    order = order + 1
+
+    if entryInfo.type == "child" and conditionInfo.parent then
+        conditionGroup.hidden = function()
+            return not Private.db.profile[selectedGroup][conditionInfo.parent.."Expanded"]
         end
     end
 
+    for _, widgetInfo in ipairs(CONDITION_ENTRY_BLUEPRINT) do
+        if widgetInfo.widget == "extraOptions" then
+            entryInfo = CreateExtraConditionOptions(widgetInfo, conditionInfo, entryInfo)
+        elseif (not widgetInfo.requiredType) or (widgetInfo.requiredType == entryInfo.type) then
+            entryInfo = CreateConditionWidget(widgetInfo, conditionInfo, entryInfo)
+        end
+    end
 
+    if conditionInfo.addSeparator then
+        path["separator_"..conditionName] = {
+            type = "header",
+            name = "",
+            order = order,
+        }
+
+        if conditionInfo.isChild and conditionInfo.parent then
+            path["separator_"..conditionName].hidden = function()
+                return not Private.db.profile[selectedGroup][conditionInfo.parent.."Expanded"]
+            end
+        end
+
+        order = order + 1
+    end
 
     return order
 end
 
-local function SetupConditionSelection()
+local function CreateConditionsOptions()
     local path = OPTIONS_MENU.args.setup.args.tabConditions.args.group_conditionSelect.args
     local order = 5
-    for index, info in ipairs(Config.CONDITION_DEFINITIONS) do
-        order = SetElementForConditionSelection(path, info, order)
+    for _, conditionInfo in ipairs(Config.CONDITION_DEFINITIONS) do
+        order = CreateConditionsEntry(path, conditionInfo, order)
     end
 end
 
 function Config.CreateOptionsMenu()
     SetupFrameSelection()
-    SetupConditionSelection()
+    CreateConditionsOptions()
 end
 
 ------------------
@@ -1358,25 +1443,47 @@ end
 function Config.CheckGroupsForMissingEntries(defaultGroup)
     -- ensuring new conditions or new sub-options for existing conditions are added to user profile.
     -- AceDB will not handle additional groups the user may have created, so we have to.
-    for _, group in ipairs(Private.db.profile) do
-        for k,v in pairs(defaultGroup) do
-            if not group[k] then
-                group[k] = CopyTable(v)
-            end
-        end
 
-        for conditionName, conditionInfo in pairs(defaultGroup.conditions) do
-            if not group.conditions[conditionName] then
-                group.conditions[conditionName] = CopyTable(conditionInfo)
-            else
-                for setting, value in pairs(conditionInfo) do
-                    if group.conditions[conditionName][setting] == nil then
-                        group.conditions[conditionName][setting] = value
+    -- iterating through all profiles
+    for _, profileData in pairs(Private.db.profiles) do
+        -- iterating for each group in profile
+        for _, group in ipairs(profileData) do
+
+            -- looking for missing settings
+            for k,v in pairs(defaultGroup) do
+                if not group[k] then
+                    if type(v) == "table" then
+                        group[k] = CopyTable(v)
+                    else
+                        group[k] = v
                     end
                 end
             end
+
+            -- looking for missing conditions
+            for conditionName, conditionInfo in pairs(defaultGroup.conditions) do
+                if not group.conditions[conditionName] then
+                    group.conditions[conditionName] = CopyTable(conditionInfo)
+                else
+                    for setting, value in pairs(conditionInfo) do
+                        if group.conditions[conditionName][setting] == nil then
+                            group.conditions[conditionName][setting] = value
+                        end
+                    end
+                end
+            end
+
+            -- checking for settings that are no longer in use
+            for k,v in pairs(group) do
+                if defaultGroup[k] == nil then
+                    print("unknown setting!", k)
+                    group[k] = nil
+                end
+            end
+
         end
     end
+
 end
 
 function Config.GetDefaultGroup(name)

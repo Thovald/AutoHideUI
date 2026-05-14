@@ -14,15 +14,15 @@ local function UpdateIcon(self)
     local method = tex.method or "SetTexture"
     if self.checked == true then
         self.icon[method](self.icon, tex.checked   or tex.unchecked)
-        self.icon:SetDesaturated(false)
+        --self.icon:SetDesaturated(false)
     elseif self.checked == nil then
         -- Tristate / indeterminate: use dedicated texture if provided,
         -- otherwise fall back to unchecked.
         self.icon[method](self.icon, tex.tristate or tex.unchecked)
-        self.icon:SetDesaturated(true)
+        --self.icon:SetDesaturated(true)
     else
         self.icon[method](self.icon, tex.unchecked or tex.checked)
-        self.icon:SetDesaturated(true)
+        --self.icon:SetDesaturated(true)
     end
     -- Suppress the base checkbox's own checkmark, which _baseSetValue
     -- re-shows whenever the value is true.
@@ -41,7 +41,7 @@ local function OnEnter(frame)
     if option then
         local desc = type(option.desc) == "function" and option.desc() or option.desc
         local name = type(option.name) == "function" and option.name() or option.name
-        if desc and desc ~= "" then
+        if name or (desc and desc ~= "") then
             GameTooltip:SetOwner(frame, "ANCHOR_TOPRIGHT")
             GameTooltip:SetText(name or "", 1, 0.82, 0, 1)
             GameTooltip:AddLine(desc, 1, 1, 1, true)
@@ -166,7 +166,7 @@ end
 -- Constructor
 -- ─────────────────────────────────────────────────────────────────────────────
  
-local function GetConstructor(texTable, type)
+local function GetConstructor(texTable, type, width, height)
     return function()
         -- 1. Build a complete, fully-wired CheckBox widget.
         local baseConstructor = AceGUI.WidgetRegistry["CheckBox"]
@@ -181,8 +181,8 @@ local function GetConstructor(texTable, type)
         -- 3. Add our replacement icon on the ARTWORK layer, occupying the same
         --    space the original checkbox graphic used (left-hand side of the frame).
         local icon = widget.frame:CreateTexture(nil, "ARTWORK")
-        icon:SetWidth(24)
-        icon:SetHeight(24)
+        icon:SetWidth(width or 24)
+        icon:SetHeight(height or 24)
         icon:SetPoint("LEFT", widget.frame, "LEFT", 1, 0)
         widget.icon = icon
     
@@ -221,7 +221,7 @@ local function GetConstructor(texTable, type)
     end
 end
 
-Private.AceWidgetTemplates.RegisterWidget = function(self, type, version, texTable)
-    local constructor = GetConstructor(texTable, type)
+Private.AceWidgetTemplates.RegisterToggleWidget = function(self, type, version, texTable, width, height)
+    local constructor = GetConstructor(texTable, type, width, height)
     AceGUI:RegisterWidgetType(type, constructor, version)
 end

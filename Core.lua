@@ -6,7 +6,7 @@ Private.Frames = {}
 Private.Fading = {}
 Private.FrameFinder = {}
 Private.MouseoverAreas = {}
-Private.isAceHooked = false
+Private.Changelog = {}
 
 -- namespaces for functions that are called between files
 local Main = Private.Main
@@ -56,9 +56,17 @@ local PARTY_UNITS = {
     party4 = true,
 }
 
+local INSTANCE_TYPE_MAPPING = {
+    pvp = "instanceBattleground",
+    arena = "instanceArena",
+    party = "instanceDungeon",
+    raid = "instanceRaid",
+    scenario = "instanceScenario",
+    neighborhood = "instanceNeighborhood",
+    interior = "instanceHousing",
+}
 
 Main.inCombat = InCombatLockdown()
-local hasHostileTarget, hasFriendlyTarget, hasHostileFocus, hasFriendlyFocus
 local isMounted = IsMounted()
 local isFlying = IsFlying()
 local isGliding = C_PlayerInfo.GetGlidingInfo()
@@ -132,10 +140,9 @@ local function RegisterEventsInCondition(condition)
         if info.name == condition and info.events then
             events = info.events
             break
-        elseif info.isParent then
+        elseif info.type == "parent" then
             parents[info.name] = info
-        elseif info.name == condition and info.isChild then
-            print("found parent events")
+        elseif info.name == condition and info.type == "child" then
             events = parents[info.parent].events
         end
     end
@@ -319,28 +326,10 @@ local function RunAfterCombatQueue()
     wipe(Main.runAfterCombat)
 end
 
-local function UpdateTargetStatesForUnitToken(unitToken, valHostile, valFriendly)
-    if unitToken == "target" then
-        hasHostileTarget = valHostile
-        hasFriendlyTarget = valFriendly
-    elseif unitToken == "focus" then
-        hasHostileFocus = valHostile
-        hasFriendlyFocus = valFriendly
-    end
-end
-
-local function GetOtherTargetStates(unitToken)
-    if unitToken == "target" then
-        return hasHostileFocus, hasFriendlyFocus
-    elseif unitToken == "focus" then
-        return hasHostileTarget, hasFriendlyTarget
-    end
-end
-
 local function GetConditionRelationships(conditionName)
     for _, conditionInfo in ipairs(Config.CONDITION_DEFINITIONS) do
         if conditionInfo.name == conditionName then
-            return conditionInfo.isChild, conditionInfo.isParent, conditionInfo.parent
+            return conditionInfo.type, conditionInfo.parent
         end
     end
 end
@@ -352,11 +341,11 @@ function Main.GetConditionsSettings(conditionsDB)
     local conditions = {}
 
     for conditionName, conditionInfo in pairs(conditionsDB) do
-        local isChild, isParent, parentName = GetConditionRelationships(conditionName)
+        local conditionType, parentName = GetConditionRelationships(conditionName)
 
-        if not isParent and not isChild then
+        if conditionType == "default" then
             conditions[conditionName] = CopyTable(conditionInfo)
-        elseif isChild then
+        elseif conditionType == "child" then
             local childInfo
             local parentInfo = conditionsDB[parentName]
             local isChildEnabled = conditionInfo.enabled and parentInfo.enabled
@@ -438,11 +427,11 @@ local MigrateDB = {
         -- target and focus
         local targetEnabled = tFriendly.enabled or tHostile.enabled
 
-        local settingsMatch = tFriendly.alpha     == tHostile.alpha
+        local targetSettingsMatch = tFriendly.alpha == tHostile.alpha
                         and tFriendly.priority  == tHostile.priority
                         and tFriendly.softTarget == tHostile.softTarget
 
-        if settingsMatch then
+        if targetSettingsMatch then
             c.target = CopyTable(tFriendly)
             c.focus  = CopyTable(tFriendly)
             c.targetFriendly = c.targetFriendly or {}
@@ -479,7 +468,6 @@ local function UpdateDB()
     for i = lastSchemaVersion + 1, DB_SCHEMA_VERSION do
         local migration = MigrateDB[i]
         if migration then
-            print("migrating!")
             -- migrating every profile
             for _, profileData in pairs(Private.db.profiles) do
                 -- migrating every group in profile
@@ -536,31 +524,26 @@ local function ConditionCombat()
 end
 
 local function ConditionTarget(unitToken)
-    local otherHostileTarget, otherFriendlyTarget = GetOtherTargetStates(unitToken)
-    local thisHostileTarget, thisFriendlyTarget
+    local isFriendly, isHostile = false, false
 
     if UnitExists(unitToken) then
-        if not otherHostileTarget and UnitCanAttack("player", unitToken) then
-            thisHostileTarget = true
+        if UnitCanAttack("player", unitToken) then
+            isHostile = true
         else
-            thisFriendlyTarget = true
+            isFriendly = true
         end
     end
-    
-    UpdateTargetStatesForUnitToken(unitToken, thisHostileTarget, thisFriendlyTarget)
 
-    UpdateConditionForAllGroups("targetHostile", thisHostileTarget or otherHostileTarget)
-    UpdateConditionForAllGroups("targetFriendly", thisFriendlyTarget or otherFriendlyTarget)
+    UpdateConditionForAllGroups(unitToken .. "Hostile", isHostile)
+    UpdateConditionForAllGroups(unitToken .. "Friendly", isFriendly)
 end
 
 local function ConditionSoftTarget()
-    local anyTarget = hasHostileTarget or hasHostileFocus or hasFriendlyTarget or hasFriendlyFocus
-
-    if anyTarget then
+    if UnitExists("target") then
         return
     end
 
-    local hasHostileSoftTarget, hasFriendlySoftTarget
+    local hasHostileSoftTarget, hasFriendlySoftTarget = false, false
 
     for _, group in pairs(Main.activeGroups) do
         if group.conditions.targetHostile.softTarget and UnitExists("softenemy") then
@@ -589,11 +572,24 @@ local function ConditionInteractable(canInteract)
 end
 
 local function ConditionInstance()
-    local isInInstance, instanceType = IsInInstance()
-    isInInstance = isInInstance or instanceType == "scenario"
-    local isHousing = instanceType == "neighborhood" or instanceType == "interior"
-    UpdateConditionForAllGroups("instance", isInInstance and not isHousing)
-    UpdateConditionForAllGroups("housing", isHousing)
+    local isInInstance, currentInstanceType = IsInInstance()
+
+    if not isInInstance and currentInstanceType ~= "scenario" then
+        print("no instance!")
+        for _, instanceCondition in pairs(INSTANCE_TYPE_MAPPING) do
+            UpdateConditionForAllGroups(instanceCondition, false)
+        end
+    else
+        for instanceType, instanceCondition in pairs(INSTANCE_TYPE_MAPPING) do
+            if instanceType == currentInstanceType then
+                print("instance:", instanceCondition)
+                UpdateConditionForAllGroups(instanceCondition, true)
+            else
+                UpdateConditionForAllGroups(instanceCondition, false)
+            end
+        end
+    end
+
 end
 
 local function ConditionMouseover()

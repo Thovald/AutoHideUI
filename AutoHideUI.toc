@@ -12,10 +12,12 @@
 embeds.xml
 Locales/Locales.xml
 
+Widgets/AutoHideUI_ToggleHover.lua
 Widgets/WidgetTemplate-ToggleIcon.lua
 Widgets/AutoHideUI_ToggleCog.lua
 Widgets/AutoHideUI_ToggleExpand.lua
 Widgets/AutoHideUI_ToggleStar.lua
+Widgets/AutoHideUI_ChangelogAnchor.lua
 
 Core.lua
 Options.lua
@@ -23,4 +25,5 @@ Modules\Fading.lua
 Modules\Frames.lua
 Modules\FrameFinder.lua
 Modules\MouseoverAreas.lua
+Modules\Changelog.lua
 

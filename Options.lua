@@ -5,7 +5,6 @@ local Config = Private.Config
 -- namespace for functions that are referenced before they are defined
 local internal = {}
 
-local AceGUI = LibStub("AceGUI-3.0")
 local AceConfig = LibStub("AceConfig-3.0")
 local AceConfigDialog = LibStub("AceConfigDialog-3.0")
 local AceConfigRegistry = LibStub("AceConfigRegistry-3.0")
@@ -14,6 +13,7 @@ local L = LibStub("AceLocale-3.0"):GetLocale("AutoHideUI")
 
 local pairs, ipairs  = pairs, ipairs
 
+local isAceHooked = false
 local selectedGroup
 local isOptionsOpen
 local MENU_WIDTH = 630
@@ -24,32 +24,7 @@ local UI_WIDTH, UI_HEIGHT
 local UI_PADDING = 5
 local CONDITION_MAXIMUM_WIDTH = 2.95
 local highlightFrames = {}
-
-------------------
--- Widgets
-------------------
-
-AceGUI:RegisterWidgetType("AutoHideUI_CheckboxWithHooks", function()
-    local widget = AceGUI:Create("CheckBox")
-
-    widget.frame:HookScript("OnEnter", function(self)
-        local frameString = self.obj.userdata.option.arg.frameString
-        local frameList = Main.FetchFramesFromString(frameString)
-        if frameList then
-            for _,frame in pairs(frameList) do
-                Config.ShowHighlight(frame)
-            end
-        end
-    end)
-
-    widget.frame:HookScript("OnLeave", function()
-        Config.HideAllHighlights()
-    end)
-
-    return widget
-end, 1)
-
-
+local sessionOptionStates = {} -- misc option states that don't need to be stored in SV
 
 ------------------
 -- UI Data
@@ -115,6 +90,7 @@ Config.CONDITION_DEFINITIONS = {
             "PLAYER_REGEN_ENABLED",
             "PLAYER_REGEN_DISABLED",
         },
+        type = "default",
     },
     ----------------------
     -- START instance
@@ -131,7 +107,7 @@ Config.CONDITION_DEFINITIONS = {
             "LOADING_SCREEN_DISABLED",
             "ZONE_CHANGED_NEW_AREA",
         },
-        isParent = true,
+        type = "parent",
     },
     {
         name = "instanceDungeon",
@@ -141,7 +117,7 @@ Config.CONDITION_DEFINITIONS = {
             alpha = 1,
             priority = false,
         },
-        isChild = true,
+        type = "child",
         parent = "instance",
     },
     {
@@ -152,7 +128,7 @@ Config.CONDITION_DEFINITIONS = {
             alpha = 1,
             priority = false,
         },
-        isChild = true,
+        type = "child",
         parent = "instance",
     },
     {
@@ -163,7 +139,7 @@ Config.CONDITION_DEFINITIONS = {
             alpha = 1,
             priority = false,
         },
-        isChild = true,
+        type = "child",
         parent = "instance",
     },
     {
@@ -174,7 +150,7 @@ Config.CONDITION_DEFINITIONS = {
             alpha = 1,
             priority = false,
         },
-        isChild = true,
+        type = "child",
         parent = "instance",
     },
     {
@@ -185,7 +161,7 @@ Config.CONDITION_DEFINITIONS = {
             alpha = 1,
             priority = false,
         },
-        isChild = true,
+        type = "child",
         parent = "instance",
     },
     {
@@ -196,7 +172,7 @@ Config.CONDITION_DEFINITIONS = {
             alpha = 0,
             priority = true,
         },
-        isChild = true,
+        type = "child",
         parent = "instance",
     },
     {
@@ -207,9 +183,8 @@ Config.CONDITION_DEFINITIONS = {
             alpha = 0,
             priority = true,
         },
-        isChild = true,
+        type = "child",
         parent = "instance",
-        addSeparator = true,
     },
     ----------------------
     -- END instance
@@ -226,6 +201,7 @@ Config.CONDITION_DEFINITIONS = {
             "WORLD_CURSOR_TOOLTIP_UPDATE",
             "UPDATE_MOUSEOVER_UNIT",
         },
+        type = "default",
         extraOptions = {
             {
                 entryName = "dropdown_mouseover",
@@ -252,8 +228,10 @@ Config.CONDITION_DEFINITIONS = {
         },
         events = {
             "PLAYER_TARGET_CHANGED",
+            "PLAYER_SOFT_ENEMY_CHANGED",
             "PLAYER_SOFT_FRIEND_CHANGED",
         },
+        type = "parent",
         extraOptions = {
             {
                 entryName = "checkbox_softTarget",
@@ -265,7 +243,6 @@ Config.CONDITION_DEFINITIONS = {
                 },
             },
         },
-        isParent = true,
     },
     {
         name = "targetFriendly",
@@ -275,7 +252,7 @@ Config.CONDITION_DEFINITIONS = {
             priority = false,
             softTarget = false,
         },
-        isChild = true,
+        type = "child",
         parent = "target",
     },
     {
@@ -286,9 +263,8 @@ Config.CONDITION_DEFINITIONS = {
             priority = false,
             softTarget = false,
         },
-        isChild = true,
+        type = "child",
         parent = "target",
-        addSeparator = true,
     },
     ----------------------
     -- END target 
@@ -307,7 +283,7 @@ Config.CONDITION_DEFINITIONS = {
         events = {
             "PLAYER_FOCUS_CHANGED",
         },
-        isParent = true,
+        type = "parent",
     },
     {
         name = "focusFriendly",
@@ -316,7 +292,7 @@ Config.CONDITION_DEFINITIONS = {
             alpha = 1,
             priority = false,
         },
-        isChild = true,
+        type = "child",
         parent = "focus",
     },
     {
@@ -326,9 +302,8 @@ Config.CONDITION_DEFINITIONS = {
             alpha = 1,
             priority = false,
         },
-        isChild = true,
+        type = "child",
         parent = "focus",
-        addSeparator = true,
     },
     ----------------------
     -- END focus
@@ -344,6 +319,7 @@ Config.CONDITION_DEFINITIONS = {
         events = {
             "PLAYER_SOFT_INTERACT_CHANGED",
         },
+        type = "default",
         description = L["descr_interactable"],
         extraOptions = {
             {
@@ -370,6 +346,7 @@ Config.CONDITION_DEFINITIONS = {
             "UNIT_SPELLCAST_CHANNEL_START",
             "UNIT_SPELLCAST_CHANNEL_STOP",
         },
+        type = "default",
     },
     {
         name = "resting",
@@ -381,6 +358,7 @@ Config.CONDITION_DEFINITIONS = {
         events = {
             "PLAYER_UPDATE_RESTING",
         },
+        type = "default",
     },
     {
         name = "health",
@@ -395,6 +373,7 @@ Config.CONDITION_DEFINITIONS = {
             "UNIT_MAXHEALTH",
             "UNIT_MAX_HEALTH_MODIFIERS_CHANGED",
         },
+        type = "default",
         description = L["descr_health"],
         extraOptions = {
             {
@@ -421,6 +400,7 @@ Config.CONDITION_DEFINITIONS = {
             "PLAYER_MOUNT_DISPLAY_CHANGED",
             "UPDATE_SHAPESHIFT_FORM",
         },
+        type = "default",
         extraOptions = {
             {
                 entryName = "dropdown_druidForms",
@@ -446,6 +426,7 @@ Config.CONDITION_DEFINITIONS = {
             "UPDATE_SHAPESHIFT_FORM",
             "PLAYER_IS_GLIDING_CHANGED",
         },
+        type = "default",
         extraOptions = {
             {
                 entryName = "dropdown_flightStyle",
@@ -465,6 +446,7 @@ Config.CONDITION_DEFINITIONS = {
             alpha = 1,
             priority = false,
         },
+        type = "default",
         events = {
             "UNIT_ENTERED_VEHICLE",
             "UNIT_EXITED_VEHICLE",
@@ -800,6 +782,7 @@ local function CloseAllPopups()
     StaticPopup_Hide("AUTOHIDEUI_CREATE_GROUP")
     StaticPopup_Hide("AUTOHIDEUI_RENAME_GROUP")
     StaticPopup_Hide("AUTOHIDEUI_DELETE_GROUP")
+    Private.Changelog.frame:SetShown(false)
 end
 
 ------------------
@@ -1017,6 +1000,12 @@ local OPTIONS_TAB_CONDITIONS = {
                     name = " ",
                     width = 0.5,
                     order = 3,
+                },
+                spacer2 = {
+                    type = "description",
+                    name = " ",
+                    width = "full",
+                    order = 4,
                 }
                 -- rest is filled in later
             },
@@ -1038,8 +1027,10 @@ local OPTIONS_MENU = {
             args = {
                 header_groups = {
                     type = "header",
-                    --fontSize = "large",
-                    name = Main.ColorString(L["descr_groups"], "gold"),
+                    name = function()
+                        local groupName = Private.db and Private.db.profile[selectedGroup].name or "?"
+                        return groupName
+                    end,
                     order = 1,
                 },
                 groupSelection = {
@@ -1048,6 +1039,7 @@ local OPTIONS_MENU = {
                     values = function() return GetGroupNames() end,
                     get = function() return selectedGroup end,
                     set = function(_, value) selectedGroup = value end,
+                    desc = L["descr_groups"],
                     width = 1,
                     order = 3,
                 },
@@ -1056,6 +1048,7 @@ local OPTIONS_MENU = {
                     type = "execute",
                     width = 0.9,
                     func = function() StaticPopup_Show("AUTOHIDEUI_CREATE_GROUP") end,
+                    desc = L["descr_groups"],
                     order = 5,
                 },
                 buttonRename = {
@@ -1076,6 +1069,13 @@ local OPTIONS_MENU = {
                 tabFade = OPTIONS_TAB_FADE,
                 tabConditions = OPTIONS_TAB_CONDITIONS,
             },
+
+        },
+        changelogAnchor = {
+            type = "description",
+            dialogControl = "AutoHideUI_ChangelogButtonAnchor",
+            name = "",
+            order = 2,
         },
         -- profiles is set later when db has actually been initialized
     },
@@ -1091,7 +1091,7 @@ local function GetElementForFrameSelection(order, frameInfo)
         disabled = function(info)
             return IsFrameSelectedElsewhere(frameString)
         end,
-        dialogControl = "AutoHideUI_CheckboxWithHooks",
+        dialogControl = "AutoHideUI_ToggleHover",
         desc = frameInfo.description, -- most times is nil
         order = order,
         arg = {frameString = frameString},
@@ -1129,27 +1129,28 @@ local CONDITION_ENTRY_BLUEPRINT = {
         name = "spacerStart",
         widget = "description",
         width = 0.1,
-        requiredType = "child",
+        allowedTypes = {child = true},
     },
     {
         name = "enable",
         widget = "toggle",
         width = 1,
         setting = "enabled",
+        allowedTypes = {default = true, parent = true, child = true},
         disabledKeys = {
             child = "parent"
         },
         widthOffset = {
-            child =  - 0.1 - 0.2, -- subtracting spacer and override toggle width
+            child =  - 0.1 - 0.15, -- subtracting spacer and override toggle width
         }
     },
     {
         name = "override",
         label = L["override"],
         widget = "toggle",
-        width = 0.2,
-        requiredType = "child",
+        width = 0.15,
         setting = "override",
+        allowedTypes = {child = true},
         disabledKeys = {
             child = "parentChild"
         },
@@ -1162,6 +1163,7 @@ local CONDITION_ENTRY_BLUEPRINT = {
         widget = "range",
         width = 0.7,
         setting = "alpha",
+        allowedTypes = {default = true, parent = true, child = true},
         disabledKeys = {
             child = "parentChildOverride"
         },
@@ -1170,11 +1172,12 @@ local CONDITION_ENTRY_BLUEPRINT = {
         bigStep = 0.1,
     },
     {
-        name = "prio",
+        name = "priority",
         label = L["priority"],
         widget = "toggle",
         width = 0.2,
         setting = "priority",
+        allowedTypes = {default = true, parent = true, child = true},
         disabledKeys = {
             child = "parentChildOverride"
         },
@@ -1184,6 +1187,7 @@ local CONDITION_ENTRY_BLUEPRINT = {
     {
         -- getting widgets info from a different table
         widget = "extraOptions",
+        allowedTypes = {default = true, parent = true, child = true},
         disabledKeys = {
             child = "parentChildOverride"
         },
@@ -1192,28 +1196,49 @@ local CONDITION_ENTRY_BLUEPRINT = {
         name = "spacerEnd",
         widget = "description",
         width = "remaining",
+        allowedTypes = {default = true, parent = true, child = true},
         widthOffset = {
-            parent =  - 0.15, -- subtracting width of expand toggle
+            parent =  - 0.2, -- subtracting width of expand toggle
         },
     },
     {
         name = "expand",
-        widget = "execute",
-        width = 0.15,
-        requiredType = "parent",
+        label = L["expand"],
+        --description = L["expand"],
+        widget = "toggle",
+        width = 0.2,
+        allowedTypes = {parent = true},
         ignoreDisabled = true,
+        dialogControl = "AutoHideUI_ToggleExpand",
     },
+
 }
 
-local function GetConditionWidget(widgetInfo, conditionName)
+local function GetConditionWidget(widgetInfo, conditionInfo)
+    local conditionName = conditionInfo.name
     local widgetType = widgetInfo.widget
     local widgetName = widgetInfo.name
     local settingName = widgetInfo.setting
 
+    -- note that we check for widgetType and widgetName
     if widgetType == "description" then
         return {
             type = "description",
             name = ""
+        }
+
+    elseif widgetName == "expand" then
+        return {
+            type = "toggle",
+            name = function()
+                if sessionOptionStates[conditionName.."Expanded"] then
+                    return L["collapse"]
+                else
+                    return L["expand"]
+                end
+            end,
+            get = function(info) return sessionOptionStates[conditionName.."Expanded"] end,
+            set = function(info, value) sessionOptionStates[conditionName.."Expanded"] = value end,
         }
     elseif widgetType == "toggle" then
         return {
@@ -1231,16 +1256,6 @@ local function GetConditionWidget(widgetInfo, conditionName)
             bigStep = 0.1,
             get = function(info) return Private.db.profile[selectedGroup].conditions[conditionName][settingName] end,
             set = function(info, value) Private.db.profile[selectedGroup].conditions[conditionName][settingName] = value end,
-        }
-    elseif widgetName == "expand" then
-        return {
-            type = "execute",
-            name = "...",
-            func = function(info)
-                local db = Private.db.profile[selectedGroup]
-                db[conditionName.."Expanded"] = not db[conditionName.."Expanded"]
-                LibStub("AceConfigRegistry-3.0"):NotifyChange("AutoHideUI")
-            end,
         }
     end
 end
@@ -1281,13 +1296,13 @@ end
 
 local function CreateConditionWidget(widgetInfo, conditionInfo, entryInfo)
 
-    local widget = GetConditionWidget(widgetInfo, conditionInfo.name)
+    local widget = GetConditionWidget(widgetInfo, conditionInfo)
     widget.order = entryInfo.widgetOrder
     widget.desc = conditionInfo.description or widgetInfo.description
 
     if widgetInfo.width == "remaining" then
         widget.width = CONDITION_MAXIMUM_WIDTH - entryInfo.totalWidth
-    else
+    elseif widgetInfo.width then
         widget.width = widgetInfo.width
         entryInfo.totalWidth = entryInfo.totalWidth + widgetInfo.width
     end
@@ -1309,21 +1324,12 @@ local function CreateConditionWidget(widgetInfo, conditionInfo, entryInfo)
     return entryInfo
 end
 
--- function Config.GetParentConditionInfo(conditionInfo)
---     local parent = conditionInfo.parent
---     for _, parentConditionInfo in ipairs(Config.CONDITION_DEFINITIONS) do
---         if parentConditionInfo.name == parent then
---             return parentConditionInfo
---         end
---     end
--- end
-
 local function GetExtraConditionOptions(conditionInfo)
     local extraOptions = conditionInfo.extraOptions
 
     if extraOptions then
         return extraOptions
-    elseif conditionInfo.isChild then
+    elseif conditionInfo.type == "child" then
         local parentConditionInfo = Config.GetDefaultConditionByName(conditionInfo.parent)
         if parentConditionInfo.extraOptions then
             return parentConditionInfo.extraOptions
@@ -1355,6 +1361,8 @@ end
 
 local function CreateConditionsEntry(path, conditionInfo, order)
     local conditionName = conditionInfo.name
+    local conditionType = conditionInfo.type
+
     local conditionGroup = {
         name = "",
         type = "group",
@@ -1362,45 +1370,41 @@ local function CreateConditionsEntry(path, conditionInfo, order)
         order = order,
         args = {},
     }
+
     local entryInfo = {
-        type = conditionInfo.isParent and "parent" or conditionInfo.isChild and "child",
+        type = conditionInfo.type,
         totalWidth = 0,
         widgetOrder = 1,
         conditionGroup = conditionGroup,
         parentName = conditionInfo.parent,
     }
 
-
-    path["group_" .. conditionName] = conditionGroup
-    order = order + 1
-
     if entryInfo.type == "child" and conditionInfo.parent then
         conditionGroup.hidden = function()
-            return not Private.db.profile[selectedGroup][conditionInfo.parent.."Expanded"]
+            return not sessionOptionStates[conditionInfo.parent.."Expanded"]
         end
+        conditionGroup.name = ""
+        local parentGroup = path["group_" .. conditionInfo.parent]
+        parentGroup.args["child_"..conditionName] = conditionGroup
+    else
+        path["group_" .. conditionName] = conditionGroup
     end
+    order = order + 1
 
     for _, widgetInfo in ipairs(CONDITION_ENTRY_BLUEPRINT) do
         if widgetInfo.widget == "extraOptions" then
             entryInfo = CreateExtraConditionOptions(widgetInfo, conditionInfo, entryInfo)
-        elseif (not widgetInfo.requiredType) or (widgetInfo.requiredType == entryInfo.type) then
+        elseif widgetInfo.allowedTypes[entryInfo.type] then
             entryInfo = CreateConditionWidget(widgetInfo, conditionInfo, entryInfo)
         end
     end
 
-    if conditionInfo.addSeparator then
-        path["separator_"..conditionName] = {
+    if conditionType ~= "child" then
+        path["headerEnd_"..conditionName] = {
             type = "header",
             name = "",
             order = order,
         }
-
-        if conditionInfo.isChild and conditionInfo.parent then
-            path["separator_"..conditionName].hidden = function()
-                return not Private.db.profile[selectedGroup][conditionInfo.parent.."Expanded"]
-            end
-        end
-
         order = order + 1
     end
 
@@ -1515,6 +1519,8 @@ local function OnOptionsOpen(frame)
     -- stopping Ace menu while Blizz menu is open.
     if frame ~= Main.blizzFrame and Main.blizzFrame:IsVisible() then
         frame:Hide()
+        -- necessary to re-anchor the changelog button
+        LibStub("AceConfigRegistry-3.0"):NotifyChange("AutoHideUI")
         return
     end
 
@@ -1544,11 +1550,11 @@ local function SetHooksForAce()
         local frame = f.frame
         f:SetStatusText(L["chatCommands"].." /autohide /autohideui")
 
-        if not Private.isAceHooked then
+        if not isAceHooked then
             frame:SetResizeBounds(MENU_WIDTH, MENU_HEIGHT_MIN, MENU_WIDTH, MENU_HEIGHT_MAX)
             frame:HookScript("OnShow", function() OnOptionsOpen(frame) end)
             frame:HookScript("OnHide", function() OnOptionsClose() end)
-            Private.isAceHooked = true
+            isAceHooked = true
             OnOptionsOpen(frame) -- need to run this manually on first open
         end
     end)

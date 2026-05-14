@@ -84,20 +84,20 @@ L["descr_conditions"] = "Enable which Conditions should fade the Frames and what
 L["descr_prioConditions"] = "Conditions can be promoted to Priority-Conditions.|nIf a Priority-Condition is active, their Alpha only competes with other Priority-Conditions.|nThe Alpha of any normal Conditions isn't even considered in that case."
 L["enable"] = "Enable"
 L["alpha"] = "Alpha"
-L["priority"] = "Prio"
+L["priority"] = "Priority Condition"
 
 L["label_combat"] = "In Combat"
 L["label_instance"] = "In Instance"
 L["label_mouseover"] = "On Mouseover"
-L["label_target"] = "Target"
+L["label_target"] = "Has Target"
 L["label_targetFriendly"] = "Friendly"
 L["label_targetHostile"] = "Hostile"
-L["label_focus"] = "Focus"
+L["label_focus"] = "Has Focus"
 L["label_focusFriendly"] = "Friendly"
 L["label_focusHostile"] = "Hostile"
 L["label_casting"] = "Casting"
 L["label_resting"] = "Resting"
-L["label_health"] = "Health"
+L["label_health"] = "Missing Health"
 L["label_mounted"] = "Mounted"
 L["label_inVehicle"] = "In Vehicle"
 L["descr_health"] = "Due to AddOn restrictions, this relies entirely on workarounds."..
@@ -189,6 +189,6 @@ L["label_instanceHousing"] = "Housing"
 
 L["override"] = "Override"
 L["description_override"] = "When enabled, this Condition will ignore the settings of the parent and instead use its own settings."
-
-
-
+L["expand"] = "Expand"
+L["collapse"] = "Collapse"
+L["buttonChangelog"] = "View Changelog"

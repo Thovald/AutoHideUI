@@ -60,7 +60,7 @@ local CHANGELOG_DATA = {
 
 local changelogFrame = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
 Changelog.frame = changelogFrame
-changelogFrame:SetSize(700, 500)
+changelogFrame:SetSize(590, 790)
 changelogFrame:SetPoint("TOPRIGHT")
 changelogFrame:SetMovable(true)
 changelogFrame:EnableMouse(true)

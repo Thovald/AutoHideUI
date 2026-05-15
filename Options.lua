@@ -1444,9 +1444,11 @@ function internal.GetNewGroup(name, useDefaultFrameSelection)
     return newGroup
 end
 
-function Config.CheckGroupsForMissingEntries(defaultGroup)
+function Config.CheckGroupsForMissingEntries()
     -- ensuring new conditions or new sub-options for existing conditions are added to user profile.
     -- AceDB will not handle additional groups the user may have created, so we have to.
+
+    local defaultGroup = Config.GetDefaultGroup("")
 
     -- iterating through all profiles
     for _, profileData in pairs(Private.db.profiles) do
@@ -1480,7 +1482,6 @@ function Config.CheckGroupsForMissingEntries(defaultGroup)
             -- checking for settings that are no longer in use
             for k,v in pairs(group) do
                 if defaultGroup[k] == nil then
-                    print("unknown setting!", k)
                     group[k] = nil
                 end
             end

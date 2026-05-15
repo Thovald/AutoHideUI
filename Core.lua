@@ -113,7 +113,6 @@ local function InitDB()
     local defaultProfile = { profile = {defaultGroup} }
 
     Private.db = LibStub("AceDB-3.0"):New("AutoHideUIDB", defaultProfile, true)
-    Config.CheckGroupsForMissingEntries(defaultGroup)
 
     Private.db.RegisterCallback(Private, "OnProfileChanged", "OnProfileChanged")
     Private.db.RegisterCallback(Private, "OnProfileCopied", "OnProfileChanged")
@@ -145,11 +144,6 @@ local function RegisterEventsInCondition(condition)
         elseif info.name == condition and info.type == "child" then
             events = parents[info.parent].events
         end
-    end
-
-    if not events then
-        print("no events to register for", condition)
-        return
     end
 
     for _, event in pairs(events) do
@@ -462,6 +456,25 @@ local MigrateDB = {
     end
 }
 
+local function RepairDB()
+    -- remove nil groups from each profile
+    -- these can occur from incomplete deletions or legacy corruption
+    for profileKey, profileData in pairs(Private.db.profiles) do
+        local cleanedProfile = {}
+
+        -- copy only non-nil groups to new table
+        for _, group in ipairs(profileData) do
+            if group then
+                tinsert(cleanedProfile, group)
+            end
+        end
+
+        Private.db.profiles[profileKey] = cleanedProfile
+    end
+
+    Config.CheckGroupsForMissingEntries()
+end
+
 local function UpdateDB()
     local lastSchemaVersion = Private.db.global.db_schema or 0
 
@@ -486,11 +499,6 @@ end
 ------------------
 
 local function UpdateActiveConditions(group, condition, value)
-    if not group.conditions[condition] then
-        print("condition not found", condition)
-        return
-    end
-
     if not group.conditions[condition].enabled then
         return
     end
@@ -575,14 +583,12 @@ local function ConditionInstance()
     local isInInstance, currentInstanceType = IsInInstance()
 
     if not isInInstance and currentInstanceType ~= "scenario" then
-        print("no instance!")
         for _, instanceCondition in pairs(INSTANCE_TYPE_MAPPING) do
             UpdateConditionForAllGroups(instanceCondition, false)
         end
     else
         for instanceType, instanceCondition in pairs(INSTANCE_TYPE_MAPPING) do
             if instanceType == currentInstanceType then
-                print("instance:", instanceCondition)
                 UpdateConditionForAllGroups(instanceCondition, true)
             else
                 UpdateConditionForAllGroups(instanceCondition, false)
@@ -785,6 +791,7 @@ local function OnLogin()
     C_Timer.After(3, function()
         InitDB()
         UpdateVersion()
+        RepairDB()
         UpdateDB()
         InitOptions()
         InitAddon()

@@ -6,7 +6,7 @@ local L = LibStub("AceLocale-3.0"):GetLocale("AutoHideUI")
 local CHANGELOG_DATA = {
     {
         version = "1.2.0",
-        date = "May 13th 2026",
+        date = "May 15th",
         entries = {
             {
                 title = "Conditions",
@@ -32,11 +32,21 @@ local CHANGELOG_DATA = {
                 content =  {
                     "Added 'Changelog' Button.",
 
+                    "The name of the currently selected group is now shown more prominently at the top.",
+
                     "Replaced the 'Priority Condition' checkbox with a more compact icon.",
 
-                    "Added version control to repair or convert user settings on major updates.",
+                    "Improved version control to repair or convert user settings on major updates.",
 
-                    "The name of the currently selected group is now shown more prominently at the top."
+                },
+            },
+            {
+                title = "Fixes",
+                content =  {
+                    "Fixed EllesmereUI's Minimap not being recognized anymore.",
+
+                    "Fixed a bug where a Group with no Frames selected could break the fade for other Groups."
+                
                 },
             },
         },

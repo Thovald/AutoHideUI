@@ -185,7 +185,7 @@ L["label_instanceBattleground"] = "Battleground"
 L["label_instanceArena"] = "Arena"
 L["label_instanceScenario"] = "Delve/Scenario"
 L["label_instanceNeighborhood"] = "Neighborhood"
-L["label_instanceHousing"] = "Housing"
+L["label_instanceHousing"] = "House Interior"
 
 L["override"] = "Override"
 L["description_override"] = "When enabled, this Condition will ignore the settings of the parent and instead use its own settings."

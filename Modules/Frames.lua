@@ -403,18 +403,7 @@ local ADDON_FRAME_MAPPING = {
     },
     {
         name = "EllesmereUI_Minimap",
-        isLoaded = function()
-                local isLoaded = false
-                if EllesmereUI and C_AddOns.IsAddOnLoaded("EllesmereUIBasics") then
-                    for _, info in ipairs(EllesmereUI.Lite._dbRegistry) do
-                        if info.folder == "EllesmereUIBasics" then
-                            isLoaded = info.profile.minimap.enabled
-                            break
-                        end
-                    end
-                end
-                return isLoaded
-            end,
+        isLoaded = function() return C_AddOns.IsAddOnLoaded("EllesmereUIMinimap") end,
         frames = {
             MinimapCluster = {},
         },
@@ -1077,30 +1066,10 @@ local function CombineFrameLists(frameString, frameInfo, framesInUse, indexedFra
     end
 end
 
-local function HasFrames(frameList)
-    if not frameList then
-        return false
-    end
-
-    for _, frameInfo in pairs(frameList) do
-        for _, frame in pairs(frameInfo.frames) do
-            if frame and frameInfo.args.isInUse then
-                return true
-            end
-        end
-    end
-
-    return false
-end
-
 local function HandleAllGroupFrames(dbIndex, groupDB)
     wipe(addonLoadedStates)
     local commonFrames = GetAllCommonFrames(groupDB)
     local customFrames = GetAllCustomFrames(groupDB)
-
-    if not HasFrames(commonFrames) and not HasFrames(customFrames) then
-        return
-    end
 
     Main.activeGroups[dbIndex] = CreateFrameGroup(groupDB, dbIndex)
 
@@ -1113,10 +1082,6 @@ local function HandleAllGroupFrames(dbIndex, groupDB)
         for frameString, frameInfo in pairs(source) do
             CombineFrameLists(frameString, frameInfo, framesInUse, indexedFrames, Main.activeGroups[dbIndex])
         end
-    end
-
-    if not next(framesInUse) then
-        return
     end
 
     Main.activeGroups[dbIndex].frames = indexedFrames

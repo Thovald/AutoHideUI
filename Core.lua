@@ -402,6 +402,7 @@ local MigrateDB = {
         local function UpdateGroup(group)
             local c = group.conditions
             if not c then
+                -- is using defaults
                 return
             end
 
@@ -472,7 +473,7 @@ local MigrateDB = {
 
         local newProfile = {
             groups= {},
-            overrides = {}
+            manualControl = {}
         }
 
         for i, group in ipairs(profile) do

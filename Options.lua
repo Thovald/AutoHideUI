@@ -1072,7 +1072,7 @@ local OPTIONS_TAB_MANUAL_CONTROL = {
             type = "group",
             name = "",
             order = 15,
-            hidden = function() return #Private.db.profile.overrides == 0 end,
+            hidden = function() return #Private.db.profile.manualControl == 0 end,
             args = {}
 
         },
@@ -1573,7 +1573,7 @@ function Config.GetDefaultProfile()
     local defaultGroup = Config.GetDefaultGroup(L["name_defaultGroup"])
     local defaultProfile = {
         profile = {
-            overrides = {},
+            manualControl = {},
             groups = {
                 defaultGroup,
             }

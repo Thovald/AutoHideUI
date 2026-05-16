@@ -135,7 +135,7 @@ L["descr_interactable"] = "When something interactable is in reach of the player
 L["checkbox_excludeNPCs"] = "Exclude NPCs"
 L["descr_excludeNPCs"] = "Will ignore interactable objects that can be targeted, like NPCs."
 L["button_disableAll"] = "Disable All"
-L["button_reset"] = "Reset Group to Default"
+L["button_reset"] = "Reset to Defaults"
 
 L["frameFinder"] = "Frame Finder"
 L["descr_frameFinder"] = "Launches a Tool to help you find and add Frames that aren't listed above."
@@ -187,8 +187,16 @@ L["label_instanceScenario"] = "Delve/Scenario"
 L["label_instanceNeighborhood"] = "Neighborhood"
 L["label_instanceHousing"] = "House Interior"
 
-L["override"] = "Override"
+L["customize"] = "Customize"
 L["description_override"] = "When enabled, this Condition will ignore the settings of the parent and instead use its own settings."
 L["expand"] = "Expand"
 L["collapse"] = "Collapse"
 L["buttonChangelog"] = "View Changelog"
+L["tab_manualControl"] = "Manual Control"
+L["descr_manualControl"] = "Define a Hotkey or Macro to manually set the Alpha of your Groups.".."|n|n"..
+                            "While an override is engaged, affected Groups will be set to that Alpha and ignore Conditions.".."|n"..
+                            "When disengaged, the Groups will go back to using Conditions to determine the Alpha.".."|n"
+L["button_newOverride"] = "New Override"
+
+
+

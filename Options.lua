@@ -25,6 +25,16 @@ local UI_PADDING = 5
 local CONDITION_MAXIMUM_WIDTH = 2.95
 local highlightFrames = {}
 local sessionOptionStates = {} -- misc option states that don't need to be stored in SV
+local popupContext = {
+    titleText = "",
+    editBoxText = "",
+    callbacks = {
+        create = function(name) end,
+        rename = function(name) end,
+        delete = function() end,
+    },
+    entityID = 1,
+}
 
 ------------------
 -- UI Data
@@ -113,7 +123,7 @@ Config.CONDITION_DEFINITIONS = {
         name = "instanceDungeon",
         db = {
             enabled = true,
-            override = false,
+            customize = false,
             alpha = 1,
             priority = false,
         },
@@ -124,7 +134,7 @@ Config.CONDITION_DEFINITIONS = {
         name = "instanceRaid",
         db = {
             enabled = true,
-            override = false,
+            customize = false,
             alpha = 1,
             priority = false,
         },
@@ -135,7 +145,7 @@ Config.CONDITION_DEFINITIONS = {
         name = "instanceBattleground",
         db = {
             enabled = true,
-            override = false,
+            customize = false,
             alpha = 1,
             priority = false,
         },
@@ -146,7 +156,7 @@ Config.CONDITION_DEFINITIONS = {
         name = "instanceArena",
         db = {
             enabled = true,
-            override = false,
+            customize = false,
             alpha = 1,
             priority = false,
         },
@@ -157,7 +167,7 @@ Config.CONDITION_DEFINITIONS = {
         name = "instanceScenario",
         db = {
             enabled = true,
-            override = false,
+            customize = false,
             alpha = 1,
             priority = false,
         },
@@ -168,7 +178,7 @@ Config.CONDITION_DEFINITIONS = {
         name = "instanceNeighborhood",
         db = {
             enabled = false,
-            override = true,
+            customize = true,
             alpha = 0,
             priority = true,
         },
@@ -179,7 +189,7 @@ Config.CONDITION_DEFINITIONS = {
         name = "instanceHousing",
         db = {
             enabled = false,
-            override = true,
+            customize = true,
             alpha = 0,
             priority = true,
         },
@@ -457,20 +467,6 @@ Config.CONDITION_DEFINITIONS = {
     -- remember to add new condition function to UpdateAllConditions
 }
 
--- also accessed in Core to reset states after loading screens
-Config.DEFAULT_STATES = {
-    startAlpha = 1,
-    endAlpha = 1,
-    fadeEndTime = 0, -- if GetTime() < fadeEndTime we measure and use currentAlpha as startAlpha
-    lastMouseover = nil, -- mouseover is polled constantly. only updating when current and last are different.
-    fadeMode = "",
-    priorityFade = false, -- if fadeMode == "OUT" and priority, we fade out without delay
-    activeConditions = { -- key: name of condition -- value: false or alpha of condition
-        normal = {},
-        priority = {},
-    },
-}
-
 local GROUP_TEMPLATE = {
     name = "New Group",
     frames = {},
@@ -617,7 +613,7 @@ end
 
 local function GetGroupNames()
     local groupNames = {}
-    for _, group in ipairs(Private.db.profile) do
+    for _, group in ipairs(Private.db.profile.groups) do
         tinsert(groupNames, group.name)
     end
     return groupNames
@@ -627,12 +623,12 @@ function Config.SetSelectedGroup(profileChanged)
     -- keeping last selection
     if profileChanged then
         selectedGroup = 1
-    elseif selectedGroup and Private.db.profile[selectedGroup] then
+    elseif selectedGroup and Private.db.profile.groups[selectedGroup] then
         return
     end
 
     selectedGroup = nil
-    for index in ipairs(Private.db.profile) do
+    for index in ipairs(Private.db.profile.groups) do
         selectedGroup = index
         break
     end
@@ -646,15 +642,8 @@ local function RefreshUI()
     AceConfigRegistry:NotifyChange("AutoHideUI")
 end
 
-local function DeleteGroup()
-    if selectedGroup then
-        table.remove(Private.db.profile, selectedGroup)
-        Config.SetSelectedGroup()
-    end
-end
-
 local function IsFrameSelectedElsewhere(frameString)
-    for index, group in pairs(Private.db.profile) do
+    for index, group in pairs(Private.db.profile.groups) do
         if index ~= selectedGroup and group.frames[frameString] then
             return true
         end
@@ -663,19 +652,64 @@ local function IsFrameSelectedElsewhere(frameString)
 end
 
 local function DisableSelectedGroupConditions()
-    for _, info in pairs(Private.db.profile[selectedGroup].conditions) do
+    for _, info in pairs(Private.db.profile.groups[selectedGroup].conditions) do
         info.enabled = false
     end
 end
 
 local function SetSelectedGroupToDefault()
     for cName, cDB in pairs(GetDefaultConditions()) do
-        Private.db.profile[selectedGroup].conditions[cName] = cDB
+        Private.db.profile.groups[selectedGroup].conditions[cName] = cDB
     end
 end
 
-StaticPopupDialogs["AUTOHIDEUI_CREATE_GROUP"] = {
-    text = L["popup_createGroup"],
+local function ShowGroupCreateDialog()
+    --StaticPopup_Hide("AUTOHIDEUI_CREATE_ENTITY")
+    popupContext.titleText = L["popup_createGroup"]
+    popupContext.editBoxText = L["button_newGroup"]
+
+    popupContext.callbacks.createOnAccept = function(name)
+        table.insert(Private.db.profile.groups, internal.GetNewGroup(name))
+        selectedGroup = #Private.db.profile.groups
+    end
+
+    StaticPopup_Show("AUTOHIDEUI_CREATE_ENTITY")
+end
+
+local function ShowGroupRenameDialog()
+    --StaticPopup_Hide("AUTOHIDEUI_RENAME_ENTITY")
+    popupContext.titleText = L["popup_renameGroup"]
+    popupContext.editBoxText = Private.db.profile.groups[selectedGroup].name
+
+    popupContext.callbacks.renameOnAccept = function(name)
+        Private.db.profile.groups[selectedGroup].name = name
+    end
+
+    StaticPopup_Show("AUTOHIDEUI_RENAME_ENTITY")
+end
+
+local function ShowGroupDeleteDialog()
+    --StaticPopup_Hide("AUTOHIDEUI_DELETE_ENTITY")
+    popupContext.titleText = L["popup_deleteGroup"]
+
+    popupContext.callbacks.deleteOnShow = function(self)
+        if selectedGroup and Private.db.profile.groups[selectedGroup] then
+            self:SetText(string.format("%s|n|n-- %s --|n", L["popup_deleteGroup"], Private.db.profile.groups[selectedGroup].name))
+        end
+    end
+
+    popupContext.callbacks.deleteOnAccept = function()
+        if selectedGroup then
+            table.remove(Private.db.profile.groups, selectedGroup)
+            Config.SetSelectedGroup()
+        end
+    end
+
+    StaticPopup_Show("AUTOHIDEUI_DELETE_ENTITY")
+end
+
+StaticPopupDialogs["AUTOHIDEUI_CREATE_ENTITY"] = {
+    text = popupContext.titleText,
     button1 = L["button_create"],
     button2 = L["button_cancel"],
     hasEditBox = true,
@@ -684,7 +718,7 @@ StaticPopupDialogs["AUTOHIDEUI_CREATE_GROUP"] = {
 
     OnShow = function(self)
         self:SetFrameStrata("TOOLTIP")
-        self:GetEditBox():SetText("New Group")
+        self:GetEditBox():SetText(popupContext.editBoxText)
         self:GetEditBox():HighlightText()
     end,
 
@@ -696,8 +730,7 @@ StaticPopupDialogs["AUTOHIDEUI_CREATE_GROUP"] = {
 
         local newName = self:GetEditBox():GetText()
         if newName and newName ~= "" then
-            table.insert(Private.db.profile, internal.GetNewGroup(newName))
-            selectedGroup = #Private.db.profile
+            popupContext.callbacks.createOnAccept(newName)
             RefreshUI()
         end
     end,
@@ -712,8 +745,8 @@ StaticPopupDialogs["AUTOHIDEUI_CREATE_GROUP"] = {
     end,
 }
 
-StaticPopupDialogs["AUTOHIDEUI_RENAME_GROUP"] = {
-    text = L["popup_renameGroup"],
+StaticPopupDialogs["AUTOHIDEUI_RENAME_ENTITY"] = {
+    text = popupContext.titleText,
     button1 = L["button_rename"],
     button2 = L["button_cancel"],
     hasEditBox = true,
@@ -722,7 +755,7 @@ StaticPopupDialogs["AUTOHIDEUI_RENAME_GROUP"] = {
 
     OnShow = function(self)
         self:SetFrameStrata("TOOLTIP")
-        self:GetEditBox():SetText(Private.db.profile[selectedGroup].name)
+        self:GetEditBox():SetText(popupContext.editBoxText)
         self:GetEditBox():HighlightText()
     end,
 
@@ -734,7 +767,7 @@ StaticPopupDialogs["AUTOHIDEUI_RENAME_GROUP"] = {
 
         local newName = self:GetEditBox():GetText()
         if newName and newName ~= "" then
-            Private.db.profile[selectedGroup].name = newName
+            popupContext.callbacks.renameOnAccept(newName)
             RefreshUI()
         end
     end,
@@ -749,17 +782,15 @@ StaticPopupDialogs["AUTOHIDEUI_RENAME_GROUP"] = {
     end,
 }
 
-StaticPopupDialogs["AUTOHIDEUI_DELETE_GROUP"] = {
-    text = L["popup_deleteGroup"],
+StaticPopupDialogs["AUTOHIDEUI_DELETE_ENTITY"] = {
+    text = popupContext.titleText,
     button1 = L["button_delete"],
     button2 = L["button_cancel"],
     timeout = 0,
     whileDead = true,
 
     OnShow = function(self)
-        if selectedGroup and Private.db.profile[selectedGroup] then
-            self:SetText(string.format("%s|n|n-- %s --|n", L["popup_deleteGroup"], Private.db.profile[selectedGroup].name))
-        end
+        popupContext.callbacks.deleteOnShow(self)
         self:SetFrameStrata("TOOLTIP")
     end,
 
@@ -769,7 +800,7 @@ StaticPopupDialogs["AUTOHIDEUI_DELETE_GROUP"] = {
             return
         end
 
-        DeleteGroup()
+        popupContext.callbacks.deleteOnAccept()
         RefreshUI()
     end,
 
@@ -779,9 +810,12 @@ StaticPopupDialogs["AUTOHIDEUI_DELETE_GROUP"] = {
 }
 
 local function CloseAllPopups()
-    StaticPopup_Hide("AUTOHIDEUI_CREATE_GROUP")
-    StaticPopup_Hide("AUTOHIDEUI_RENAME_GROUP")
-    StaticPopup_Hide("AUTOHIDEUI_DELETE_GROUP")
+    -- StaticPopup_Hide("AUTOHIDEUI_CREATE_GROUP")
+    -- StaticPopup_Hide("AUTOHIDEUI_RENAME_GROUP")
+    -- StaticPopup_Hide("AUTOHIDEUI_DELETE_GROUP")
+    StaticPopup_Hide("AUTOHIDEUI_CREATE_ENTITY")
+    StaticPopup_Hide("AUTOHIDEUI_RENAME_ENTITY")
+    StaticPopup_Hide("AUTOHIDEUI_DELETE_ENTITY")
     Private.Changelog.frame:SetShown(false)
 end
 
@@ -846,8 +880,8 @@ local OPTIONS_TAB_FRAMES = {
                     type = "input",
                     name = "",
                     width = "full",
-                    get = function(info) return Private.db.profile[selectedGroup].config.customFrames end,
-                    set = function(info, value) Private.db.profile[selectedGroup].config.customFrames = value end,
+                    get = function(info) return Private.db.profile.groups[selectedGroup].config.customFrames end,
+                    set = function(info, value) Private.db.profile.groups[selectedGroup].config.customFrames = value end,
                     multiline = true,
                     order = 5,
                 },
@@ -876,8 +910,8 @@ local OPTIONS_TAB_FADE = {
                     max = 60,
                     softMax = 10,
                     bigStep = 0.1,
-                    get = function() return Private.db.profile[selectedGroup].config.fadeOutDelay end,
-                    set = function(_, value) Private.db.profile[selectedGroup].config.fadeOutDelay = value end,
+                    get = function() return Private.db.profile.groups[selectedGroup].config.fadeOutDelay end,
+                    set = function(_, value) Private.db.profile.groups[selectedGroup].config.fadeOutDelay = value end,
                     order = 5,
                 },
                 fadeInDelay = {
@@ -888,8 +922,8 @@ local OPTIONS_TAB_FADE = {
                     max = 60,
                     softMax = 10,
                     bigStep = 0.1,
-                    get = function() return Private.db.profile[selectedGroup].config.fadeInDelay end,
-                    set = function(_, value) Private.db.profile[selectedGroup].config.fadeInDelay = value end,
+                    get = function() return Private.db.profile.groups[selectedGroup].config.fadeInDelay end,
+                    set = function(_, value) Private.db.profile.groups[selectedGroup].config.fadeInDelay = value end,
                     order = 6,
                 },
                 fadeDuration = {
@@ -899,8 +933,8 @@ local OPTIONS_TAB_FADE = {
                     min = 0,
                     max = 5,
                     softMax = 1,
-                    get = function() return Private.db.profile[selectedGroup].config.timeToFade end,
-                    set = function(_, value) Private.db.profile[selectedGroup].config.timeToFade = value end,
+                    get = function() return Private.db.profile.groups[selectedGroup].config.timeToFade end,
+                    set = function(_, value) Private.db.profile.groups[selectedGroup].config.timeToFade = value end,
                     order = 10,
                 },
             },
@@ -917,8 +951,8 @@ local OPTIONS_TAB_FADE = {
                     width = 1.5,
                     min = 0,
                     max = 1,
-                    get = function() return Private.db.profile[selectedGroup].config.idleAlpha end,
-                    set = function(_, value) Private.db.profile[selectedGroup].config.idleAlpha = value end,
+                    get = function() return Private.db.profile.groups[selectedGroup].config.idleAlpha end,
+                    set = function(_, value) Private.db.profile.groups[selectedGroup].config.idleAlpha = value end,
                     order = 1,
                 },
                 checkbox_forceAlpha = {
@@ -926,8 +960,8 @@ local OPTIONS_TAB_FADE = {
                     name = L["checkbox_forceAlpha"],
                     desc = L["desc_forceAlpha"],
                     width = 1.5,
-                    get = function(info) return Private.db.profile[selectedGroup].config.forceAlpha end,
-                    set = function(info, value) Private.db.profile[selectedGroup].config.forceAlpha = value end,
+                    get = function(info) return Private.db.profile.groups[selectedGroup].config.forceAlpha end,
+                    set = function(info, value) Private.db.profile.groups[selectedGroup].config.forceAlpha = value end,
                     order = 2,
                 },
                 descrAlphaPref = {
@@ -941,8 +975,8 @@ local OPTIONS_TAB_FADE = {
                     type = "select",
                     width = 1.3,
                     values = function() return ALPHA_PREF end,
-                    get = function() return Private.db.profile[selectedGroup].config.normalAlphaPref end,
-                    set = function(_, value) Private.db.profile[selectedGroup].config.normalAlphaPref = value end,
+                    get = function() return Private.db.profile.groups[selectedGroup].config.normalAlphaPref end,
+                    set = function(_, value) Private.db.profile.groups[selectedGroup].config.normalAlphaPref = value end,
                     desc = L["tooltip_alphaPref"],
                     order = 6,
                 },
@@ -951,8 +985,8 @@ local OPTIONS_TAB_FADE = {
                     type = "select",
                     width = 1.3,
                     values = function() return ALPHA_PREF end,
-                    get = function() return Private.db.profile[selectedGroup].config.prioAlphaPref end,
-                    set = function(_, value) Private.db.profile[selectedGroup].config.prioAlphaPref = value end,
+                    get = function() return Private.db.profile.groups[selectedGroup].config.prioAlphaPref end,
+                    set = function(_, value) Private.db.profile.groups[selectedGroup].config.prioAlphaPref = value end,
                     desc = L["tooltip_prioAlphaPref"],
                     order = 7,
                 },
@@ -1014,6 +1048,39 @@ local OPTIONS_TAB_CONDITIONS = {
     order = 23
 }
 
+local OPTIONS_TAB_MANUAL_CONTROL = {
+    name = L["tab_manualControl"],
+    type = "group",
+    disabled = NoSelectedGroup,
+    args = {
+        descrConditions = {
+            type = "description",
+            name = "|n"..L["descr_manualControl"].."|n|n",
+            fontSize = "medium",
+            order = 5,
+        },
+        buttonNew = {
+            name = L["button_newOverride"],
+            type = "execute",
+            confirm = true,
+            width = 0.7,
+            --func = CreateNewOverride,
+            func = function() end,
+            order = 10,
+        },
+        overrideContainer = {
+            type = "group",
+            name = "",
+            order = 15,
+            hidden = function() return #Private.db.profile.overrides == 0 end,
+            args = {}
+
+        },
+
+    },
+    order = 5
+}
+
 local OPTIONS_MENU = {
     type = "group",
     name = "Auto Hide UI",
@@ -1028,7 +1095,7 @@ local OPTIONS_MENU = {
                 header_groups = {
                     type = "header",
                     name = function()
-                        local groupName = Private.db and Private.db.profile[selectedGroup].name or "?"
+                        local groupName = Private.db and Private.db.profile.groups[selectedGroup].name or "?"
                         return groupName
                     end,
                     order = 1,
@@ -1047,7 +1114,7 @@ local OPTIONS_MENU = {
                     name = L["button_newGroup"],
                     type = "execute",
                     width = 0.9,
-                    func = function() StaticPopup_Show("AUTOHIDEUI_CREATE_GROUP") end,
+                    func = ShowGroupCreateDialog,
                     desc = L["descr_groups"],
                     order = 5,
                 },
@@ -1055,14 +1122,14 @@ local OPTIONS_MENU = {
                     name = L["button_renameGroup"],
                     type = "execute",
                     width = 0.7,
-                    func = function() StaticPopup_Show("AUTOHIDEUI_RENAME_GROUP") end,
+                    func = ShowGroupRenameDialog,
                     order = 10,
                 },
                 buttonDelete = {
                     name = L["button_deleteGroup"],
                     type = "execute",
                     width = 0.7,
-                    func = function() StaticPopup_Show("AUTOHIDEUI_DELETE_GROUP") end,
+                    func = ShowGroupDeleteDialog,
                     order = 15,
                 },
                 tabFrames = OPTIONS_TAB_FRAMES,
@@ -1071,11 +1138,12 @@ local OPTIONS_MENU = {
             },
 
         },
+        --tabManualOverride = OPTIONS_TAB_MANUAL_CONTROL,
         changelogAnchor = {
             type = "description",
             dialogControl = "AutoHideUI_ChangelogButtonAnchor",
             name = "",
-            order = 2,
+            order = 20,
         },
         -- profiles is set later when db has actually been initialized
     },
@@ -1086,8 +1154,8 @@ local function GetElementForFrameSelection(order, frameInfo)
     local checkbox = {
         name = frameInfo.label,
         type = "toggle",
-        get = function(info) return Private.db.profile[selectedGroup].frames[frameString] end,
-        set = function(info, value) Private.db.profile[selectedGroup].frames[frameString] = value end,
+        get = function(info) return Private.db.profile.groups[selectedGroup].frames[frameString] end,
+        set = function(info, value) Private.db.profile.groups[selectedGroup].frames[frameString] = value end,
         disabled = function(info)
             return IsFrameSelectedElsewhere(frameString)
         end,
@@ -1141,15 +1209,15 @@ local CONDITION_ENTRY_BLUEPRINT = {
             child = "parent"
         },
         widthOffset = {
-            child =  - 0.1 - 0.15, -- subtracting spacer and override toggle width
+            child =  - 0.1 - 0.15, -- subtracting spacer and customize toggle width
         }
     },
     {
-        name = "override",
-        label = L["override"],
+        name = "customize",
+        label = L["customize"],
         widget = "toggle",
         width = 0.15,
-        setting = "override",
+        setting = "customize",
         allowedTypes = {child = true},
         disabledKeys = {
             child = "parentChild"
@@ -1244,8 +1312,8 @@ local function GetConditionWidget(widgetInfo, conditionInfo)
         return {
             type = "toggle",
             name = widgetInfo.label or L["label_"..conditionName],
-            get = function(info) return Private.db.profile[selectedGroup].conditions[conditionName][settingName] end,
-            set = function(info, value) Private.db.profile[selectedGroup].conditions[conditionName][settingName] = value end,
+            get = function(info) return Private.db.profile.groups[selectedGroup].conditions[conditionName][settingName] end,
+            set = function(info, value) Private.db.profile.groups[selectedGroup].conditions[conditionName][settingName] = value end,
         }
     elseif widgetType == "range" then
         return {
@@ -1254,8 +1322,8 @@ local function GetConditionWidget(widgetInfo, conditionInfo)
             min = 0,
             max = 1,
             bigStep = 0.1,
-            get = function(info) return Private.db.profile[selectedGroup].conditions[conditionName][settingName] end,
-            set = function(info, value) Private.db.profile[selectedGroup].conditions[conditionName][settingName] = value end,
+            get = function(info) return Private.db.profile.groups[selectedGroup].conditions[conditionName][settingName] end,
+            set = function(info, value) Private.db.profile.groups[selectedGroup].conditions[conditionName][settingName] = value end,
         }
     end
 end
@@ -1270,24 +1338,24 @@ local function GetConditionDisabledFunc(widgetInfo, conditionInfo, entryInfo)
 
     if disabledKey == "parent" then
         return function(info)
-            return not Private.db.profile[selectedGroup].conditions[parentName].enabled
+            return not Private.db.profile.groups[selectedGroup].conditions[parentName].enabled
         end
     elseif disabledKey == "parentChild" then
         return function(info)
-            local parentEnabled = Private.db.profile[selectedGroup].conditions[parentName].enabled
-            local selfEnabled = Private.db.profile[selectedGroup].conditions[conditionName].enabled
+            local parentEnabled = Private.db.profile.groups[selectedGroup].conditions[parentName].enabled
+            local selfEnabled = Private.db.profile.groups[selectedGroup].conditions[conditionName].enabled
             return not selfEnabled or not parentEnabled
         end
     elseif disabledKey == "parentChildOverride" then
         return function(info)
-            local parentEnabled = Private.db.profile[selectedGroup].conditions[parentName].enabled
-            local selfEnabled = Private.db.profile[selectedGroup].conditions[conditionName].enabled
-            local overrideEnabled = Private.db.profile[selectedGroup].conditions[conditionName].override
+            local parentEnabled = Private.db.profile.groups[selectedGroup].conditions[parentName].enabled
+            local selfEnabled = Private.db.profile.groups[selectedGroup].conditions[conditionName].enabled
+            local overrideEnabled = Private.db.profile.groups[selectedGroup].conditions[conditionName].customize
             return not selfEnabled or not parentEnabled or not overrideEnabled
         end
     elseif widgetInfo.name ~= "enable" and not widgetInfo.ignoreDisabled  then
         return function(info)
-            return not Private.db.profile[selectedGroup].conditions[conditionName].enabled
+            return not Private.db.profile.groups[selectedGroup].conditions[conditionName].enabled
         end
     else
         return nil
@@ -1346,8 +1414,8 @@ local function CreateExtraConditionOptions(widgetInfo, conditionInfo, entryInfo)
 
     for _, extraInfo in pairs(extraOptions) do
         local widget = CopyTable(extraInfo.widget)
-        widget.get = function(info) return Private.db.profile[selectedGroup].conditions[conditionInfo.name][extraInfo.settingName] end
-        widget.set = function(info, value) Private.db.profile[selectedGroup].conditions[conditionInfo.name][extraInfo.settingName] = value end
+        widget.get = function(info) return Private.db.profile.groups[selectedGroup].conditions[conditionInfo.name][extraInfo.settingName] end
+        widget.set = function(info, value) Private.db.profile.groups[selectedGroup].conditions[conditionInfo.name][extraInfo.settingName] = value end
         widget.name = L[extraInfo.entryName]
         widget.order = entryInfo.widgetOrder
         widget.disabled = GetConditionDisabledFunc(widgetInfo, conditionInfo, entryInfo)
@@ -1453,39 +1521,40 @@ function Config.CheckGroupsForMissingEntries()
     -- iterating through all profiles
     for _, profileData in pairs(Private.db.profiles) do
         -- iterating for each group in profile
-        for _, group in ipairs(profileData) do
-
-            -- looking for missing settings
-            for k,v in pairs(defaultGroup) do
-                if not group[k] then
-                    if type(v) == "table" then
-                        group[k] = CopyTable(v)
-                    else
-                        group[k] = v
-                    end
-                end
-            end
-
-            -- looking for missing conditions
-            for conditionName, conditionInfo in pairs(defaultGroup.conditions) do
-                if not group.conditions[conditionName] then
-                    group.conditions[conditionName] = CopyTable(conditionInfo)
-                else
-                    for setting, value in pairs(conditionInfo) do
-                        if group.conditions[conditionName][setting] == nil then
-                            group.conditions[conditionName][setting] = value
+        if profileData.groups then
+            for _, group in ipairs(profileData.groups) do
+                -- looking for missing settings
+                for k,v in pairs(defaultGroup) do
+                    if not group[k] then
+                        if type(v) == "table" then
+                            group[k] = CopyTable(v)
+                        else
+                            group[k] = v
                         end
                     end
                 end
-            end
 
-            -- checking for settings that are no longer in use
-            for k,v in pairs(group) do
-                if defaultGroup[k] == nil then
-                    group[k] = nil
+                -- looking for missing conditions
+                for conditionName, conditionInfo in pairs(defaultGroup.conditions) do
+                    if not group.conditions[conditionName] then
+                        group.conditions[conditionName] = CopyTable(conditionInfo)
+                    else
+                        for setting, value in pairs(conditionInfo) do
+                            if group.conditions[conditionName][setting] == nil then
+                                group.conditions[conditionName][setting] = value
+                            end
+                        end
+                    end
                 end
-            end
 
+                -- checking for settings that are no longer in use
+                for k,v in pairs(group) do
+                    if defaultGroup[k] == nil then
+                        group[k] = nil
+                    end
+                end
+
+            end
         end
     end
 
@@ -1497,6 +1566,21 @@ function Config.GetDefaultConditionByName(conditionName)
             return conditionInfo
         end
     end
+end
+
+
+function Config.GetDefaultProfile()
+    local defaultGroup = Config.GetDefaultGroup(L["name_defaultGroup"])
+    local defaultProfile = {
+        profile = {
+            overrides = {},
+            groups = {
+                defaultGroup,
+            }
+        }
+    }
+
+    return defaultProfile
 end
 
 function Config.GetDefaultGroup(name)
@@ -1592,7 +1676,7 @@ end
 ------------------
 
 function Config.SetHeaderText(frame, title)
-    frame.header.title:SetText(title .. " - " .. Private.db.profile[selectedGroup].name)
+    frame.header.title:SetText(title .. " - " .. Private.db.profile.groups[selectedGroup].name)
     local textWidth = frame.header.title:GetStringWidth()
     frame.header.middle:SetWidth(textWidth + 20)
 end

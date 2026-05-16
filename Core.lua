@@ -66,6 +66,19 @@ local INSTANCE_TYPE_MAPPING = {
     interior = "instanceHousing",
 }
 
+Main.DEFAULT_STATES = {
+    startAlpha = 1,
+    endAlpha = 1,
+    fadeEndTime = 0, -- if GetTime() < fadeEndTime we measure and use currentAlpha as startAlpha
+    lastMouseover = nil, -- mouseover is polled constantly. only updating when current and last are different.
+    fadeMode = "",
+    priorityFade = false, -- if fadeMode == "OUT" and priority, we fade out without delay
+    activeConditions = { -- key: name of condition -- value: false or alpha of condition
+        normal = {},
+        priority = {},
+    },
+}
+
 Main.inCombat = InCombatLockdown()
 local isMounted = IsMounted()
 local isFlying = IsFlying()
@@ -109,9 +122,7 @@ function Private:OnProfileChanged()
 end
 
 local function InitDB()
-    local defaultGroup = Config.GetDefaultGroup(L["name_defaultGroup"])
-    local defaultProfile = { profile = {defaultGroup} }
-
+    local defaultProfile = Config.GetDefaultProfile()
     Private.db = LibStub("AceDB-3.0"):New("AutoHideUIDB", defaultProfile, true)
 
     Private.db.RegisterCallback(Private, "OnProfileChanged", "OnProfileChanged")
@@ -173,9 +184,9 @@ end
 local function ResetGroupStates(states)
     for k, v in pairs(states) do
         if type(v) == "table" then
-            states[k] = CopyTable(Config.DEFAULT_STATES[k])
+            states[k] = CopyTable(Main.DEFAULT_STATES[k])
         else
-            states[k] = Config.DEFAULT_STATES[k]
+            states[k] = Main.DEFAULT_STATES[k]
         end
     end
 end
@@ -343,7 +354,7 @@ function Main.GetConditionsSettings(conditionsDB)
             local childInfo
             local parentInfo = conditionsDB[parentName]
             local isChildEnabled = conditionInfo.enabled and parentInfo.enabled
-            local useOverride = conditionInfo.override
+            local useOverride = conditionInfo.customize
 
             if isChildEnabled and not useOverride then
                 -- inheriting parent settings
@@ -370,7 +381,7 @@ end
 
 local MigrateDB = {
     -- when parent/child conditions were introduced
-    [1] = function(db)
+    [1] = function(profile)
         local OLD_CONDITION_DEFAULTS = {
             housing        = { enabled = false, alpha = 0, priority = true },
             instance       = { enabled = true,  alpha = 1, priority = false },
@@ -388,71 +399,88 @@ local MigrateDB = {
             return result
         end
 
-        local c = db.conditions
-
-        local housing  = ResolveOldCondition(c, "housing")
-        local instance = ResolveOldCondition(c, "instance")
-        local tFriendly = ResolveOldCondition(c, "targetFriendly")
-        local tHostile  = ResolveOldCondition(c, "targetHostile")
-
-        -- instance and housing
-        c.instanceNeighborhood = CopyTable(housing)
-        c.instanceHousing      = CopyTable(housing)
-
-        if housing.alpha ~= instance.alpha or housing.priority ~= instance.priority then
-            c.instanceNeighborhood.override = true
-            c.instanceHousing.override      = true
-        else
-            c.instanceNeighborhood.override = false
-            c.instanceHousing.override      = false
-        end
-
-        if housing.enabled and not instance.enabled then
-            c.instance = c.instance or {}
-            c.instance.enabled = true
-            for _, name in ipairs({ "instanceDungeon", "instanceRaid", "instanceBattleground", "instanceArena", "instanceScenario" }) do
-                c[name] = c[name] or {}
-                c[name].enabled = false
+        local function UpdateGroup(group)
+            local c = group.conditions
+            if not c then
+                return
             end
+
+            local housing  = ResolveOldCondition(c, "housing")
+            local instance = ResolveOldCondition(c, "instance")
+            local tFriendly = ResolveOldCondition(c, "targetFriendly")
+            local tHostile  = ResolveOldCondition(c, "targetHostile")
+
+            -- instance and housing
+            c.instanceNeighborhood = CopyTable(housing)
+            c.instanceHousing      = CopyTable(housing)
+
+            if housing.alpha ~= instance.alpha or housing.priority ~= instance.priority then
+                c.instanceNeighborhood.customize = true
+                c.instanceHousing.customize      = true
+            else
+                c.instanceNeighborhood.customize = false
+                c.instanceHousing.customize      = false
+            end
+
+            if housing.enabled and not instance.enabled then
+                c.instance = c.instance or {}
+                c.instance.enabled = true
+                for _, name in ipairs({ "instanceDungeon", "instanceRaid", "instanceBattleground", "instanceArena", "instanceScenario" }) do
+                    c[name] = c[name] or {}
+                    c[name].enabled = false
+                end
+            end
+
+            c.housing = nil
+
+            -- target and focus
+            local targetEnabled = tFriendly.enabled or tHostile.enabled
+
+            local targetSettingsMatch = tFriendly.alpha == tHostile.alpha
+                            and tFriendly.priority  == tHostile.priority
+                            and tFriendly.softTarget == tHostile.softTarget
+
+            if targetSettingsMatch then
+                c.target = CopyTable(tFriendly)
+                c.focus  = CopyTable(tFriendly)
+                c.targetFriendly = c.targetFriendly or {}
+                c.targetHostile  = c.targetHostile  or {}
+                c.targetFriendly.customize = false
+                c.targetHostile.customize  = false
+                c.focusFriendly = CopyTable(tFriendly)
+                c.focusHostile  = CopyTable(tHostile)
+                c.focusFriendly.customize = false
+                c.focusHostile.customize  = false
+            else
+                c.target = CopyTable(Config.GetDefaultConditionByName("target").db)
+                c.focus  = CopyTable(Config.GetDefaultConditionByName("focus").db)
+                c.targetFriendly = c.targetFriendly or {}
+                c.targetHostile  = c.targetHostile  or {}
+                c.targetFriendly.customize = true
+                c.targetHostile.customize  = true
+                c.focusFriendly = CopyTable(tFriendly)
+                c.focusHostile  = CopyTable(tHostile)
+                c.focusFriendly.customize = true
+                c.focusHostile.customize  = true
+            end
+
+            c.target.enabled = targetEnabled
+            c.focus.enabled  = targetEnabled
+            c.focusFriendly.softTarget = nil
+            c.focusHostile.softTarget  = nil
         end
 
-        c.housing = nil
+        local newProfile = {
+            groups= {},
+            overrides = {}
+        }
 
-        -- target and focus
-        local targetEnabled = tFriendly.enabled or tHostile.enabled
-
-        local targetSettingsMatch = tFriendly.alpha == tHostile.alpha
-                        and tFriendly.priority  == tHostile.priority
-                        and tFriendly.softTarget == tHostile.softTarget
-
-        if targetSettingsMatch then
-            c.target = CopyTable(tFriendly)
-            c.focus  = CopyTable(tFriendly)
-            c.targetFriendly = c.targetFriendly or {}
-            c.targetHostile  = c.targetHostile  or {}
-            c.targetFriendly.override = false
-            c.targetHostile.override  = false
-            c.focusFriendly = CopyTable(tFriendly)
-            c.focusHostile  = CopyTable(tHostile)
-            c.focusFriendly.override = false
-            c.focusHostile.override  = false
-        else
-            c.target = CopyTable(Config.GetDefaultConditionByName("target").db)
-            c.focus  = CopyTable(Config.GetDefaultConditionByName("focus").db)
-            c.targetFriendly = c.targetFriendly or {}
-            c.targetHostile  = c.targetHostile  or {}
-            c.targetFriendly.override = true
-            c.targetHostile.override  = true
-            c.focusFriendly = CopyTable(tFriendly)
-            c.focusHostile  = CopyTable(tHostile)
-            c.focusFriendly.override = true
-            c.focusHostile.override  = true
+        for i, group in ipairs(profile) do
+            UpdateGroup(group)
+            tinsert(newProfile.groups, group)
         end
 
-        c.target.enabled = targetEnabled
-        c.focus.enabled  = targetEnabled
-        c.focusFriendly.softTarget = nil
-        c.focusHostile.softTarget  = nil
+        return newProfile
     end
 }
 
@@ -460,16 +488,18 @@ local function RepairDB()
     -- remove nil groups from each profile
     -- these can occur from incomplete deletions or legacy corruption
     for profileKey, profileData in pairs(Private.db.profiles) do
-        local cleanedProfile = {}
+        if profileData.groups then
+            local cleanedGroups = {}
 
-        -- copy only non-nil groups to new table
-        for _, group in ipairs(profileData) do
-            if group then
-                tinsert(cleanedProfile, group)
+            -- copy only non-nil groups to new table
+            for _, group in ipairs(profileData.groups) do
+                if group then
+                    tinsert(cleanedGroups, group)
+                end
             end
-        end
 
-        Private.db.profiles[profileKey] = cleanedProfile
+            Private.db.profiles[profileKey].groups = cleanedGroups
+        end
     end
 
     Config.CheckGroupsForMissingEntries()
@@ -482,10 +512,10 @@ local function UpdateDB()
         local migration = MigrateDB[i]
         if migration then
             -- migrating every profile
-            for _, profileData in pairs(Private.db.profiles) do
-                -- migrating every group in profile
-                for _, db in pairs(profileData) do
-                    migration(db)
+            for profileName, profileData in pairs(Private.db.profiles) do
+                local newProfile = migration(profileData)
+                if newProfile then
+                    Private.db.profiles[profileName] = newProfile
                 end
             end
         end
@@ -791,8 +821,8 @@ local function OnLogin()
     C_Timer.After(3, function()
         InitDB()
         UpdateVersion()
-        RepairDB()
         UpdateDB()
+        RepairDB()
         InitOptions()
         InitAddon()
     end)

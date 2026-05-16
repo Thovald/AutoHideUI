@@ -809,7 +809,7 @@ local function CreateFrameGroup(groupDB, dbIndex)
         frames = {},
         index = dbIndex,
         config = CopyTable(groupDB.config),
-        states = CopyTable(Config.DEFAULT_STATES),
+        states = CopyTable(Main.DEFAULT_STATES),
         conditions = Main.GetConditionsSettings(groupDB.conditions)
     }
     return groupInfo
@@ -1090,7 +1090,7 @@ end
 function Frames.InitFrames()
     WipeActiveFramesLists()
 
-    for dbIndex, groupDB in ipairs(Private.db.profile) do
+    for dbIndex, groupDB in ipairs(Private.db.profile.groups) do
         HandleAllGroupFrames(dbIndex, groupDB)
     end
 

@@ -73,7 +73,7 @@ function FrameFinder.ConfirmSelection()
     -- preserving user's strings that were not found at all, ie from unloaded addons
     local newString = ""
     local frameStrings = {}
-    local userStrings = string.gmatch(Private.db.profile[selectedGroup].config.customFrames, "[^,]+")
+    local userStrings = string.gmatch(Private.db.profile.groups[selectedGroup].config.customFrames, "[^,]+")
 
     for _, helperFrame in ipairs(helperFrameList) do
         frameStrings[helperFrame.name] = {selected = helperFrame.selected}
@@ -88,7 +88,7 @@ function FrameFinder.ConfirmSelection()
             newString = newString..userString..", "
         end
     end
-    Private.db.profile[selectedGroup].config.customFrames = newString
+    Private.db.profile.groups[selectedGroup].config.customFrames = newString
     FrameFinder:HideWindow()
     AceConfigDialog:Open("AutoHideUI")
 end

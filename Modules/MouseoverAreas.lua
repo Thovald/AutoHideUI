@@ -93,7 +93,7 @@ local function OnMouseoverAreaClick(self, button)
 end
 
 local function UpdateAreaDB(frame)
-    local db = Private.db.profile[selectedGroup].mouseoverAreas[frame.index]
+    local db = Private.db.profile.groups[selectedGroup].mouseoverAreas[frame.index]
 
     if not db then
         return
@@ -111,7 +111,7 @@ local function UpdateAreaDB(frame)
 end
 
 local function AddAreaToDB(frame)
-    local db = Private.db.profile[selectedGroup].mouseoverAreas
+    local db = Private.db.profile.groups[selectedGroup].mouseoverAreas
 
     local areaData = {
         width = frame:GetWidth(),
@@ -128,7 +128,7 @@ local function AddAreaToDB(frame)
 end
 
 local function RemoveAreaFromDB(index)
-    local db = Private.db.profile[selectedGroup].mouseoverAreas
+    local db = Private.db.profile.groups[selectedGroup].mouseoverAreas
     table.remove(db, index)
 end
 
@@ -270,7 +270,7 @@ end
 
 function MouseoverAreas:CreateAreas()
     wipe(MouseoverAreas.ActiveAreas)
-    for groupIndex, groupDate in ipairs(Private.db.profile) do
+    for groupIndex, groupDate in ipairs(Private.db.profile.groups) do
         if groupDate.mouseoverAreas then
              for i, areaData in ipairs(groupDate.mouseoverAreas) do
                 local frame = GetNextFrame()

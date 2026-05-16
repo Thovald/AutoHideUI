@@ -9,12 +9,12 @@ local CHANGELOG_DATA = {
         date = "May 15th",
         entries = {
             {
-                title = "Conditions",
+                title = "Overhauled Conditions",
                 comment = "Please have a look at your settings for the Conditions 'Instance', 'Target' and 'Focus' to check if your old settings have been converted correctly.",
                 content =  {
                     "Some Conditions have been converted to a new type of grouped Condition.|n"..
                     "The head of the group (parent) controls the settings of the group contents (children).|n"..
-                    "The user can toggle and override the settings of each child individually.",
+                    "The user can toggle and customize the settings of each child individually.",
 
                     "'Instance' Condition has been converted to a grouped Condition.",
 
@@ -31,6 +31,8 @@ local CHANGELOG_DATA = {
                 title = "Misc",
                 content =  {
                     "Added 'Changelog' Button.",
+
+                    "New 'Mouseover Areas' tool in Frames section to create custom areas that react to mouseover events",
 
                     "The name of the currently selected group is now shown more prominently at the top.",
 
@@ -112,7 +114,7 @@ scrollFrame:SetScrollChild(contentFrame)
 -- ============================================================================
 
 local currentYOffset = -10
-local contentWidth = 620
+local contentWidth = 550
 
 local function AddLine(text, fontObject, indent, color, heightMultiplier)
     local fs = contentFrame:CreateFontString(nil, "OVERLAY", fontObject or "GameFontHighlight")

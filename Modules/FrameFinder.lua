@@ -21,9 +21,9 @@ local uiSurface = UIParent:GetWidth() * UIParent:GetHeight()
 -- only needed if we decide to enable clickthrough
 local lastClickTime = 0
 
-------------------
+-- ─────────────────────────────────────────────────────────────────────────────
 -- Toggle Frame Finder
-------------------
+-- ─────────────────────────────────────────────────────────────────────────────
 
 function FrameFinder.Start(groupID)
     selectedGroup = groupID
@@ -93,9 +93,9 @@ function FrameFinder.ConfirmSelection()
     AceConfigDialog:Open("AutoHideUI")
 end
 
-------------------
+-- ─────────────────────────────────────────────────────────────────────────────
 -- Helper Frames
-------------------
+-- ─────────────────────────────────────────────────────────────────────────────
 
 local COLORS = {
     bodySelected = {0, 1, 0, 0.2},
@@ -624,9 +624,9 @@ function FrameFinder.StartVisibilityTicker()
     VISIBILITY_TICKER = C_Timer.NewTicker(0.25, FrameFinder.UpdateHelperFramesVisibility)
 end
 
-------------------
+-- ─────────────────────────────────────────────────────────────────────────────
 -- FrameFinder Window
-------------------
+-- ─────────────────────────────────────────────────────────────────────────────
 do
     local CreateHeader = Config.CreateHeader
 
@@ -656,14 +656,14 @@ do
 
     frame:Hide()
 
-    ------------------
+    -- ─────────────────────────────────────────────────────────────────────────────
     -- Header
-    ------------------
+    -- ─────────────────────────────────────────────────────────────────────────────
     CreateHeader(frame)
 
-    ------------------
+    -- ─────────────────────────────────────────────────────────────────────────────
     -- Left Container
-    ------------------
+    -- ─────────────────────────────────────────────────────────────────────────────
 
     local leftGroup = Config.CreateAceLikeGroup(frame, L["ffTitle_available"], 240, 228)
     leftGroup:SetPoint("TOPLEFT", 20, -50)
@@ -688,9 +688,9 @@ do
         frame:ClearSelections()
     end)
 
-    ------------------
+    -- ─────────────────────────────────────────────────────────────────────────────
     -- Right Container
-    ------------------
+    -- ─────────────────────────────────────────────────────────────────────────────
 
     local rightGroup = Config.CreateAceLikeGroup(frame, L["title_howTo"], 290, 190)
     rightGroup:SetPoint("TOPLEFT", leftGroup, "TOPRIGHT", 20, 0)
@@ -723,9 +723,9 @@ do
         FrameFinder:Cancel()
     end)
 
-    ------------------
+    -- ─────────────────────────────────────────────────────────────────────────────
     -- Button Logic
-    ------------------
+    -- ─────────────────────────────────────────────────────────────────────────────
 
     local function CreateRow()
         local row = CreateFrame("Button", nil, scrollChild)

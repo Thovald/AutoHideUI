@@ -34,9 +34,9 @@ local RESIZE_BUTTON_MAPPING = {
     { point = "RIGHT",       name = "r",    rotation = 0,          tex = "resizeEdgeV",   anchors = {"BOTTOMRIGHT", "TOPRIGHT", "br", "TOPLEFT", "BOTTOMLEFT", "tr"} },
 }
 
-------------------
+-- ─────────────────────────────────────────────────────────────────────────────
 -- Toggle MouseoverAreas Window
-------------------
+-- ─────────────────────────────────────────────────────────────────────────────
 
 function MouseoverAreas.Start(groupID)
     selectedGroup = groupID
@@ -72,9 +72,9 @@ function MouseoverAreas.HideWindow()
     AceConfigDialog:Open("AutoHideUI")
 end
 
-------------------
+-- ─────────────────────────────────────────────────────────────────────────────
 -- MouseoverArea Frames
-------------------
+-- ─────────────────────────────────────────────────────────────────────────────
 
 local function HighlightFrame(self, show)
     if show then
@@ -315,9 +315,9 @@ function MouseoverAreas:HideMovers()
     end
 end
 
-------------------
+-- ─────────────────────────────────────────────────────────────────────────────
 -- MouseoverAreas Window
-------------------
+-- ─────────────────────────────────────────────────────────────────────────────
 
 do
     local CreateHeader = Config.CreateHeader
@@ -348,14 +348,14 @@ do
 
     frame:Hide()
 
-    ------------------
+    -- ─────────────────────────────────────────────────────────────────────────────
     -- Header
-    ------------------
+    -- ─────────────────────────────────────────────────────────────────────────────
     CreateHeader(frame)
 
-    ------------------
+    -- ─────────────────────────────────────────────────────────────────────────────
     -- Left Container
-    ------------------
+    -- ─────────────────────────────────────────────────────────────────────────────
 
     local rightGroup = Config.CreateAceLikeGroup(frame, L["title_howTo"], 310, 90)
     rightGroup:SetPoint("TOPLEFT", 20, -50)

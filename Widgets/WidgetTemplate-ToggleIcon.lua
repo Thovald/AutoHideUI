@@ -1,3 +1,8 @@
+--[[
+Template for a checkbox widget with custom textures to appear like a clickable icon.
+User provides a table of textures and a name for the widget to create a new one.
+]]
+
 local _, Private = ...
 Private.AceWidgetTemplates = {}
 
@@ -144,51 +149,41 @@ end
 -- ─────────────────────────────────────────────────────────────────────────────
 
 local function CreateToggleIconWidget(texTable, width, height)
-    -- Create base checkbox and hide default visuals
-    --local widget = AceGUI:Create("CheckBox")
+    -- base checkbox and hide default visuals
     local baseConstructor = AceGUI.WidgetRegistry["CheckBox"]
     local widget = baseConstructor()
     widget.checkbg:Hide()
     widget.check:Hide()
     widget.highlight:Hide()
 
-    -- Create custom icon
+    -- custom icon
     local icon = widget.frame:CreateTexture(nil, "ARTWORK")
     icon:SetWidth(width or 24)
     icon:SetHeight(height or 24)
     icon:SetPoint("LEFT", widget.frame, "LEFT", 1, 0)
     widget.icon = icon
 
-    -- Store base methods before overriding
     widget._baseSetValue = widget.SetValue
     widget._baseSetDisabled = widget.SetDisabled
     widget._baseOnRelease = widget.OnRelease
 
-    -- Hook frame scripts (run after base scripts)
     widget.frame:HookScript("OnEnter", OnEnter)
     widget.frame:HookScript("OnLeave", OnLeave)
     widget.frame:HookScript("OnMouseDown", OnMouseDown)
     widget.frame:HookScript("OnMouseUp", OnMouseUp)
 
-    -- Replace OnClick with custom tri-state logic
     widget.frame:SetScript("OnClick", OnClick)
 
-    -- Override methods
     widget.SetValue = SetValue
     widget.SetDisabled = SetDisabled
     widget.OnRelease = OnRelease
     widget.SetTextures = SetTextures
 
-    -- Apply textures
     widget:SetTextures(texTable)
     widget.text:Hide()
 
     return AceGUI:RegisterAsWidget(widget)
 end
-
--- ─────────────────────────────────────────────────────────────────────────────
--- Public API: Register a new toggle icon widget type
--- ─────────────────────────────────────────────────────────────────────────────
 
 Private.AceWidgetTemplates.RegisterToggleWidget = function(self, type, version, texTable, width, height)
     AceGUI:RegisterWidgetType(type, function()

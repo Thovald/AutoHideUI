@@ -8,13 +8,11 @@ Private.FrameFinder = {}
 Private.MouseoverAreas = {}
 Private.Changelog = {}
 
--- namespaces for functions that are called between files
 local Main = Private.Main
 local Config = Private.Config
 local Frames = Private.Frames
 local Fading = Private.Fading
 local MouseoverAreas = Private.MouseoverAreas
-local internal = {}
 local DB_SCHEMA_VERSION = 1
 
 -- unlike systemFrame, Main.frame's events are registered based on which conditions are enabled
@@ -113,9 +111,9 @@ local IsInInstance, IsMounted, GetShapeshiftFormID, UnitInVehicle, HasOverrideAc
 local UnitCastingInfo, UnitChannelInfo, IsResting, IsFlying, UnitExists, UnitCanAttack
     = UnitCastingInfo, UnitChannelInfo, IsResting, IsFlying, UnitExists, UnitCanAttack
 
-------------------
+-- ─────────────────────────────────────────────────────────────────────────────
 -- Setup
-------------------
+-- ─────────────────────────────────────────────────────────────────────────────
 
 function Private:OnProfileChanged()
     Config.SetSelectedGroup(true)
@@ -283,8 +281,8 @@ local function InitAddon()
     RegisterAllEvents()
     MouseoverAreas.CreateAreas()
     Main.CreateMouseoverLists()
-    internal.CreateMouseoverTicker()
-    internal.UpdateAllConditions()
+    Main.CreateMouseoverTicker()
+    Main.UpdateAllConditions()
     Fading.SetAllAlpha()
     Frames.ToggleHelperFrames()
 end
@@ -375,9 +373,9 @@ function Main.GetConditionsSettings(conditionsDB)
     return conditions
 end
 
-------------------
+-- ─────────────────────────────────────────────────────────────────────────────
 -- Repairing DB
-------------------
+-- ─────────────────────────────────────────────────────────────────────────────
 
 local MigrateDB = {
     -- when parent/child conditions were introduced
@@ -525,9 +523,9 @@ local function UpdateDB()
     Private.db.global.db_schema = DB_SCHEMA_VERSION
 end
 
-------------------
+-- ─────────────────────────────────────────────────────────────────────────────
 -- Conditions
-------------------
+-- ─────────────────────────────────────────────────────────────────────────────
 
 local function UpdateActiveConditions(group, condition, value)
     if not group.conditions[condition].enabled then
@@ -796,7 +794,7 @@ local function ConditionResting()
     UpdateConditionForAllGroups("resting", IsResting())
 end
 
-function internal.UpdateAllConditions()
+function Main.UpdateAllConditions()
     ConditionCombat()
     ConditionTarget("target")
     ConditionTarget("focus")
@@ -813,9 +811,9 @@ function internal.UpdateAllConditions()
     ConditionFlying()
 end
 
-------------------
+-- ─────────────────────────────────────────────────────────────────────────────
 -- Events
-------------------
+-- ─────────────────────────────────────────────────────────────────────────────
 
 local function OnLogin()
     -- deferred to ensure all AddOn frames have been created.
@@ -889,7 +887,7 @@ local function OnMouseover()
     end
 end
 
-function internal.CreateMouseoverTicker()
+function Main.CreateMouseoverTicker()
     if (not mouseoverTicker) and next(mouseoverFrames) then
         mouseoverTicker = C_Timer.NewTicker(MOUSE_TICKER_INTERVAL, OnMouseover)
         return
@@ -902,7 +900,7 @@ local function OnInstanceChange()
         return
     end
     ResetStates()
-    internal.UpdateAllConditions()
+    Main.UpdateAllConditions()
     Fading.SetAllAlpha()
     lastInstanceCheck = currentTime
 end
@@ -990,9 +988,9 @@ local function OnRestingChange()
     Fading.FadeAllGroups()
 end
 
-------------------
+-- ─────────────────────────────────────────────────────────────────────────────
 -- Event Handler
-------------------
+-- ─────────────────────────────────────────────────────────────────────────────
 
 local EVENT_HANDLER = {
     PLAYER_TARGET_CHANGED = function() OnTargetChange("target") end,

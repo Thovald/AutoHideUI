@@ -74,9 +74,9 @@ function Fading.SetAllAlpha(targetAlpha)
     Fading.UpdateAllFrameVisibility()
 end
 
-------------------
+-- ─────────────────────────────────────────────────────────────────────────────
 -- Fade Stuff
-------------------
+-- ─────────────────────────────────────────────────────────────────────────────
 
 local function AutoHide_FrameFade_OnUpdate(self, elapsed)
     totalElapsed = totalElapsed + elapsed

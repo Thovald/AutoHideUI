@@ -8,9 +8,9 @@ local addonLoadedStates = {}
 local FRAME_INFO_TEMPLATE = {frames = {}, args = {}, frameString = ""}
 local DYNAMIC_ADDON_FRAMES = {}
 
-------------------
+-- ─────────────────────────────────────────────────────────────────────────────
 -- Spell Flyout Frame
-------------------
+-- ─────────────────────────────────────────────────────────────────────────────
 
 local spellFlyoutFrame = SpellFlyout
 local IS_HOOKED_LABFlyoutHandlerFrame = false
@@ -59,9 +59,9 @@ local function HookLABFlyoutHandlerFrame()
     spellFlyoutFrame = LABFlyoutHandlerFrame
 end
 
-------------------
+-- ─────────────────────────────────────────────────────────────────────────────
 -- Frames
-------------------
+-- ─────────────────────────────────────────────────────────────────────────────
 
 local function MINIMAPCLUSTER_CUSTOMGETTER(frameString)
     local frameList = {}
@@ -1100,9 +1100,9 @@ function Frames.InitFrames()
     ReplaceAllAlphaFunctions()
 end
 
-------------------
+-- ─────────────────────────────────────────────────────────────────────────────
 -- Special Workarounds
-------------------
+-- ─────────────────────────────────────────────────────────────────────────────
 
 -- Ayije_CDM creates resourceBars as they are needed, for example when shapeshifting or respeccing.
 -- need to update the frame lists when that happens. this is run after a 0.15s delay.

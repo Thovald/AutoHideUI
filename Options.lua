@@ -1,9 +1,6 @@
 local _, Private = ...
--- namespaces for functions that are called between files
 local Main = Private.Main
 local Config = Private.Config
--- namespace for functions that are referenced before they are defined
-local internal = {}
 
 local AceConfig = LibStub("AceConfig-3.0")
 local AceConfigDialog = LibStub("AceConfigDialog-3.0")
@@ -36,9 +33,9 @@ local popupContext = {
     entityID = 1,
 }
 
-------------------
+-- ─────────────────────────────────────────────────────────────────────────────
 -- UI Data
-------------------
+-- ─────────────────────────────────────────────────────────────────────────────
 
 -- same order as these will appear in the options
 Config.DEFAULT_FRAMES = {
@@ -102,9 +99,9 @@ Config.CONDITION_DEFINITIONS = {
         },
         type = "default",
     },
-    ----------------------
+    -- ─────────────────────────────────────────────────────────────────────────────----
     -- START instance
-    ----------------------
+    -- ─────────────────────────────────────────────────────────────────────────────----
     {
         name = "instance",
         db = {
@@ -196,9 +193,9 @@ Config.CONDITION_DEFINITIONS = {
         type = "child",
         parent = "instance",
     },
-    ----------------------
+    -- ─────────────────────────────────────────────────────────────────────────────----
     -- END instance
-    ----------------------
+    -- ─────────────────────────────────────────────────────────────────────────────----
     {
         name = "mouseover",
         db = {
@@ -225,9 +222,9 @@ Config.CONDITION_DEFINITIONS = {
             },
         },
     },
-    ----------------------
+    -- ─────────────────────────────────────────────────────────────────────────────----
     -- START target
-    ----------------------
+    -- ─────────────────────────────────────────────────────────────────────────────----
     {
         name = "target",
         db = {
@@ -276,13 +273,13 @@ Config.CONDITION_DEFINITIONS = {
         type = "child",
         parent = "target",
     },
-    ----------------------
+    -- ─────────────────────────────────────────────────────────────────────────────----
     -- END target 
-    ----------------------
+    -- ─────────────────────────────────────────────────────────────────────────────----
 
-    ----------------------
+    -- ─────────────────────────────────────────────────────────────────────────────----
     -- START focus 
-    ----------------------
+    -- ─────────────────────────────────────────────────────────────────────────────----
     {
         name = "focus",
         db = {
@@ -315,9 +312,9 @@ Config.CONDITION_DEFINITIONS = {
         type = "child",
         parent = "focus",
     },
-    ----------------------
+    -- ─────────────────────────────────────────────────────────────────────────────----
     -- END focus
-    ----------------------
+    -- ─────────────────────────────────────────────────────────────────────────────----
     {
         name = "interactable",
         db = {
@@ -490,9 +487,9 @@ local ALPHA_PREF = {
     L["Highest"], L["Lowest"],
 }
 
-------------------
+-- ─────────────────────────────────────────────────────────────────────────────
 -- UI Logic
-------------------
+-- ─────────────────────────────────────────────────────────────────────────────
 
 local function IsOtherWindowsShown()
     return AutoHideUIFrameFinderFrame:IsShown() or AutoHideUIMouseoverAreasFrame:IsShown()
@@ -669,7 +666,7 @@ local function ShowGroupCreateDialog()
     popupContext.editBoxText = L["button_newGroup"]
 
     popupContext.callbacks.createOnAccept = function(name)
-        table.insert(Private.db.profile.groups, internal.GetNewGroup(name))
+        table.insert(Private.db.profile.groups, Config.GetNewGroup(name))
         selectedGroup = #Private.db.profile.groups
     end
 
@@ -819,9 +816,9 @@ local function CloseAllPopups()
     Private.Changelog.frame:SetShown(false)
 end
 
-------------------
+-- ─────────────────────────────────────────────────────────────────────────────
 -- UI Layout
-------------------
+-- ─────────────────────────────────────────────────────────────────────────────
 
 local OPTIONS_TAB_FRAMES = {
     name = L["tab_frameSelect"],
@@ -1492,11 +1489,11 @@ function Config.CreateOptionsMenu()
     CreateConditionsOptions()
 end
 
-------------------
+-- ─────────────────────────────────────────────────────────────────────────────
 -- Managing Settings
-------------------
+-- ─────────────────────────────────────────────────────────────────────────────
 
-function internal.GetNewGroup(name, useDefaultFrameSelection)
+function Config.GetNewGroup(name, useDefaultFrameSelection)
     local newGroup = CopyTable(GROUP_TEMPLATE)
     newGroup.frames = GetCommonFrames()
     newGroup.conditions = GetDefaultConditions()
@@ -1585,7 +1582,7 @@ end
 
 function Config.GetDefaultGroup(name)
     local useDefaultFrameSelection = true
-    local defaultGroup = internal.GetNewGroup(name, useDefaultFrameSelection)
+    local defaultGroup = Config.GetNewGroup(name, useDefaultFrameSelection)
     return defaultGroup
 end
 
@@ -1671,9 +1668,9 @@ function Config.RegisterOptions()
     SetHooksForMenus()
 end
 
-------------------
+-- ─────────────────────────────────────────────────────────────────────────────
 -- Misc
-------------------
+-- ─────────────────────────────────────────────────────────────────────────────
 
 function Config.SetHeaderText(frame, title)
     frame.header.title:SetText(title .. " - " .. Private.db.profile.groups[selectedGroup].name)

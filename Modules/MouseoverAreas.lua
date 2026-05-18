@@ -9,7 +9,6 @@ local AceConfigDialog = LibStub("AceConfigDialog-3.0")
 local L = LibStub("AceLocale-3.0"):GetLocale("AutoHideUI")
 
 MouseoverAreas.ActiveAreas = {}
-local selectedGroup
 local MOUSEOVER_FRAME_POOL = {}
 local MIN_SIZE = 50
 local pi = math.pi
@@ -38,9 +37,8 @@ local RESIZE_BUTTON_MAPPING = {
 -- Toggle MouseoverAreas Window
 -- ─────────────────────────────────────────────────────────────────────────────
 
-function MouseoverAreas.Start(groupID)
-    selectedGroup = groupID
-    if not selectedGroup then
+function MouseoverAreas.Start()
+    if not Config.selectedGroup then
         return
     end
 
@@ -93,7 +91,7 @@ local function OnMouseoverAreaClick(self, button)
 end
 
 local function UpdateAreaDB(frame)
-    local db = Private.db.profile.groups[selectedGroup].mouseoverAreas[frame.index]
+    local db = Private.db.profile.groups[Config.selectedGroup].mouseoverAreas[frame.index]
 
     if not db then
         return
@@ -111,7 +109,7 @@ local function UpdateAreaDB(frame)
 end
 
 local function AddAreaToDB(frame)
-    local db = Private.db.profile.groups[selectedGroup].mouseoverAreas
+    local db = Private.db.profile.groups[Config.selectedGroup].mouseoverAreas
 
     local areaData = {
         width = frame:GetWidth(),
@@ -122,14 +120,14 @@ local function AddAreaToDB(frame)
         yOffset = 0,
     }
 
-    table.insert(db, areaData)
+    tinsert(db, areaData)
 
     return #db
 end
 
 local function RemoveAreaFromDB(index)
-    local db = Private.db.profile.groups[selectedGroup].mouseoverAreas
-    table.remove(db, index)
+    local db = Private.db.profile.groups[Config.selectedGroup].mouseoverAreas
+    tremove(db, index)
 end
 
 local CreateMouseoverFrame = function()
@@ -257,7 +255,7 @@ function MouseoverAreas:CreateNewArea()
     frame.mover:Show()
     local index = AddAreaToDB(frame)
     frame.index = index
-    frame.group = selectedGroup
+    frame.group = Config.selectedGroup
     tinsert(MouseoverAreas.ActiveAreas, frame)
 end
 
@@ -303,7 +301,7 @@ end
 
 function MouseoverAreas:ShowMovers()
     for _, frame in ipairs(MouseoverAreas.ActiveAreas) do
-        if frame.group == selectedGroup then
+        if frame.group == Config.selectedGroup then
             frame.mover:Show()
         end
     end

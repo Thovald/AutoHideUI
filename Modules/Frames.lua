@@ -1138,8 +1138,8 @@ function Frames.UpdateAyijeResourceBars()
     local activeStringFrames = Main.activeStrings["PersonalResourceDisplayFrame"].frames
 
     for _, newFrame in ipairs(newFrames) do
-        table.insert(groupFrames, newFrame)
-        table.insert(activeStringFrames, newFrame)
+        tinsert(groupFrames, newFrame)
+        tinsert(activeStringFrames, newFrame)
         ReplaceAlphaFunctions(newFrame, groupInfo)
         newFrame:_origSetAlpha(groupInfo.states.endAlpha)
     end

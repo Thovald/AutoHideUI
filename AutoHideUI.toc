@@ -20,10 +20,13 @@ Widgets/AutoHideUI_ToggleStar.lua
 Widgets/AutoHideUI_ChangelogAnchor.lua
 
 Core.lua
-Options.lua
+
+Options\Options.lua
+Options\Options-Changelog.lua
+Options\Options-ManualControl.lua
+Options\Options-Conditions.lua
+
 Modules\Fading.lua
 Modules\Frames.lua
 Modules\FrameFinder.lua
 Modules\MouseoverAreas.lua
-Modules\Changelog.lua
-

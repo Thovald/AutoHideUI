@@ -7,11 +7,15 @@ Private.Fading = {}
 Private.FrameFinder = {}
 Private.MouseoverAreas = {}
 Private.Changelog = {}
+Private.ManualControl = {}
+Private.Conditions = {}
 
 local Main = Private.Main
 local Config = Private.Config
 local Frames = Private.Frames
 local Fading = Private.Fading
+local ManualControl = Private.ManualControl
+local Conditions = Private.Conditions
 local MouseoverAreas = Private.MouseoverAreas
 local DB_SCHEMA_VERSION = 1
 
@@ -144,7 +148,7 @@ local function RegisterEventsInCondition(condition)
     local events
     local parents = {}
 
-    for _, info in ipairs(Config.CONDITION_DEFINITIONS) do
+    for _, info in ipairs(Conditions.CONDITION_DEFINITIONS) do
         if info.name == condition and info.events then
             events = info.events
             break
@@ -330,7 +334,7 @@ local function RunAfterCombatQueue()
 end
 
 local function GetConditionRelationships(conditionName)
-    for _, conditionInfo in ipairs(Config.CONDITION_DEFINITIONS) do
+    for _, conditionInfo in ipairs(Conditions.CONDITION_DEFINITIONS) do
         if conditionInfo.name == conditionName then
             return conditionInfo.type, conditionInfo.parent
         end
@@ -484,23 +488,6 @@ local MigrateDB = {
 }
 
 local function RepairDB()
-    -- remove nil groups from each profile
-    -- these can occur from incomplete deletions or legacy corruption
-    for profileKey, profileData in pairs(Private.db.profiles) do
-        if profileData.groups then
-            local cleanedGroups = {}
-
-            -- copy only non-nil groups to new table
-            for _, group in ipairs(profileData.groups) do
-                if group then
-                    tinsert(cleanedGroups, group)
-                end
-            end
-
-            Private.db.profiles[profileKey].groups = cleanedGroups
-        end
-    end
-
     Config.CheckGroupsForMissingEntries()
 end
 

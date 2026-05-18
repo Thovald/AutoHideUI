@@ -8,7 +8,6 @@ local ffWindow -- reference to the frame
 local AceConfigDialog = LibStub("AceConfigDialog-3.0")
 local L = LibStub("AceLocale-3.0"):GetLocale("AutoHideUI")
 
-local selectedGroup
 local HELPER_FRAME_POOL = {}
 local VISIBILITY_TICKER -- periodically checks frame visibility to toggle helper frames
 local mouseoverFrame
@@ -26,8 +25,6 @@ local lastClickTime = 0
 -- ─────────────────────────────────────────────────────────────────────────────
 
 function FrameFinder.Start(groupID)
-    selectedGroup = groupID
-
     if Main.blizzFrame and Main.blizzFrame:IsVisible() then
         HideUIPanel(SettingsPanel)
     else
@@ -73,7 +70,7 @@ function FrameFinder.ConfirmSelection()
     -- preserving user's strings that were not found at all, ie from unloaded addons
     local newString = ""
     local frameStrings = {}
-    local userStrings = string.gmatch(Private.db.profile.groups[selectedGroup].config.customFrames, "[^,]+")
+    local userStrings = string.gmatch(Private.db.profile.groups[Config.selectedGroup].config.customFrames, "[^,]+")
 
     for _, helperFrame in ipairs(helperFrameList) do
         frameStrings[helperFrame.name] = {selected = helperFrame.selected}
@@ -88,7 +85,7 @@ function FrameFinder.ConfirmSelection()
             newString = newString..userString..", "
         end
     end
-    Private.db.profile.groups[selectedGroup].config.customFrames = newString
+    Private.db.profile.groups[Config.selectedGroup].config.customFrames = newString
     FrameFinder:HideWindow()
     AceConfigDialog:Open("AutoHideUI")
 end
@@ -271,7 +268,7 @@ local function GetFramesUnderCursor()
 
     for _, frame in ipairs(helperFrameList) do
         if frame:IsMouseOver() then
-            table.insert(frames, frame)
+            tinsert(frames, frame)
         end
     end
 
@@ -605,7 +602,7 @@ end
 
 function FrameFinder.UpdateIgnoredFrames()
     for frame, frameInfo in pairs(Main.activeFrames) do
-        local isInSelectedGroup = frameInfo.group.index == selectedGroup
+        local isInSelectedGroup = frameInfo.group.index == Config.selectedGroup
         local isCustomFrame = frameInfo.isCustom
         if frameInfo.name and (not isCustomFrame or not isInSelectedGroup) then
             ignoredFrames[frameInfo.name] = {
@@ -770,7 +767,7 @@ do
         local keys = {}
 
         for k in pairs(frame.entries) do
-            table.insert(keys, k)
+            tinsert(keys, k)
         end
 
         table.sort(keys, function(a,b)

@@ -197,6 +197,19 @@ L["descr_manualControl"] = "Define a Hotkey or Macro to manually set the Alpha o
                             "While an override is engaged, affected Groups will be set to that Alpha and ignore Conditions.".."|n"..
                             "When disengaged, the Groups will go back to using Conditions to determine the Alpha.".."|n"
 L["button_newOverride"] = "New Override"
-
-
-
+L["name_newGroup"] = "New Group"
+L["popup_createOverride"] = "Name of new Override:"
+L["name_newOverride"] = "New Override"
+L["popup_renameOverride"] = "Rename Override"
+L["popup_deleteOverride"] = "Delete Override"
+L["button_setHotkey"] = "Set Hotkey"
+L["button_setHotkeyRecording"] = "Recording ..."
+L["description_setHotkey"] = "Click to set a new Keybind.".."|n"..
+                             "Esc to clear."
+L["input_macro"] = "Macro (optional)"
+L["description_macro"] = "In addition or instead of a keybind, you can use a macro to toggle this override.".."|n|n"..
+                         "Make the following macro and replace 'MyMacro' with your custom word:".."|n|n"..
+                         "/autohide override MyMacro"
+L["dropdown_affectedGroups"] = "Affected Groups"
+L["dropdownOption_affectedGroups1"] = "All"
+L["dropdownOption_affectedGroups2"] = "Customize"

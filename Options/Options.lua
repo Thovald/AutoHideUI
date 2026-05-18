@@ -1,0 +1,967 @@
+local _, Private = ...
+local Main = Private.Main
+local Config = Private.Config
+local ManualControl = Private.ManualControl
+local Conditions = Private.Conditions
+
+local AceConfig = LibStub("AceConfig-3.0")
+local AceConfigDialog = LibStub("AceConfigDialog-3.0")
+local AceConfigRegistry = LibStub("AceConfigRegistry-3.0")
+local AceDBOptions = LibStub("AceDBOptions-3.0")
+local L = LibStub("AceLocale-3.0"):GetLocale("AutoHideUI")
+
+local pairs, ipairs  = pairs, ipairs
+
+Config.selectedGroup = nil
+local isAceHooked = false
+local isOptionsOpen
+local MENU_WIDTH = 630
+local MENU_HEIGHT = 830
+local MENU_HEIGHT_MIN = 400
+local MENU_HEIGHT_MAX = 1000
+local UI_WIDTH, UI_HEIGHT
+local UI_PADDING = 5
+local highlightFrames = {}
+
+Config.popupContext = {
+    titleText = "",
+    editBoxText = "",
+    callbacks = {
+        create = function(name) end,
+        rename = function(name) end,
+        delete = function() end,
+    },
+    entityID = 1,
+}
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- UI Data
+-- ─────────────────────────────────────────────────────────────────────────────
+
+-- same order as these will appear in the options
+Config.DEFAULT_FRAMES = {
+    -- unitframes
+    { frame = "PlayerFrame", label = L["Player Frame"], enabled = true },
+    { frame = "TargetFrame", label = L["Target Frame"], enabled = true },
+    { frame = "FocusFrame", label = L["Focus Frame"], enabled = false },
+    { frame = "PetFrame", label = L["Pet Frame"], enabled = true },
+    { frame = "PartyFrame", label = L["Party Frame"], enabled = false },
+    { frame = "PlayerCastingBarFrame", label = L["Player Castbar"], enabled = false },
+    -- actionbars
+    { frame = "MainActionBar", label = L["ActionBar 1"], enabled = true, description = L["descr_ActionBar1"] },
+    { frame = "MultiBarBottomLeft", label = L["ActionBar 2"], enabled = true },
+    { frame = "MultiBarBottomRight", label = L["ActionBar 3"], enabled = true },
+    { frame = "MultiBarRight", label = L["ActionBar 4"], enabled = true },
+    { frame = "MultiBarLeft", label = L["ActionBar 5"], enabled = true },
+    { frame = "MultiBar5", label = L["ActionBar 6"], enabled = true },
+    { frame = "MultiBar6", label = L["ActionBar 7"], enabled = true },
+    { frame = "MultiBar7", label = L["ActionBar 8"], enabled = true },
+    { frame = "StanceBar", label = L["Stance Bar"], enabled = true },
+    { frame = "PetActionBar", label = L["Pet Bar"], enabled = true },
+    -- CDM
+    { frame = "EssentialCooldownViewer", label = L["CDManager Essential"], enabled = true },
+    { frame = "UtilityCooldownViewer", label = L["CDManager Utility"], enabled = true },
+    { frame = "BuffIconCooldownViewer", label = L["CDManager Buffs"], enabled = true },
+    { frame = "BuffBarCooldownViewer", label = L["CDManager Bars"], enabled = true },
+    { frame = "BuffFrame", label = L["Buff Frame"], enabled = false },
+    { frame = "DebuffFrame", label = L["Debuff Frame"], enabled = false },
+    { frame = "PersonalResourceDisplayFrame", label = L["Personal Resource"], enabled = true },
+    -- other
+    { frame = "DamageMeter", label = L["Damage Meter"], enabled = true },
+    { frame = "MinimapCluster", label = L["Minimap"], enabled = false , description = L["descr_Minimap"]},
+    { frame = "MicroMenu", label = L["Micro Menu"], enabled = false },
+    { frame = "ObjectiveTrackerFrame", label = L["Objectives Frame"], enabled = false },
+    { frame = "MainStatusTrackingBarContainer", label = L["Experience Bar"], enabled = false },
+    { frame = "BagsBar", label = L["Bags Bar"], enabled = true },
+
+}
+
+local function GetCommonFrames()
+    local frameList = {}
+    for _, frameInfo in ipairs(Config.DEFAULT_FRAMES) do
+        frameList[frameInfo.frame] = frameInfo.enabled
+    end
+    return frameList
+end
+
+local GROUP_TEMPLATE = {
+    name = "New Group",
+    frames = {},
+    conditions = {},
+    config = {
+        enabled = true,
+        timeToFade = 0.15,
+        fadeOutDelay = 2,
+        fadeInDelay = 0,
+        idleAlpha = 0,
+        normalAlphaPref = 1, -- 1 = highest, 2 = lowest
+        prioAlphaPref = 1,
+        customFrames = "",
+        forceAlpha = true,
+    },
+    states = {},
+    mouseoverAreas = {},
+}
+
+local ALPHA_PREF = {
+    L["Highest"], L["Lowest"],
+}
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- UI Logic
+-- ─────────────────────────────────────────────────────────────────────────────
+
+local function IsOtherWindowsShown()
+    return AutoHideUIFrameFinderFrame:IsShown() or AutoHideUIMouseoverAreasFrame:IsShown()
+end
+
+function Config.PrintOptionsOpenError()
+    local title = Main.GetErrorTitleString()
+    local message = Main.ColorString(L["error_optionsOpen"], "red")
+    print(title..message)
+end
+
+function Config.CheckTextBounds(frame)
+    if not frame.text then
+        return
+    end
+
+    -- idk why but DetailsWaitFrameBG is larger than 0 when we add it, but is 0 here.
+    local w,h = frame:GetSize()
+    if w*h < 10 then
+        return
+    end
+
+    local x, y = 0, 0
+
+    local leftBorder = 0 + UI_PADDING
+    local rightBorder = UI_WIDTH - UI_PADDING
+    local topBorder = UI_HEIGHT - UI_PADDING
+    local bottomBorder = 0 + UI_PADDING
+
+    frame.text:SetPointsOffset(0, 0)
+    local left = frame.text:GetLeft()
+    local right = frame.text:GetRight()
+    local top = frame.text:GetTop()
+    local bottom = frame.text:GetBottom()
+
+    if left < leftBorder then
+        x = math.abs(leftBorder - left)
+    elseif right > rightBorder then
+        x = (rightBorder - right)
+    end
+
+    if top > topBorder then
+        y = (topBorder - top)
+    elseif bottom < bottomBorder then
+        y = math.abs(bottomBorder - bottom)
+    end
+
+    frame.text:SetPointsOffset(x, y)
+end
+
+local function CreateNewHighlight()
+    -- to highlight frames when user hovers over frame selection options.
+    local frame = CreateFrame("Frame", nil, UIParent)
+    local texture = frame:CreateTexture()
+    texture:SetAllPoints()
+    texture:SetColorTexture(1, 1, 1, 0.6)
+    frame.texture = texture
+    frame:Hide()
+    frame:SetFrameStrata("HIGH")
+    local text = frame:CreateFontString()
+    text:SetFont(GameFontNormal:GetFont(), 35, "THICKOUTLINE")
+    text:SetPoint("BOTTOM", frame, "TOP")
+    frame.text = text
+    local hlInfo = {frame = frame, inUse = false}
+    tinsert(highlightFrames, hlInfo)
+
+    return hlInfo
+end
+
+local function GetNextHighlight()
+    for i, info in pairs(highlightFrames) do
+        if info.frame and not info.inUse then
+            info.inUse = true
+            return info.frame
+        end
+    end
+
+    local newInfo = CreateNewHighlight()
+    newInfo.inUse = true
+    return newInfo.frame
+end
+
+function Config.ShowHighlight(frame)
+    if Main.helperFrames[frame] and not Main.helperFrames[frame].isAnchor then
+        return
+    end
+
+    local highlight = GetNextHighlight()
+
+    if frame:IsVisible() then
+        highlight.texture:SetVertexColor(0, 1, 0)
+    else
+        highlight.texture:SetVertexColor(1, 1, 0)
+    end
+
+    highlight:SetAllPoints(frame)
+    highlight.text:SetText(frame:GetName())
+    Config.CheckTextBounds(highlight)
+    highlight:Show()
+end
+
+function Config.HideAllHighlights()
+    for i, info in pairs(highlightFrames) do
+        if info.frame then
+            info.frame:Hide()
+            info.inUse = false
+        end
+    end
+end
+
+local function GetGroupNames()
+    local groupNames = {}
+    for _, group in ipairs(Private.db.profile.groups) do
+        tinsert(groupNames, group.name)
+    end
+    return groupNames
+end
+
+function Config.SetSelectedGroup(profileChanged)
+    -- keeping last selection
+    if profileChanged then
+        Config.selectedGroup = 1
+    elseif Config.selectedGroup and Private.db.profile.groups[Config.selectedGroup] then
+        return
+    end
+
+    Config.selectedGroup = nil
+    for index in ipairs(Private.db.profile.groups) do
+        Config.selectedGroup = index
+        break
+    end
+end
+
+function Config.NoSelectedGroup()
+    return not Config.selectedGroup
+end
+
+function Config.RebuildUI()
+    Config.CreateOptionsMenu()
+    AceConfigRegistry:NotifyChange("AutoHideUI")
+end
+
+function Config.RefreshUI()
+    AceConfigRegistry:NotifyChange("AutoHideUI")
+end
+
+local function IsFrameSelectedElsewhere(frameString)
+    for index, group in pairs(Private.db.profile.groups) do
+        if index ~= Config.selectedGroup and group.frames[frameString] then
+            return true
+        end
+    end
+    return false
+end
+
+local function ShowGroupCreateDialog()
+    --StaticPopup_Hide("AUTOHIDEUI_CREATE_ENTITY")
+    StaticPopupDialogs["AUTOHIDEUI_CREATE_ENTITY"].text = L["popup_createGroup"]
+    Config.popupContext.editBoxText = L["name_newGroup"]
+
+    Config.popupContext.callbacks.createOnAccept = function(name)
+        tinsert(Private.db.profile.groups, Config.GetNewGroup(name))
+        Config.selectedGroup = #Private.db.profile.groups
+    end
+
+    StaticPopup_Show("AUTOHIDEUI_CREATE_ENTITY")
+end
+
+local function ShowGroupRenameDialog()
+    --StaticPopup_Hide("AUTOHIDEUI_RENAME_ENTITY")
+    StaticPopupDialogs["AUTOHIDEUI_RENAME_ENTITY"].text = L["popup_renameGroup"]
+    Config.popupContext.editBoxText = Private.db.profile.groups[Config.selectedGroup].name
+
+    Config.popupContext.callbacks.renameOnAccept = function(name)
+        Private.db.profile.groups[Config.selectedGroup].name = name
+    end
+
+    StaticPopup_Show("AUTOHIDEUI_RENAME_ENTITY")
+end
+
+local function ShowGroupDeleteDialog()
+    --StaticPopup_Hide("AUTOHIDEUI_DELETE_ENTITY")
+    StaticPopupDialogs["AUTOHIDEUI_DELETE_ENTITY"].text = L["popup_deleteGroup"]
+
+    Config.popupContext.callbacks.deleteOnShow = function(self)
+        if Config.selectedGroup and Private.db.profile.groups[Config.selectedGroup] then
+            self:SetText(string.format("%s|n|n-- %s --|n", L["popup_deleteGroup"], Private.db.profile.groups[Config.selectedGroup].name))
+        end
+    end
+
+    Config.popupContext.callbacks.deleteOnAccept = function()
+        if Config.selectedGroup then
+            tremove(Private.db.profile.groups, Config.selectedGroup)
+            Config.SetSelectedGroup()
+        end
+    end
+
+    StaticPopup_Show("AUTOHIDEUI_DELETE_ENTITY")
+end
+
+StaticPopupDialogs["AUTOHIDEUI_CREATE_ENTITY"] = {
+    text = "",
+    button1 = L["button_create"],
+    button2 = L["button_cancel"],
+    hasEditBox = true,
+    timeout = 0,
+    whileDead = true,
+
+    OnShow = function(self)
+        self:SetFrameStrata("TOOLTIP")
+        self:GetEditBox():SetText(Config.popupContext.editBoxText)
+        self:GetEditBox():HighlightText()
+    end,
+
+    OnAccept = function(self)
+        if not isOptionsOpen then
+            Config.PrintOptionsOpenError()
+            return
+        end
+
+        local newName = self:GetEditBox():GetText()
+        if newName and newName ~= "" then
+            Config.popupContext.callbacks.createOnAccept(newName)
+            Config.RebuildUI()
+        end
+    end,
+
+    EditBoxOnEscapePressed = function(self)
+        self:GetParent():Hide()
+    end,
+
+    EditBoxOnEnterPressed = function(self)
+        local parent = self:GetParent()
+        StaticPopup_OnClick(parent, 1)
+    end,
+}
+
+StaticPopupDialogs["AUTOHIDEUI_RENAME_ENTITY"] = {
+    text = "",
+    button1 = L["button_rename"],
+    button2 = L["button_cancel"],
+    hasEditBox = true,
+    timeout = 0,
+    whileDead = true,
+
+    OnShow = function(self)
+        self:SetFrameStrata("TOOLTIP")
+        self:GetEditBox():SetText(Config.popupContext.editBoxText)
+        self:GetEditBox():HighlightText()
+    end,
+
+    OnAccept = function(self)
+        if not isOptionsOpen then
+            Config.PrintOptionsOpenError()
+            return
+        end
+
+        local newName = self:GetEditBox():GetText()
+        if newName and newName ~= "" then
+            Config.popupContext.callbacks.renameOnAccept(newName)
+            Config.RebuildUI()
+        end
+    end,
+
+    EditBoxOnEscapePressed = function(self)
+        self:GetParent():Hide()
+    end,
+
+    EditBoxOnEnterPressed = function(self)
+        local parent = self:GetParent()
+        StaticPopup_OnClick(parent, 1)
+    end,
+}
+
+StaticPopupDialogs["AUTOHIDEUI_DELETE_ENTITY"] = {
+    text = "",
+    button1 = L["button_delete"],
+    button2 = L["button_cancel"],
+    timeout = 0,
+    whileDead = true,
+
+    OnShow = function(self)
+        Config.popupContext.callbacks.deleteOnShow(self)
+        self:SetFrameStrata("TOOLTIP")
+    end,
+
+    OnAccept = function(self)
+        if not isOptionsOpen then
+            Config.PrintOptionsOpenError()
+            return
+        end
+
+        Config.popupContext.callbacks.deleteOnAccept()
+        Config.RebuildUI()
+    end,
+
+    EditBoxOnEscapePressed = function(self)
+        self:GetParent():Hide()
+    end,
+}
+
+local function CloseAllPopups()
+    StaticPopup_Hide("AUTOHIDEUI_CREATE_ENTITY")
+    StaticPopup_Hide("AUTOHIDEUI_RENAME_ENTITY")
+    StaticPopup_Hide("AUTOHIDEUI_DELETE_ENTITY")
+    Private.Changelog.frame:SetShown(false)
+end
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- UI Layout
+-- ─────────────────────────────────────────────────────────────────────────────
+
+local OPTIONS_TAB_FRAMES = {
+    name = L["tab_frameSelect"],
+    type = "group",
+    disabled = Config.NoSelectedGroup,
+    args = {
+        spacer_frames1 = {
+            type = "description",
+            name = "",
+            fontSize = "small",
+            order = 1,
+        },
+        group_defaultFrames = {
+            name = L["group_defaultFrames"],
+            type = "group",
+            inline = true,
+            order = 5,
+            args = {}, -- filled in later
+        },
+        group_customFrames = {
+            name = L["group_customFrames"],
+            type = "group",
+            inline = true,
+            order = 10,
+            args = {
+                button_frameFinder = {
+                    name = L["frameFinder"],
+                    desc = L["descr_frameFinder"],
+                    type = "execute",
+                    width = 1,
+                    func = function() Private.FrameFinder.Start() end,
+                    order = 1,
+                },
+                spacer1 = {
+                    type = "description",
+                    name = " ",
+                    width = 0.1,
+                    order = 2
+                },
+                button_mouseoverArea = {
+                    name = L["mouseoverAreas"],
+                    desc = L["descr_mouseoverAreas"],
+                    type = "execute",
+                    width = 1,
+                    func = function() Private.MouseoverAreas.Start() end,
+                    order = 3,
+                },
+                descr_customFrames = {
+                    type = "description",
+                    fontSize = "medium",
+                    name = L["descr_customFrames"].."|n",
+                    width = "full",
+                    order = 4,
+                },
+                editbox_customFrames = {
+                    type = "input",
+                    name = "",
+                    width = "full",
+                    get = function(info) return Private.db.profile.groups[Config.selectedGroup].config.customFrames end,
+                    set = function(info, value) Private.db.profile.groups[Config.selectedGroup].config.customFrames = value end,
+                    multiline = true,
+                    order = 5,
+                },
+            },
+        },
+    },
+    order = 21,
+}
+
+local OPTIONS_TAB_FADE = {
+    name = L["tab_fadeSetup"],
+    type = "group",
+    disabled = Config.NoSelectedGroup,
+    args = {
+        group_conditionList22 = {
+            name = L["group_fadeAnimation"],
+            type = "group",
+            inline = true,
+            order = 5,
+            args = {
+                fadeOutDelay = {
+                    type = "range",
+                    name = L["slider_fadeOutDelay"],
+                    width = 1,
+                    min = 0,
+                    max = 60,
+                    softMax = 10,
+                    bigStep = 0.1,
+                    get = function() return Private.db.profile.groups[Config.selectedGroup].config.fadeOutDelay end,
+                    set = function(_, value) Private.db.profile.groups[Config.selectedGroup].config.fadeOutDelay = value end,
+                    order = 5,
+                },
+                fadeInDelay = {
+                    type = "range",
+                    name = L["slider_fadeInDelay"],
+                    width = 1,
+                    min = 0,
+                    max = 60,
+                    softMax = 10,
+                    bigStep = 0.1,
+                    get = function() return Private.db.profile.groups[Config.selectedGroup].config.fadeInDelay end,
+                    set = function(_, value) Private.db.profile.groups[Config.selectedGroup].config.fadeInDelay = value end,
+                    order = 6,
+                },
+                fadeDuration = {
+                    type = "range",
+                    name = L["slider_fadeDuration"],
+                    width = 1,
+                    min = 0,
+                    max = 5,
+                    softMax = 1,
+                    get = function() return Private.db.profile.groups[Config.selectedGroup].config.timeToFade end,
+                    set = function(_, value) Private.db.profile.groups[Config.selectedGroup].config.timeToFade = value end,
+                    order = 10,
+                },
+            },
+        },
+        group_alpha = {
+            name = L["group_alpha"],
+            type = "group",
+            inline = true,
+            order = 10,
+            args = {
+                idleAlpha = {
+                    type = "range",
+                    name = L["slider_idleAlpha"],
+                    width = 1.5,
+                    min = 0,
+                    max = 1,
+                    get = function() return Private.db.profile.groups[Config.selectedGroup].config.idleAlpha end,
+                    set = function(_, value) Private.db.profile.groups[Config.selectedGroup].config.idleAlpha = value end,
+                    order = 1,
+                },
+                checkbox_forceAlpha = {
+                    type = "toggle",
+                    name = L["checkbox_forceAlpha"],
+                    desc = L["desc_forceAlpha"],
+                    width = 1.5,
+                    get = function(info) return Private.db.profile.groups[Config.selectedGroup].config.forceAlpha end,
+                    set = function(info, value) Private.db.profile.groups[Config.selectedGroup].config.forceAlpha = value end,
+                    order = 2,
+                },
+                descrAlphaPref = {
+                    type = "description",
+                    name = "|n"..L["descr_alphaPref"].."|n",
+                    fontSize = "medium",
+                    order = 5,
+                },
+                dropdownAlphaPref = {
+                    name = L["dropdown_alphaPref"],
+                    type = "select",
+                    width = 1.3,
+                    values = function() return ALPHA_PREF end,
+                    get = function() return Private.db.profile.groups[Config.selectedGroup].config.normalAlphaPref end,
+                    set = function(_, value) Private.db.profile.groups[Config.selectedGroup].config.normalAlphaPref = value end,
+                    desc = L["tooltip_alphaPref"],
+                    order = 6,
+                },
+                dropdownPrioAlphaPref = {
+                    name = L["dropdown_prioAlphaPref"],
+                    type = "select",
+                    width = 1.3,
+                    values = function() return ALPHA_PREF end,
+                    get = function() return Private.db.profile.groups[Config.selectedGroup].config.prioAlphaPref end,
+                    set = function(_, value) Private.db.profile.groups[Config.selectedGroup].config.prioAlphaPref = value end,
+                    desc = L["tooltip_prioAlphaPref"],
+                    order = 7,
+                },
+            },
+        },
+    },
+    order = 22,
+}
+
+Config.OPTIONS_MENU = {
+    type = "group",
+    name = "Auto Hide UI",
+    childGroups = "tab",
+    args = {
+        setup = {
+            name = L["tab_setup"],
+            type = "group",
+            childGroups = "tab",
+            order = 1,
+            args = {
+                header_groups = {
+                    type = "header",
+                    name = function()
+                        local groupName = Private.db and Private.db.profile.groups[Config.selectedGroup].name or "?"
+                        return groupName
+                    end,
+                    order = 1,
+                },
+                groupSelection = {
+                    name = L["dropdown_groupSelect"],
+                    type = "select",
+                    values = function() return GetGroupNames() end,
+                    get = function() return Config.selectedGroup end,
+                    set = function(_, value) Config.selectedGroup = value end,
+                    desc = L["descr_groups"],
+                    width = 1,
+                    order = 3,
+                },
+                buttonNew = {
+                    name = L["button_newGroup"],
+                    type = "execute",
+                    width = 0.9,
+                    func = ShowGroupCreateDialog,
+                    desc = L["descr_groups"],
+                    order = 5,
+                },
+                buttonRename = {
+                    name = L["button_renameGroup"],
+                    type = "execute",
+                    width = 0.7,
+                    func = ShowGroupRenameDialog,
+                    order = 10,
+                },
+                buttonDelete = {
+                    name = L["button_deleteGroup"],
+                    type = "execute",
+                    width = 0.7,
+                    func = ShowGroupDeleteDialog,
+                    order = 15,
+                },
+                tabFrames = OPTIONS_TAB_FRAMES,
+                tabFade = OPTIONS_TAB_FADE,
+            },
+
+        },
+        changelogAnchor = {
+            type = "description",
+            dialogControl = "AutoHideUI_ChangelogButtonAnchor",
+            name = "",
+            order = 20,
+        },
+        -- profiles is set later when db has actually been initialized
+    },
+}
+
+local function GetElementForFrameSelection(order, frameInfo)
+    local frameString = frameInfo.frame
+    local checkbox = {
+        name = frameInfo.label,
+        type = "toggle",
+        get = function(info) return Private.db.profile.groups[Config.selectedGroup].frames[frameString] end,
+        set = function(info, value) Private.db.profile.groups[Config.selectedGroup].frames[frameString] = value end,
+        disabled = function(info)
+            return IsFrameSelectedElsewhere(frameString)
+        end,
+        dialogControl = "AutoHideUI_ToggleHover",
+        desc = frameInfo.description, -- most times is nil
+        order = order,
+        arg = {frameString = frameString},
+    }
+
+    return frameInfo.frame, checkbox
+end
+
+local function SetupFrameSelection()
+    local path = Config.OPTIONS_MENU.args.setup.args.tabFrames.args.group_defaultFrames.args
+
+    local spacerLocation = {PlayerCastingBarFrame = true, PetActionBar = true, PersonalResourceDisplayFrame = true}
+    local order = 1
+    local spacerCount = 1
+
+    for _, frameInfo in ipairs(Config.DEFAULT_FRAMES) do
+        local name, checkbox = GetElementForFrameSelection(order, frameInfo)
+        path[name] = checkbox
+        order = order + 1
+
+        if spacerLocation[frameInfo.frame] then
+            path["space"..spacerCount] = {
+                name = "",
+                type = "header",
+                order = order,
+            }
+            spacerCount = spacerCount + 1
+            order = order + 1
+        end
+    end
+end
+
+function Config.CreateOptionsMenu()
+    SetupFrameSelection()
+    local tabConditions = Conditions.CreateOptions()
+    local tabManualControl = ManualControl.CreateOptions()
+
+    tabManualControl.order = 2
+    tabConditions.order = 23
+
+    Config.OPTIONS_MENU.args.setup.args.tabConditions = tabConditions
+    Config.OPTIONS_MENU.args.tabManualControl = tabManualControl
+end
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Managing Settings
+-- ─────────────────────────────────────────────────────────────────────────────
+
+function Config.GetNewGroup(name, useDefaultFrameSelection)
+    local newGroup = CopyTable(GROUP_TEMPLATE)
+    newGroup.frames = GetCommonFrames()
+    newGroup.conditions = Conditions.GetDefaultConditions()
+    newGroup.name = name
+
+    -- use defaults if no groups exist
+    if Config.selectedGroup and not useDefaultFrameSelection then
+        for frame in pairs(newGroup.frames) do
+            newGroup.frames[frame] = false
+        end
+    end
+
+    return newGroup
+end
+
+function Config.CheckGroupsForMissingEntries()
+    -- ensuring new conditions or new sub-options for existing conditions are added to user profile.
+    -- AceDB will not handle additional groups the user may have created, so we have to.
+
+    local defaultGroup = Config.GetDefaultGroup(L["name_defaultGroup"])
+
+    -- iterating through all profiles
+    for _, profileData in pairs(Private.db.profiles) do
+        -- iterating for each group in profile
+        if profileData.groups then
+            for _, group in ipairs(profileData.groups) do
+                -- looking for missing settings
+                for k,v in pairs(defaultGroup) do
+                    if not group[k] then
+                        if type(v) == "table" then
+                            group[k] = CopyTable(v)
+                        else
+                            group[k] = v
+                        end
+                    end
+                end
+
+                -- looking for missing conditions
+                for conditionName, conditionInfo in pairs(defaultGroup.conditions) do
+                    if not group.conditions[conditionName] then
+                        group.conditions[conditionName] = CopyTable(conditionInfo)
+                    else
+                        for setting, value in pairs(conditionInfo) do
+                            if group.conditions[conditionName][setting] == nil then
+                                group.conditions[conditionName][setting] = value
+                            end
+                        end
+                    end
+                end
+
+                -- checking for settings that are no longer in use
+                for k,v in pairs(group) do
+                    if defaultGroup[k] == nil then
+                        group[k] = nil
+                    end
+                end
+
+            end
+        end
+    end
+
+end
+
+function Config.GetDefaultConditionByName(conditionName)
+    for _, conditionInfo in ipairs(Conditions.CONDITION_DEFINITIONS) do
+        if conditionInfo.name == conditionName then
+            return conditionInfo
+        end
+    end
+end
+
+function Config.GetDefaultProfile()
+    local defaultGroup = Config.GetDefaultGroup(L["name_defaultGroup"])
+    local defaultProfile = {
+        profile = {
+            manualControl = {},
+            groups = {
+                defaultGroup,
+            }
+        }
+    }
+
+    return defaultProfile
+end
+
+function Config.GetDefaultGroup(name)
+    local useDefaultFrameSelection = true
+    local defaultGroup = Config.GetNewGroup(name, useDefaultFrameSelection)
+    return defaultGroup
+end
+
+local function OnOptionsClose()
+    if Main.blizzFrame:IsVisible() then
+        return
+    end
+
+    Config.HideAllHighlights()
+    CloseAllPopups()
+    isOptionsOpen = false
+    Main.ResumeAddon()
+end
+
+local function OnOptionsOpen(frame)
+    -- stopping Ace menu while Blizz menu is open.
+    if frame ~= Main.blizzFrame and Main.blizzFrame:IsVisible() then
+        frame:Hide()
+        -- necessary to re-anchor the changelog button
+        LibStub("AceConfigRegistry-3.0"):NotifyChange("AutoHideUI")
+        return
+    end
+
+    UI_WIDTH, UI_HEIGHT = UIParent:GetSize()
+
+    isOptionsOpen = true
+    Main.SuspendAddon()
+end
+
+local function SetHooksForBlizzard()
+    Main.blizzFrame:HookScript("OnShow", function() OnOptionsOpen(Main.blizzFrame) end)
+    Main.blizzFrame:HookScript("OnHide", function() OnOptionsClose() end)
+end
+
+local function SetHooksForAce()
+    hooksecurefunc(AceConfigDialog, "Open", function(_, appName)
+        -- this runs every time an option is changed, not just when menu opens.
+        if appName ~= "AutoHideUI" then
+            return
+        end
+
+        local f = AceConfigDialog.OpenFrames[appName]
+        if not f then
+            return
+        end
+
+        local frame = f.frame
+        f:SetStatusText(L["chatCommands"].." /autohide /autohideui")
+
+        if not isAceHooked then
+            frame:SetResizeBounds(MENU_WIDTH, MENU_HEIGHT_MIN, MENU_WIDTH, MENU_HEIGHT_MAX)
+            frame:HookScript("OnShow", function() OnOptionsOpen(frame) end)
+            frame:HookScript("OnHide", function() OnOptionsClose() end)
+            isAceHooked = true
+            OnOptionsOpen(frame) -- need to run this manually on first open
+        end
+    end)
+end
+
+local function SetHooksForMenus()
+    SetHooksForBlizzard()
+    SetHooksForAce()
+end
+
+function Config.RegisterOptions()
+    -- setting profiles tab in options menu
+    Config.OPTIONS_MENU.args.profiles = AceDBOptions:GetOptionsTable(Private.db)
+
+    AceConfig:RegisterOptionsTable("AutoHideUI", Config.OPTIONS_MENU)
+    AceConfigDialog:SetDefaultSize("AutoHideUI", MENU_WIDTH, MENU_HEIGHT)
+    Main.blizzFrame = AceConfigDialog:AddToBlizOptions("AutoHideUI", "Auto Hide UI")
+
+    SLASH_AUTOHIDEUI1 = "/autohide"
+    SLASH_AUTOHIDEUI2 = "/autohideui"
+    SlashCmdList["AUTOHIDEUI"] = function()
+        if AceConfigDialog.OpenFrames["AutoHideUI"] then
+            AceConfigDialog:Close("AutoHideUI")
+        elseif not IsOtherWindowsShown() then
+            AceConfigDialog:Open("AutoHideUI")
+        end
+    end
+
+    SetHooksForMenus()
+end
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Misc
+-- ─────────────────────────────────────────────────────────────────────────────
+
+function Config.SetHeaderText(frame, title)
+    frame.header.title:SetText(title .. " - " .. Private.db.profile.groups[Config.selectedGroup].name)
+    local textWidth = frame.header.title:GetStringWidth()
+    frame.header.middle:SetWidth(textWidth + 20)
+end
+
+function Config.CreateHeader(frame)
+    local header = CreateFrame("Frame", nil, frame)
+    frame.header = header
+    header:SetSize(40,40)
+    header:SetPoint("TOP", 0, 0)
+
+    -- the code for positioning the header graphics was taken from the Ace3 libeary
+    -- middle 
+    header.middle = header:CreateTexture(nil, "ARTWORK")
+    header.middle:SetTexture("Interface/DialogFrame/UI-DialogBox-Header")
+    header.middle:SetTexCoord(0.31, 0.67, 0, 0.63)
+    header.middle:SetPoint("TOP", 0, 12)
+    header.middle:SetWidth(100)
+    header.middle:SetHeight(40)
+
+    -- left cap
+    header.left = header:CreateTexture(nil, "ARTWORK")
+    header.left:SetTexture("Interface/DialogFrame/UI-DialogBox-Header")
+    header.left:SetTexCoord(0.21, 0.31, 0, 0.63)
+    header.left:SetPoint("RIGHT", header.middle, "LEFT")
+    header.left:SetWidth(30)
+    header.left:SetHeight(40)
+
+    -- right cap
+    header.right = header:CreateTexture(nil, "ARTWORK")
+    header.right:SetTexture("Interface/DialogFrame/UI-DialogBox-Header")
+    header.right:SetTexCoord(0.67, 0.77, 0, 0.63)
+    header.right:SetPoint("LEFT", header.middle, "RIGHT")
+    header.right:SetWidth(30)
+    header.right:SetHeight(40)
+
+    -- title text
+    local title = header:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    title:SetPoint("CENTER", 0, 12)
+    header.title = title
+end
+
+function Config.CreateAceLikeGroup(parent, titleText, width, height)
+    local group = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    group:SetSize(width, height)
+
+    group:SetBackdrop({
+        bgFile = "Interface/Buttons/WHITE8x8",
+        edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+        tile = true,
+        tileSize = 8,
+        edgeSize = 12,
+        insets = { left = 3, right = 3, top = 3, bottom = 3 }
+    })
+
+    group:SetBackdropColor(0.1, 0.1, 0.1, 0.5)
+    group:SetBackdropBorderColor(0.4, 0.4, 0.4)
+
+    local title = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    title:SetPoint("BOTTOMLEFT", group, "TOPLEFT", 6, 3)
+    title:SetText(titleText)
+
+    group.Title = title
+
+    return group
+end

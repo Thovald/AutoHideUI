@@ -193,19 +193,19 @@ L["expand"] = "Expand"
 L["collapse"] = "Collapse"
 L["buttonChangelog"] = "View Changelog"
 L["tab_manualControl"] = "Manual Control"
-L["descr_manualControl"] = "Define a Hotkey or Macro to manually set the Alpha of your Groups.".."|n|n"..
-                            "While an override is engaged, affected Groups will be set to that Alpha and ignore Conditions.".."|n"..
-                            "When disengaged, the Groups will go back to using Conditions to determine the Alpha.".."|n"
+L["descr_manualControl"] = "Define a Keybind or Macro to manually set the Alpha of your Groups.".."|n|n"..
+                            "While an override is engaged, affected Groups will be set to that Alpha and ignore Conditions.".."|n|n"..
+                            "When disengaged, the Groups will go back to using Conditions to determine their Alpha."
 L["button_newOverride"] = "New Override"
 L["name_newGroup"] = "New Group"
 L["popup_createOverride"] = "Name of new Override:"
 L["name_newOverride"] = "New Override"
 L["popup_renameOverride"] = "Rename Override"
 L["popup_deleteOverride"] = "Delete Override"
-L["button_setHotkey"] = "Set Hotkey"
+L["button_setHotkey"] = "No Keybind"
 L["button_setHotkeyRecording"] = "Recording ..."
 L["description_setHotkey"] = "Click to set a new Keybind.".."|n"..
-                             "Esc to clear."
+                             "Esc or Right-Click to clear."
 L["input_macro"] = "Macro (optional)"
 L["description_macro"] = "In addition or instead of a keybind, you can use a macro to toggle this override.".."|n|n"..
                          "Make the following macro and replace 'MyMacro' with your custom word:".."|n|n"..
@@ -213,3 +213,19 @@ L["description_macro"] = "In addition or instead of a keybind, you can use a mac
 L["dropdown_affectedGroups"] = "Affected Groups"
 L["dropdownOption_affectedGroups1"] = "All"
 L["dropdownOption_affectedGroups2"] = "Customize"
+L["print_overrideResult"] = "AutoHideUI Override: "
+L["checkbox_printOverride"] = "Print Results"
+L["description_printOverride"] = "Prints out a message in your chat showing which groups are now controlled by an override."
+L["print_duplicateKeybind"] = "Duplicate keybind '%s' removed from Override '%s' !"
+L["print_duplicateMacro"] = "Duplicate macro '%s' removed from Override '%s' !"
+
+L["mouseMiddle"] = "MiddleMouse"
+L["mouseBtn4"] = "Mouse4"
+L["mouseBtn5"] = "Mouse5"
+L["num+"] = "NumPlus"
+L["num-"] = "NumMinus"
+L["pageUp"] = "PageUp"
+L["pageDown"] = "PageDown"
+L["ctrl"] = "Ctrl"
+L["alt"] = "Alt"
+L["shift"] = "Shift"

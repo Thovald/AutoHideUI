@@ -9,8 +9,8 @@ local CHANGELOG_DATA = {
         date = "May 15th",
         entries = {
             {
-                title = "Overhauled Conditions",
-                comment = "Please have a look at your settings for the Conditions 'Instance', 'Target' and 'Focus' to check if your old settings have been converted correctly.",
+                title = "New - Grouped Conditions",
+                comment = "Take a look at the Conditions settings for 'Instance', 'Target' and 'Focus' to check if your old settings have been converted correctly.",
                 content =  {
                     "Some Conditions have been converted to a new type of grouped Condition.|n"..
                     "The head of the group (parent) controls the settings of the group contents (children).|n"..
@@ -28,11 +28,35 @@ local CHANGELOG_DATA = {
                 },
             },
             {
+                title = "New - Manual Controls",
+                comment = "Control a Group's Alpha with a keybind or macro.",
+                content =  {
+                    "Create new Overrides in the 'Manual Control' tab.",
+
+                    "Customize each Override's setting for Keybind, Macro, Alpha and which Groups to affect.",
+
+                    "An Override can be toggled with a keybind and/or macro",
+
+                    "While an Override is engaged, conditions for affected Groups are ignored.",
+
+                    "Useful to quickly show/hide Groups of your choice.",
+                },
+            },
+            {
+                title = "New - Mouseover Areas",
+                comment = "Create custom areas that react to mouseover events.",
+                content =  {
+                    "Access it in the Custom Frames section.",
+
+                    "Create new elements and drag /resize them to define the areas you wish to react to mouseovers.",
+
+                    "Useful for example to get your Group to fade in when your cursor moves to the edges of your screen.",
+                },
+            },
+            {
                 title = "Misc",
                 content =  {
                     "Added 'Changelog' Button.",
-
-                    "New 'Mouseover Areas' tool in Frames section to create custom areas that react to mouseover events",
 
                     "The name of the currently selected group is now shown more prominently at the top.",
 
@@ -40,6 +64,7 @@ local CHANGELOG_DATA = {
 
                     "Improved version control to repair or convert user settings on major updates.",
 
+                    "The Group-delete button will now gray out if there is only one Group remaining."
                 },
             },
             {
@@ -47,8 +72,11 @@ local CHANGELOG_DATA = {
                 content =  {
                     "Fixed EllesmereUI's Minimap not being recognized anymore.",
 
-                    "Fixed a bug where a Group with no Frames selected could break the fade for other Groups."
+                    "Fixed a bug where a Group with no Frames selected could break the fade for other Groups.",
                 
+                    "Fixed Custom Frames not being recognized if they had spaces in their names.",
+
+                    "Added more restrictions to the Vehicle Condition to stop it from firing when you wouldn't expect it to."
                 },
             },
         },
@@ -64,7 +92,7 @@ local CHANGELOG_DATA = {
 
 local changelogFrame = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
 Changelog.frame = changelogFrame
-changelogFrame:SetSize(590, 790)
+changelogFrame:SetSize(700, 790)
 changelogFrame:SetPoint("TOPRIGHT")
 changelogFrame:SetMovable(true)
 changelogFrame:EnableMouse(true)
@@ -73,9 +101,9 @@ changelogFrame:SetScript("OnDragStart", changelogFrame.StartMoving)
 changelogFrame:SetScript("OnDragStop", changelogFrame.StopMovingOrSizing)
 
 changelogFrame:SetBackdrop({
-    bgFile = "Interface/Tooltips/UI-Tooltip-Background",
+    bgFile = "interface/chatframe/chatframebackground",
     edgeFile = "Interface/DialogFrame/UI-DialogBox-Border",
-    tile = true,
+    tile = false,
     tileSize = 16,
     edgeSize = 32,
     insets = {
@@ -85,7 +113,9 @@ changelogFrame:SetBackdrop({
         bottom = 8,
     },
 })
-changelogFrame:SetBackdropColor(0.05, 0.05, 0.05, 0.95)
+--changelogFrame:SetBackdropColor(0.1, 0.1, 0.1, 1)
+changelogFrame:SetBackdropColor(0.08, 0.08, 0.08, 1)
+
 
 changelogFrame:Hide()
 
@@ -116,7 +146,7 @@ scrollFrame:SetScrollChild(contentFrame)
 -- ─────────────────────────────────────────────────────────────────────────────
 
 local currentYOffset = -10
-local contentWidth = 550
+local contentWidth = 655
 
 local function AddLine(text, fontObject, indent, color, heightMultiplier)
     local fs = contentFrame:CreateFontString(nil, "OVERLAY", fontObject or "GameFontHighlight")
@@ -124,8 +154,8 @@ local function AddLine(text, fontObject, indent, color, heightMultiplier)
     fs:SetWidth(contentWidth - indent)
     fs:SetJustifyH("LEFT")
     fs:SetJustifyV("TOP")
-
     fs:SetPoint("TOPLEFT", indent, currentYOffset)
+    fs:SetSpacing(2)
 
     if color then
         fs:SetText(color .. text .. "|r")
@@ -161,18 +191,19 @@ local function AddBullet(text)
     fs:SetPoint("TOPLEFT", 14, 0)
 
     fs:SetText(text)
+    fs:SetSpacing(2)
+    --fs:SetVertexColor(0.9, 0.9, 0.9, 1)
 
     local height = math.max(fs:GetStringHeight(), 12)
 
     bulletFrame:SetHeight(height)
 
-    currentYOffset = currentYOffset - height - 6
+    currentYOffset = currentYOffset - height - 10
 end
 
 local function AddSeparator()
     local line = contentFrame:CreateTexture(nil, "ARTWORK")
 
-    --line:SetColorTexture(1, 1, 1, 0.15)
     line:SetAtlas("RecipeList-Divider")
 
     line:SetHeight(3)
@@ -194,8 +225,7 @@ for _, versionData in ipairs(CHANGELOG_DATA) do
         string.format("Version %s - %s", versionData.version, versionData.date),
         "GameFontNormalLarge",
         10,
-        "|cffFFD100",
-        0.9
+        "|cffFFD100"
     )
 
     currentYOffset = currentYOffset - 4
@@ -208,7 +238,8 @@ for _, versionData in ipairs(CHANGELOG_DATA) do
                 entry.title..":",
                 "GameFontNormal",
                 10,
-                "|cffFFD100"
+                "|cffFFD100",
+                1.1
             )
         end
 
@@ -252,7 +283,7 @@ function Changelog.ShowButton(anchorFrame)
     changelogButton.optionsFrame = anchorFrame
     changelogButton:Show()
     changelogButton:SetParent(anchorFrame)
-    changelogButton:SetPoint("TOPRIGHT", anchorFrame, "TOPRIGHT", -5, 5)
+    changelogButton:SetPoint("TOPRIGHT", anchorFrame, "TOPRIGHT", 0, 5)
 
     if not changelogFrame:IsShown() then
         changelogFrame:SetParent(changelogButton)

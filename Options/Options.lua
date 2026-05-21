@@ -266,12 +266,12 @@ local function IsFrameSelectedElsewhere(frameString)
 end
 
 local function ShowGroupCreateDialog()
-    --StaticPopup_Hide("AUTOHIDEUI_CREATE_ENTITY")
     StaticPopupDialogs["AUTOHIDEUI_CREATE_ENTITY"].text = L["popup_createGroup"]
     Config.popupContext.editBoxText = L["name_newGroup"]
 
     Config.popupContext.callbacks.createOnAccept = function(name)
         tinsert(Private.db.profile.groups, Config.GetNewGroup(name))
+        ManualControl.AddGroupToAllOverrides()
         Config.selectedGroup = #Private.db.profile.groups
     end
 
@@ -279,7 +279,6 @@ local function ShowGroupCreateDialog()
 end
 
 local function ShowGroupRenameDialog()
-    --StaticPopup_Hide("AUTOHIDEUI_RENAME_ENTITY")
     StaticPopupDialogs["AUTOHIDEUI_RENAME_ENTITY"].text = L["popup_renameGroup"]
     Config.popupContext.editBoxText = Private.db.profile.groups[Config.selectedGroup].name
 
@@ -291,7 +290,6 @@ local function ShowGroupRenameDialog()
 end
 
 local function ShowGroupDeleteDialog()
-    --StaticPopup_Hide("AUTOHIDEUI_DELETE_ENTITY")
     StaticPopupDialogs["AUTOHIDEUI_DELETE_ENTITY"].text = L["popup_deleteGroup"]
 
     Config.popupContext.callbacks.deleteOnShow = function(self)
@@ -303,6 +301,7 @@ local function ShowGroupDeleteDialog()
     Config.popupContext.callbacks.deleteOnAccept = function()
         if Config.selectedGroup then
             tremove(Private.db.profile.groups, Config.selectedGroup)
+            ManualControl.RemoveGroupFromAllOverrides(Config.selectedGroup)
             Config.SetSelectedGroup()
         end
     end
@@ -547,21 +546,27 @@ local OPTIONS_TAB_FADE = {
                 idleAlpha = {
                     type = "range",
                     name = L["slider_idleAlpha"],
-                    width = 1.5,
+                    width = 1.3,
                     min = 0,
                     max = 1,
                     get = function() return Private.db.profile.groups[Config.selectedGroup].config.idleAlpha end,
                     set = function(_, value) Private.db.profile.groups[Config.selectedGroup].config.idleAlpha = value end,
                     order = 1,
                 },
+                spacerAlpha = {
+                    type = "description",
+                    name = " ",
+                    width = 0.2,
+                    order = 2,
+                },
                 checkbox_forceAlpha = {
                     type = "toggle",
                     name = L["checkbox_forceAlpha"],
                     desc = L["desc_forceAlpha"],
-                    width = 1.5,
+                    width = 1.3,
                     get = function(info) return Private.db.profile.groups[Config.selectedGroup].config.forceAlpha end,
                     set = function(info, value) Private.db.profile.groups[Config.selectedGroup].config.forceAlpha = value end,
-                    order = 2,
+                    order = 3,
                 },
                 descrAlphaPref = {
                     type = "description",
@@ -579,6 +584,12 @@ local OPTIONS_TAB_FADE = {
                     desc = L["tooltip_alphaPref"],
                     order = 6,
                 },
+                spacerPref = {
+                    type = "description",
+                    name = " ",
+                    width = 0.2,
+                    order = 7,
+                },
                 dropdownPrioAlphaPref = {
                     name = L["dropdown_prioAlphaPref"],
                     type = "select",
@@ -587,7 +598,7 @@ local OPTIONS_TAB_FADE = {
                     get = function() return Private.db.profile.groups[Config.selectedGroup].config.prioAlphaPref end,
                     set = function(_, value) Private.db.profile.groups[Config.selectedGroup].config.prioAlphaPref = value end,
                     desc = L["tooltip_prioAlphaPref"],
-                    order = 7,
+                    order = 8,
                 },
             },
         },
@@ -609,7 +620,7 @@ Config.OPTIONS_MENU = {
                 header_groups = {
                     type = "header",
                     name = function()
-                        local groupName = Private.db and Private.db.profile.groups[Config.selectedGroup].name or "?"
+                        local groupName = Private.db and Private.db.profile.groups and Private.db.profile.groups[Config.selectedGroup] and Private.db.profile.groups[Config.selectedGroup].name or "?"
                         return groupName
                     end,
                     order = 1,
@@ -644,6 +655,7 @@ Config.OPTIONS_MENU = {
                     type = "execute",
                     width = 0.7,
                     func = ShowGroupDeleteDialog,
+                    disabled = function() return #Private.db.profile.groups == 1 end,
                     order = 15,
                 },
                 tabFrames = OPTIONS_TAB_FRAMES,
@@ -734,54 +746,6 @@ function Config.GetNewGroup(name, useDefaultFrameSelection)
     end
 
     return newGroup
-end
-
-function Config.CheckGroupsForMissingEntries()
-    -- ensuring new conditions or new sub-options for existing conditions are added to user profile.
-    -- AceDB will not handle additional groups the user may have created, so we have to.
-
-    local defaultGroup = Config.GetDefaultGroup(L["name_defaultGroup"])
-
-    -- iterating through all profiles
-    for _, profileData in pairs(Private.db.profiles) do
-        -- iterating for each group in profile
-        if profileData.groups then
-            for _, group in ipairs(profileData.groups) do
-                -- looking for missing settings
-                for k,v in pairs(defaultGroup) do
-                    if not group[k] then
-                        if type(v) == "table" then
-                            group[k] = CopyTable(v)
-                        else
-                            group[k] = v
-                        end
-                    end
-                end
-
-                -- looking for missing conditions
-                for conditionName, conditionInfo in pairs(defaultGroup.conditions) do
-                    if not group.conditions[conditionName] then
-                        group.conditions[conditionName] = CopyTable(conditionInfo)
-                    else
-                        for setting, value in pairs(conditionInfo) do
-                            if group.conditions[conditionName][setting] == nil then
-                                group.conditions[conditionName][setting] = value
-                            end
-                        end
-                    end
-                end
-
-                -- checking for settings that are no longer in use
-                for k,v in pairs(group) do
-                    if defaultGroup[k] == nil then
-                        group[k] = nil
-                    end
-                end
-
-            end
-        end
-    end
-
 end
 
 function Config.GetDefaultConditionByName(conditionName)
@@ -883,7 +847,14 @@ function Config.RegisterOptions()
 
     SLASH_AUTOHIDEUI1 = "/autohide"
     SLASH_AUTOHIDEUI2 = "/autohideui"
-    SlashCmdList["AUTOHIDEUI"] = function()
+    SlashCmdList["AUTOHIDEUI"] = function(msg)
+        local cmd, arg = strsplit(" ", msg, 2)
+
+        if cmd == "override" then
+            ManualControl:HandleMacro(arg)
+            return
+        end
+
         if AceConfigDialog.OpenFrames["AutoHideUI"] then
             AceConfigDialog:Close("AutoHideUI")
         elseif not IsOtherWindowsShown() then

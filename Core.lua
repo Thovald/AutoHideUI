@@ -110,8 +110,8 @@ local DRUID_FORMS= {
 
 local GetTime, pairs, ipairs, C_Timer
     = GetTime, pairs, ipairs, C_Timer
-local IsInInstance, IsMounted, GetShapeshiftFormID, UnitInVehicle, HasOverrideActionBar
-    = IsInInstance, IsMounted, GetShapeshiftFormID, UnitInVehicle, C_ActionBar.HasOverrideActionBar
+local IsInInstance, IsMounted, GetShapeshiftFormID, UnitInVehicle, HasOverrideActionBar, CanExitVehicle, UnitInVehicleControlSeat
+    = IsInInstance, IsMounted, GetShapeshiftFormID, UnitInVehicle, C_ActionBar.HasOverrideActionBar, CanExitVehicle, UnitInVehicleControlSeat
 local UnitCastingInfo, UnitChannelInfo, IsResting, IsFlying, UnitExists, UnitCanAttack
     = UnitCastingInfo, UnitChannelInfo, IsResting, IsFlying, UnitExists, UnitCanAttack
 
@@ -289,12 +289,15 @@ local function InitAddon()
     Main.UpdateAllConditions()
     Fading.SetAllAlpha()
     Frames.ToggleHelperFrames()
+    ManualControl.StartListening()
 end
 
 function Main.SuspendAddon()
     UnregisterAllEvents()
     CancelTickers()
     ClearQueues()
+    ManualControl.StopListening()
+    ManualControl.DisableAllOverrides()
     Fading.SetAllAlpha(1)
 end
 
@@ -304,13 +307,13 @@ function Main.ResumeAddon()
 end
 
 function Main.GetErrorTitleString()
-    return "|cff80ffffAuto Hide UI: |r"
+    return "|cff80ffffAutoHideUI: |r"
 end
 
 function Main.ColorString(string, clr)
     local clrTable = {
-        red = "|cffff3b3b",
-        green = "|cff3bff3b",
+        red = "|cffff5959",
+        green = "|cff59ff59",
         blue = "|cff80ffff",
         gold = "|cFFFFD100",
     }
@@ -391,6 +394,8 @@ local MigrateDB = {
             targetHostile  = { enabled = true,  alpha = 1, priority = false, softTarget = false },
         }
 
+        local DEFAULT_GROUP = Config.GetDefaultGroup(L["name_defaultGroup"])
+
         local function ResolveOldCondition(c, name)
             local result = CopyTable(OLD_CONDITION_DEFAULTS[name])
             if c[name] then
@@ -401,7 +406,7 @@ local MigrateDB = {
             return result
         end
 
-        local function UpdateGroup(group)
+        local function MigrateGroup(group)
             local c = group.conditions
             if not c then
                 -- is using defaults
@@ -473,23 +478,60 @@ local MigrateDB = {
             c.focusHostile.softTarget  = nil
         end
 
+        local function CheckGroupForMissingEntries(group)
+            -- AceDB would not keep user's groups up to date with updates to conditions.
+            -- doing a one-time check here to update everything and use migration feature in the future.
+
+            -- looking for missing settings
+            for k,v in pairs(DEFAULT_GROUP) do
+                if not group[k] then
+                    --print("found missing setting", k)
+                    if type(v) == "table" then
+                        group[k] = CopyTable(v)
+                    else
+                        group[k] = v
+                    end
+                end
+            end
+
+            -- looking for missing conditions
+            for conditionName, conditionInfo in pairs(DEFAULT_GROUP.conditions) do
+                if not group.conditions[conditionName] then
+                    --print("found missing condition", conditionName)
+                    group.conditions[conditionName] = CopyTable(conditionInfo)
+                else
+                    for setting, value in pairs(conditionInfo) do
+                        if group.conditions[conditionName][setting] == nil then
+                            --print("found missing condition setting", conditionName, setting)
+                            group.conditions[conditionName][setting] = value
+                        end
+                    end
+                end
+            end
+
+            -- checking for settings that are no longer in use
+            for k,v in pairs(group) do
+                if DEFAULT_GROUP[k] == nil then
+                    --print("found deprecated setting", k)
+                    group[k] = nil
+                end
+            end
+        end
+
         local newProfile = {
             groups= {},
             manualControl = {}
         }
 
         for i, group in ipairs(profile) do
-            UpdateGroup(group)
+            MigrateGroup(group)
+            CheckGroupForMissingEntries(group)
             tinsert(newProfile.groups, group)
         end
 
         return newProfile
     end
 }
-
-local function RepairDB()
-    Config.CheckGroupsForMissingEntries()
-end
 
 local function UpdateDB()
     local lastSchemaVersion = Private.db.global.db_schema or 0
@@ -762,7 +804,11 @@ local function CheckMissingHealthChange(key)
 end
 
 local function ConditionVehicle()
-    UpdateConditionForAllGroups("inVehicle", UnitInVehicle("player") or HasOverrideActionBar())
+    UpdateConditionForAllGroups(
+        "inVehicle",
+        ( UnitInVehicle("player") and ( CanExitVehicle() or UnitInVehicleControlSeat("player") )) -- player controls a vehicle
+        or HasOverrideActionBar() -- player is unable to use their spells. playing a puzzle game or controlled in some way
+    )
 end
 
 local function ConditionCasting(castState)
@@ -808,7 +854,6 @@ local function OnLogin()
         InitDB()
         UpdateVersion()
         UpdateDB()
-        RepairDB()
         InitOptions()
         InitAddon()
     end)

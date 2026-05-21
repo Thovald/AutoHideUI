@@ -60,16 +60,24 @@ local function GetTargetAlpha(group)
     return alpha or group.config.idleAlpha
 end
 
+function Fading.SetGroupAlpha(group, targetAlpha)
+    if group.overrideDB then
+        targetAlpha = group.overrideDB.alpha
+    end
+
+    local newAlpha = targetAlpha or GetTargetAlpha(group)
+    group.states.endAlpha = newAlpha
+    for _, frame in pairs(group.frames) do
+        if not Main.helperFrames[frame] then
+            local alphaFunc = frame._origSetAlpha or frame.SetAlpha
+            alphaFunc(frame, newAlpha)
+        end
+    end
+end
+
 function Fading.SetAllAlpha(targetAlpha)
     for _, group in ipairs(Main.activeGroups) do
-        local newAlpha = targetAlpha or GetTargetAlpha(group)
-        group.states.endAlpha = newAlpha
-        for _, frame in pairs(group.frames) do
-            if not Main.helperFrames[frame] then
-                local alphaFunc = frame._origSetAlpha or frame.SetAlpha
-                alphaFunc(frame, newAlpha)
-            end
-        end
+        Fading.SetGroupAlpha(group, targetAlpha)
     end
     Fading.UpdateAllFrameVisibility()
 end
@@ -131,6 +139,12 @@ function Fading.WipeFadeQueue()
     Main.frame:SetScript("OnUpdate", nil)
 end
 
+function Fading.RemoveGroupFromFadeQueue(group)
+    for _, frame in ipairs(group.frames) do
+        tDeleteItem(FADE_QUEUE, frame)
+    end
+end
+
 function Fading.SetVisibilityFromAlpha(frame, endAlpha, threshold)
     if Main.inCombat and frame:IsProtected() then
         return
@@ -189,7 +203,7 @@ function Fading.IsFadeInProgress(states)
     return GetTime() < states.fadeEndTime
 end
 
-local function CancelPendingFade(group)
+function Fading.CancelPendingFade(group)
     if pendingFades[group] and pendingFades[group].timer then
         pendingFades[group].timer:Cancel()
         pendingFades[group] = nil
@@ -237,7 +251,7 @@ function Fading.GetRequiredSteps(timeToFade)
 end
 
 local function ApplyFade(group, targetAlpha)
-    CancelPendingFade(group)
+    Fading.CancelPendingFade(group)
 
     local states = group.states
 
@@ -265,7 +279,7 @@ end
 local function ScheduleFade(group, targetAlpha, delay, fadeMode)
     local pendingFade = pendingFades[group]
     if pendingFade and pendingFade.fadeMode ~= fadeMode then
-        CancelPendingFade(group)
+        Fading.CancelPendingFade(group)
     elseif pendingFade then
         pendingFade.targetAlpha = targetAlpha
         return
@@ -305,10 +319,14 @@ local function ShouldDelayFade(group)
 end
 
 function Fading.FadeGroup(group)
+    if group.overrideDB then
+        return
+    end
+
     local targetAlpha = GetTargetAlpha(group)
 
     if targetAlpha == group.states.endAlpha then
-        CancelPendingFade(group)
+        Fading.CancelPendingFade(group)
         return
     end
 

@@ -1,10 +1,16 @@
 local _, Private = ...
 local Main = Private.Main
 local Config = Private.Config
+local Fading = Private.Fading
 local ManualControl = Private.ManualControl
 local L = LibStub("AceLocale-3.0"):GetLocale("AutoHideUI")
 
 local capturingKeybind = false
+local activeKeybinds = {}
+local activeMacros = {}
+local activeOverrides = {}
+local GetCurrentKeyBoardFocus, IsControlKeyDown, IsShiftKeyDown, IsAltKeyDown
+    = GetCurrentKeyBoardFocus, IsControlKeyDown, IsShiftKeyDown, IsAltKeyDown
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- UI Data
@@ -12,6 +18,7 @@ local capturingKeybind = false
 
 local MANUAL_CONTROL_DEFAULTS = {
     enabled = true,
+    printMessage = false,
     name = L["button_newOverride"],
     alpha = 1,
     keybind = "",
@@ -29,17 +36,34 @@ local MANUAL_CONTROL_TEMPLATE = {
         toggleEnable = {
             type = "toggle",
             name = L["enable"],
-            width = 0.7,
+            width = 0.6,
             order = 5,
             get = function(info) return Private.db.profile.manualControl[info.arg.index].enabled end,
             set = function(info, value) Private.db.profile.manualControl[info.arg.index].enabled = value end,
             arg = {},
         },
-        spacer1 = {
+        spacerEnable = {
             type = "description",
             name = " ",
-            width = 0.9,
+            width = 0.1,
             order = 6,
+        },
+        togglePrint = {
+            type = "toggle",
+            name = L["checkbox_printOverride"],
+            desc = L["description_printOverride"],
+            disabled = function(info) return not Private.db.profile.manualControl[info.arg.index].enabled end,
+            width = 0.8,
+            order = 7,
+            get = function(info) return Private.db.profile.manualControl[info.arg.index].printMessage end,
+            set = function(info, value) Private.db.profile.manualControl[info.arg.index].printMessage = value end,
+            arg = {},
+        },
+        spacerPrint = {
+            type = "description",
+            name = " ",
+            width = 0.1,
+            order = 8,
         },
         buttonRename = {
             name = L["button_rename"],
@@ -84,15 +108,19 @@ local MANUAL_CONTROL_TEMPLATE = {
         },
         buttonHotkey = {
             name = function(info)
-                local recording = capturingKeybind == info.arg.index and L["button_setHotkeyRecording"]
-                local keybind = Private.db.profile.manualControl[info.arg.index].keybindDisplay ~= "" and Private.db.profile.manualControl[info.arg.index].keybindDisplay
-                return recording or keybind or L["button_setHotkey"]
+                local capturingText = capturingKeybind and info.arg.buttonIsCapturing and L["button_setHotkeyRecording"]
+                local keybindText = Private.db.profile.manualControl[info.arg.index].keybindDisplay ~= "" and Private.db.profile.manualControl[info.arg.index].keybindDisplay
+                return capturingText or keybindText or L["button_setHotkey"]
             end,
             desc = L["description_setHotkey"],
             disabled = function(info) return not Private.db.profile.manualControl[info.arg.index].enabled end,
             type = "execute",
             width = 0.9,
-            func = function(info) ManualControl.RecordKeybind(info.arg.index) end,
+            func = function(info)
+                capturingKeybind = true
+                info.arg.buttonIsCapturing = true
+                ManualControl.RecordKeybind(info.arg.index, info.arg)
+            end,
             order = 25,
             arg = {},
         },
@@ -109,7 +137,11 @@ local MANUAL_CONTROL_TEMPLATE = {
             disabled = function(info) return not Private.db.profile.manualControl[info.arg.index].enabled end,
             width = 0.9,
             get = function(info) return Private.db.profile.manualControl[info.arg.index].macro end,
-            set = function(info, value) Private.db.profile.manualControl[info.arg.index].macro = value end,
+            set = function(info, value)
+                ManualControl.UpdateActiveKeybindsAndMacros()
+                ManualControl.CheckForDuplicateMacros(Private.db.profile.manualControl[info.arg.index], value)
+                Private.db.profile.manualControl[info.arg.index].macro = value
+            end,
             order = 30,
             arg = {},
         },
@@ -197,89 +229,94 @@ local FORBIDDEN_KEYS = {
     RALT = true,
 
     LeftButton = true,
-    RightButton = true,
 }
 
 local DISPLAY_NAMES = {
-    BUTTON1 = "Mouse Left",
-    BUTTON2 = "Mouse Right",
-    BUTTON3 = "Mouse Middle",
-    BUTTON4 = "Mouse 4",
-    BUTTON5 = "Mouse 5",
+    MiddleButton = L["mouseMiddle"],
+    Button4 = L["mouseBtn4"],
+    Button5 = L["mouseBtn5"],
 
-    MOUSEWHEELUP = "Wheel Up",
-    MOUSEWHEELDOWN = "Wheel Down",
+    NUMPADPLUS = L["num+"],
+    NUMPADMINUS = L["num-"],
 
-    NUMPADPLUS = "Numpad +",
-    NUMPADMINUS = "Numpad -",
-
-    PAGEUP = "Page Up",
-    PAGEDOWN = "Page Down",
+    PAGEUP = L["pageUp"],
+    PAGEDOWN = L["pageDown"],
 }
 
 do
+    -- using two frames to capture and listen to keybinds.
+    -- because switching SetPopagate on the fly during keybinding doesn't intercept key presses.
+    -- could use one frame and change the state on options open/close, but combat may prevent it. 
+
+    -- capturing
     local captureFrame = CreateFrame("Frame", nil, UIParent)
 
-    captureFrame:EnableKeyboard(false)
-    captureFrame:EnableMouse(false)
+    captureFrame:EnableKeyboard(true)
+    captureFrame:EnableMouse(true)
     captureFrame:SetPropagateKeyboardInput(false)
+    captureFrame:SetPropagateMouseClicks(false)
     captureFrame:SetFrameStrata("TOOLTIP")
     captureFrame:SetAllPoints(UIParent)
     captureFrame:Hide()
 
     captureFrame:SetScript("OnKeyDown", function(_, key)
-        ManualControl.HandleBinding(key)
+        ManualControl.StartCapture(key)
     end)
 
     captureFrame:SetScript("OnMouseDown", function(_, button)
-        ManualControl.HandleBinding(button)
+        ManualControl.StartCapture(button)
+    end)
+
+        -- listening
+    local listenerFrame = CreateFrame("Frame", nil, UIParent)
+
+    listenerFrame:EnableKeyboard(true)
+    listenerFrame:EnableMouse(true)
+    listenerFrame:EnableMouseWheel(true)
+    listenerFrame:SetPropagateKeyboardInput(true)
+    listenerFrame:SetPropagateMouseClicks(true)
+    listenerFrame:SetPropagateMouseMotion(true)
+    listenerFrame:SetFrameStrata("TOOLTIP")
+    listenerFrame:SetAllPoints(UIParent)
+    listenerFrame:Hide()
+
+    listenerFrame:SetScript("OnKeyDown", function(_, key)
+        ManualControl.OnListenerKeyPress(key)
+    end)
+
+    listenerFrame:SetScript("OnMouseDown", function(_, button)
+        ManualControl.OnListenerKeyPress(button)
     end)
 
     ManualControl.captureFrame = captureFrame
+    ManualControl.listenerFrame = listenerFrame
 end
 
- function ManualControl.RecordKeybind(index)
-    capturingKeybind = index
-    Config.RefreshUI()
+function ManualControl.RecordKeybind(index, buttonArg)
     ManualControl.captureFrame.db = Private.db.profile.manualControl[index]
-    ManualControl.captureFrame:EnableKeyboard(true)
-    ManualControl.captureFrame:EnableMouse(true)
+    ManualControl.captureFrame.buttonArg = buttonArg
     ManualControl.captureFrame:Show()
+    Config.RefreshUI()
 end
 
-local function NormalizeKey(key)
-
-    if key == "LeftButton" then
-        return "BUTTON1"
-    elseif key == "RightButton" then
-        return "BUTTON2"
-    elseif key == "MiddleButton" then
-        return "BUTTON3"
-    end
-
-    return key
-end
 
 local function BuildBindingData(key)
-
-    key = NormalizeKey(key)
-
     local bindingParts = {}
     local displayParts = {}
 
     if IsControlKeyDown() then
         table.insert(bindingParts, "CTRL")
-        table.insert(displayParts, "Ctrl")
+        table.insert(displayParts, L["ctrl"])
     end
 
     if IsShiftKeyDown() then
         table.insert(bindingParts, "SHIFT")
-        table.insert(displayParts, "Shift")
+        table.insert(displayParts, L["shift"])
     end
 
     if IsAltKeyDown() then
         table.insert(bindingParts, "ALT")
-        table.insert(displayParts, "Alt")
+        table.insert(displayParts, L["alt"])
     end
 
     table.insert(bindingParts, key)
@@ -297,51 +334,233 @@ end
 
 local function StopCapture()
     capturingKeybind = false
-    ManualControl.captureFrame:EnableKeyboard(false)
-    ManualControl.captureFrame:EnableMouse(false)
+    ManualControl.UpdateActiveKeybindsAndMacros()
+    ManualControl.captureFrame.buttonArg.buttonIsCapturing = false
     ManualControl.captureFrame:Hide()
-
     Config.RefreshUI()
-    print("Binding capture ended")
 end
 
+function ManualControl.StartCapture(key)
+    if FORBIDDEN_KEYS[key] then
+        return
+    end
 
-
-function ManualControl.HandleBinding(key)
-
-    if key == "ESCAPE" then
+    if key == "ESCAPE" or key == "RightButton" then
         ManualControl.captureFrame.db.keybind = ""
         ManualControl.captureFrame.db.keybindDisplay = ""
         StopCapture()
         return
     end
 
-    if FORBIDDEN_KEYS[key] then
-        return
-    end
-
     local bindData = BuildBindingData(key)
 
-    print("binding:", bindData.binding)
-    print("display:", bindData.display)
+    -- check other overrides for the same keybind and unbind it from them
+    local otherOverrideDB = activeKeybinds[bindData.binding] and activeKeybinds[bindData.binding].overrideDB
+    if otherOverrideDB and otherOverrideDB ~= ManualControl.captureFrame.db then
+        ManualControl.PrintDuplicateAssignmentWarning(L["print_duplicateKeybind"], otherOverrideDB.name, otherOverrideDB.keybindDisplay)
+        otherOverrideDB.keybind = ""
+        otherOverrideDB.keybindDisplay = ""
+    end
+
     ManualControl.captureFrame.db.keybind = bindData.binding
     ManualControl.captureFrame.db.keybindDisplay = bindData.display
+
+    activeKeybinds[bindData.binding] = ManualControl.captureFrame.db
 
     StopCapture()
 end
 
+function ManualControl.OnListenerKeyPress(key)
+    local bindData = BuildBindingData(key)
+
+    if activeKeybinds[bindData.binding] then
+        if GetCurrentKeyBoardFocus() then
+            return
+        end
+        ManualControl.ToggleOverride(activeKeybinds[bindData.binding])
+    end
+end
+
 -- ─────────────────────────────────────────────────────────────────────────────
--- Managing Settings
+-- Logic
 -- ─────────────────────────────────────────────────────────────────────────────
 
+function ManualControl.AddGroupToAllOverrides()
+    for _, overrideInfo in ipairs(Private.db.profile.manualControl) do
+        tinsert(overrideInfo.groups, false)
+    end
+end
+
+function ManualControl.RemoveGroupFromAllOverrides(groupIndex)
+    for _, overrideInfo in ipairs(Private.db.profile.manualControl) do
+        tremove(overrideInfo.groups, groupIndex)
+    end
+end
+
+local function CreateOverrideInfo(overrideDB)
+    return {
+        overrideDB = overrideDB,
+        isActive = false
+    }
+end
+
+function ManualControl.CheckForDuplicateMacros(overrideDB, macroText)
+    if not activeMacros[macroText] then
+        return
+    end
+
+    local otherOverrideDB = activeMacros[macroText].overrideDB
+    if otherOverrideDB and otherOverrideDB ~= overrideDB then
+        ManualControl.PrintDuplicateAssignmentWarning(L["print_duplicateMacro"], otherOverrideDB.name, otherOverrideDB.macro)
+        otherOverrideDB.macro = ""
+    end
+end
+
+local function PrintOverrideResults(overrideResults, overrideName)
+    local groups = {}
+    for _, info in ipairs(overrideResults) do
+        local groupName = Main.ColorString(info.group.name, info.isEnabled and "green" or "red")
+        table.insert(groups, groupName)
+    end
+
+    local overrideText = Main.ColorString(L["print_overrideResult"], "blue")
+    print(overrideText .. table.concat(groups, ", "))
+end
+
+function ManualControl.PrintDuplicateAssignmentWarning(warningText, overrideName, value)
+    local title = Main.GetErrorTitleString()
+    value = Main.ColorString(value, "red")
+    overrideName = Main.ColorString(overrideName, "red")
+
+    print(title .. string.format(warningText, value, overrideName))
+end
+
+
+local function HandleGroupOverride(group, overrideInfo)
+    local overrideDB = overrideInfo.overrideDB
+    -- this override doesn't affect this group
+    if overrideDB.groupStyle == 2 and not overrideDB.groups[group.index] then
+        return group.overrideDB and true or false
+    end
+
+    Fading.RemoveGroupFromFadeQueue(group)
+    Fading.CancelPendingFade(group)
+
+    -- if override is set to all groups then disregard any overrides that may already be active.
+    -- this prevents unintuitive situations when user toggles group-specifc overrides while a group-wide one is active.
+    if overrideDB.groupStyle == 1 then
+        -- flag other overrides as inactive
+        for _, otherOverrideInfo in pairs(activeOverrides) do
+            if otherOverrideInfo.overrideDB ~= overrideDB then
+                otherOverrideInfo.isActive = false
+            end
+        end
+
+        if overrideInfo.isActive then
+            group.overrideDB = overrideDB
+            Fading.SetGroupAlpha(group)
+            return true
+        else
+            group.overrideDB = nil
+            Fading.SetGroupAlpha(group)
+            return false
+        end
+
+    end
+
+    -- disengage previous override
+    if group.overrideDB == overrideDB then
+        group.overrideDB = nil
+        Fading.SetGroupAlpha(group)
+        return false
+    end
+
+    -- apply override
+    group.overrideDB = overrideDB
+    Fading.SetGroupAlpha(group)
+
+    return true
+end
+
+function ManualControl.ToggleOverride(overrideInfo)
+    local overrideResults = {}
+    local overrideDB = overrideInfo.overrideDB
+    overrideInfo.isActive = not overrideInfo.isActive
+
+    for _, group in ipairs(Main.activeGroups) do
+        local overrideEnabled = HandleGroupOverride(group, overrideInfo)
+        tinsert(overrideResults, { group = group, isEnabled = overrideEnabled } )
+    end
+
+    if overrideDB.printMessage then
+        PrintOverrideResults(overrideResults, overrideDB.name)
+    end
+end
+
+function ManualControl.DisableAllOverrides()
+    for _, group in ipairs(Main.activeGroups) do
+        group.overrideDB = nil
+    end
+end
+
+function ManualControl:HandleMacro(string)
+    if activeMacros[string] then
+        ManualControl.ToggleOverride(activeMacros[string])
+    end
+end
+
+function ManualControl.StartListening()
+    capturingKeybind = false
+    ManualControl.UpdateActiveKeybindsAndMacros()
+    ManualControl.captureFrame:Hide()
+    ManualControl.listenerFrame:Show()
+end
+
+function ManualControl.StopListening()
+    capturingKeybind = false
+    ManualControl.listenerFrame:Hide()
+end
+
+function ManualControl.UpdateActiveKeybindsAndMacros()
+    activeKeybinds = {}
+    activeMacros = {}
+    activeOverrides = {}
+
+    for _, overrideDB in ipairs(Private.db.profile.manualControl) do
+        if overrideDB.enabled then
+            local keybind = overrideDB.keybind
+            local macro = overrideDB.macro
+            local overrideInfo = CreateOverrideInfo(overrideDB)
+
+            tinsert(activeOverrides, overrideInfo)
+
+            if keybind and keybind ~= "" then
+                activeKeybinds[keybind] = overrideInfo
+            end
+
+            if macro and macro ~= "" then
+                activeMacros[macro] = overrideInfo
+            end
+
+        end
+    end
+end
+
+function ManualControl.GetNewOverrideEntry(name)
+    local newEntry = CopyTable(MANUAL_CONTROL_DEFAULTS)
+    newEntry.name = name
+    for _, group in ipairs(Private.db.profile.groups) do
+        tinsert(newEntry.groups, false)
+    end
+    return newEntry
+end
+
 function ManualControl.ShowCreateDialog()
-    --StaticPopup_Hide("AUTOHIDEUI_CREATE_ENTITY")
     StaticPopupDialogs["AUTOHIDEUI_CREATE_ENTITY"].text = L["popup_createOverride"]
     Config.popupContext.editBoxText = L["name_newOverride"]
 
     Config.popupContext.callbacks.createOnAccept = function(name)
-        local newEntry = CopyTable(MANUAL_CONTROL_DEFAULTS)
-        newEntry.name = name
+        local newEntry = ManualControl.GetNewOverrideEntry(name)
         tinsert(Private.db.profile.manualControl, newEntry)
     end
 
@@ -349,7 +568,6 @@ function ManualControl.ShowCreateDialog()
 end
 
 function ManualControl.ShowRenameDialog(index)
-    --StaticPopup_Hide("AUTOHIDEUI_RENAME_ENTITY")
     StaticPopupDialogs["AUTOHIDEUI_RENAME_ENTITY"].text = L["popup_renameOverride"]
     Config.popupContext.editBoxText = Private.db.profile.manualControl[index].name
 
@@ -361,7 +579,6 @@ function ManualControl.ShowRenameDialog(index)
 end
 
 function ManualControl.ShowDeleteDialog(index)
-    --StaticPopup_Hide("AUTOHIDEUI_DELETE_ENTITY")
     StaticPopupDialogs["AUTOHIDEUI_DELETE_ENTITY"].text = L["popup_deleteOverride"]
 
     Config.popupContext.callbacks.deleteOnShow = function(self)
@@ -383,7 +600,7 @@ function ManualControl.CreateOptions()
     local root = CopyTable(MANUAL_CONTROL_TAB)
     local order = 1
 
-    for overrideIndex, overrideInfo in ipairs(Private.db.profile.manualControl) do
+    for overrideIndex, overrideDB in ipairs(Private.db.profile.manualControl) do
         -- separator
         local header = {
             type = "header",
@@ -396,7 +613,7 @@ function ManualControl.CreateOptions()
 
         -- main options
         local overrideGroup = CopyTable(MANUAL_CONTROL_TEMPLATE)
-        overrideGroup.name = overrideInfo.name
+        overrideGroup.name = overrideDB.name
         overrideGroup.order = order
         order = order + 1
 

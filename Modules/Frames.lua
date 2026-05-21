@@ -1000,7 +1000,7 @@ local function GetAllCustomFrames(groupDB)
     local frameList = {}
     local frameStringList = string.gmatch(groupDB.config.customFrames, "[^,]+")
     for frameString in frameStringList do
-        frameString = frameString:gsub("%s", "")
+        frameString = frameString:match("^%s*(.-)%s*$")
         if frameString ~= "" then
             local frameInfo = GetAllFrameObjectsFromString(frameString, groupDB)
             if frameInfo then

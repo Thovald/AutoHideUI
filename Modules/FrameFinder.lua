@@ -24,7 +24,7 @@ local lastClickTime = 0
 -- Toggle Frame Finder
 -- ─────────────────────────────────────────────────────────────────────────────
 
-function FrameFinder.Start(groupID)
+function FrameFinder.Start()
     if Main.blizzFrame and Main.blizzFrame:IsVisible() then
         HideUIPanel(SettingsPanel)
     else
@@ -80,7 +80,7 @@ function FrameFinder.ConfirmSelection()
     end
 
     for userString in userStrings do
-        userString = userString:gsub("%s", "")
+        userString = userString:match("^%s*(.-)%s*$")
         if userString ~= "" and not frameStrings[userString] then
             newString = newString..userString..", "
         end

@@ -44,11 +44,14 @@ local CHANGELOG_DATA = {
             },
             {
                 title = "New - Mouseover Areas",
-                comment = "Create custom areas that react to mouseover events.",
+                comment = "A tool to create custom areas that you can hover over to trigger mouseover events.",
                 content =  {
                     "Access it in the Custom Frames section.",
 
-                    "Create new elements and drag /resize them to define the areas you wish to react to mouseovers.",
+                    "Create new elements and drag /resize them to define an area.",
+
+                    "The Group's mouseover will trigger when hovering over these areas." .. "|n" ..
+                    "Hovering over the Group's Frames works as usual.",
 
                     "Useful for example to get your Group to fade in when your cursor moves to the edges of your screen.",
                 },
@@ -57,6 +60,8 @@ local CHANGELOG_DATA = {
                 title = "Misc",
                 content =  {
                     "Added 'Changelog' Button.",
+
+                    "Added new chat command '/autohide reset' to set the active profile back to defaults.",
 
                     "The name of the currently selected group is now shown more prominently at the top.",
 

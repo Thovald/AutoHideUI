@@ -230,3 +230,4 @@ L["ctrl"] = "Strg"
 L["alt"] = "Alt"
 L["shift"] = "Shift"
 
+L["print_resetSuccess"] = "Aktuelles Profil wurde zurückgesetzt!"

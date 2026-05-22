@@ -138,9 +138,10 @@ local MANUAL_CONTROL_TEMPLATE = {
             width = 0.9,
             get = function(info) return Private.db.profile.manualControl[info.arg.index].macro end,
             set = function(info, value)
+                local macroString = value:gsub("%s+", "") -- removing spaces
                 ManualControl.UpdateActiveKeybindsAndMacros()
-                ManualControl.CheckForDuplicateMacros(Private.db.profile.manualControl[info.arg.index], value)
-                Private.db.profile.manualControl[info.arg.index].macro = value
+                ManualControl.CheckForDuplicateMacros(Private.db.profile.manualControl[info.arg.index], macroString)
+                Private.db.profile.manualControl[info.arg.index].macro = macroString
             end,
             order = 30,
             arg = {},

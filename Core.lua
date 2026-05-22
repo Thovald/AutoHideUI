@@ -1,5 +1,6 @@
 local _, Private = ...
 local L = LibStub("AceLocale-3.0"):GetLocale("AutoHideUI")
+local AceConfigDialog = LibStub("AceConfigDialog-3.0")
 Private.Main = {}
 Private.Config = {}
 Private.Frames = {}
@@ -110,8 +111,8 @@ local DRUID_FORMS= {
 
 local GetTime, pairs, ipairs, C_Timer
     = GetTime, pairs, ipairs, C_Timer
-local IsInInstance, IsMounted, GetShapeshiftFormID, UnitInVehicle, HasOverrideActionBar, CanExitVehicle, UnitInVehicleControlSeat
-    = IsInInstance, IsMounted, GetShapeshiftFormID, UnitInVehicle, C_ActionBar.HasOverrideActionBar, CanExitVehicle, UnitInVehicleControlSeat
+local IsInInstance, IsMounted, GetShapeshiftFormID, UnitInVehicle,             HasOverrideActionBar, CanExitVehicle, UnitInVehicleControlSeat, UnitHasVehiclePlayerFrameUI
+    = IsInInstance, IsMounted, GetShapeshiftFormID, UnitInVehicle, C_ActionBar.HasOverrideActionBar, CanExitVehicle, UnitInVehicleControlSeat, UnitHasVehiclePlayerFrameUI
 local UnitCastingInfo, UnitChannelInfo, IsResting, IsFlying, UnitExists, UnitCanAttack
     = UnitCastingInfo, UnitChannelInfo, IsResting, IsFlying, UnitExists, UnitCanAttack
 
@@ -121,15 +122,28 @@ local UnitCastingInfo, UnitChannelInfo, IsResting, IsFlying, UnitExists, UnitCan
 
 function Private:OnProfileChanged()
     Config.SetSelectedGroup(true)
+    Config.RebuildUI()
+end
+
+function Private:OnNewProfile(_, AceTable)
+    -- defaultGroup is not part of defaultProfile anymore.
+    -- adding defaultGroup to profile after profile creation.
+    local profileName = AceTable:GetCurrentProfile()
+    local profile = AceTable.profiles[profileName]
+    local defaultGroup = Config.GetDefaultGroup(L["name_defaultGroup"])
+    tinsert(profile.groups, defaultGroup)
+    Config.SetSelectedGroup(true)
+    Config.RebuildUI()
 end
 
 local function InitDB()
     local defaultProfile = Config.GetDefaultProfile()
     Private.db = LibStub("AceDB-3.0"):New("AutoHideUIDB", defaultProfile, true)
 
+    Private.db.RegisterCallback(Private, "OnNewProfile", "OnNewProfile")
+    Private.db.RegisterCallback(Private, "OnProfileReset", "OnNewProfile")
     Private.db.RegisterCallback(Private, "OnProfileChanged", "OnProfileChanged")
     Private.db.RegisterCallback(Private, "OnProfileCopied", "OnProfileChanged")
-    Private.db.RegisterCallback(Private, "OnProfileReset", "OnProfileChanged")
 
     Config.RegisterOptions()
 end
@@ -406,6 +420,20 @@ local MigrateDB = {
             return result
         end
 
+        function MergeGroups(defaultGroup, userGroup)
+            local result = CopyTable(defaultGroup)
+
+            for key, value in pairs(userGroup) do
+                if type(value) == "table" and type(result[key]) == "table" then
+                    result[key] = MergeGroups(result[key], value)
+                else
+                    result[key] = value
+                end
+            end
+
+            return result
+        end
+
         local function MigrateGroup(group)
             local c = group.conditions
             if not c then
@@ -485,7 +513,6 @@ local MigrateDB = {
             -- looking for missing settings
             for k,v in pairs(DEFAULT_GROUP) do
                 if not group[k] then
-                    --print("found missing setting", k)
                     if type(v) == "table" then
                         group[k] = CopyTable(v)
                     else
@@ -497,12 +524,10 @@ local MigrateDB = {
             -- looking for missing conditions
             for conditionName, conditionInfo in pairs(DEFAULT_GROUP.conditions) do
                 if not group.conditions[conditionName] then
-                    --print("found missing condition", conditionName)
                     group.conditions[conditionName] = CopyTable(conditionInfo)
                 else
                     for setting, value in pairs(conditionInfo) do
                         if group.conditions[conditionName][setting] == nil then
-                            --print("found missing condition setting", conditionName, setting)
                             group.conditions[conditionName][setting] = value
                         end
                     end
@@ -512,7 +537,6 @@ local MigrateDB = {
             -- checking for settings that are no longer in use
             for k,v in pairs(group) do
                 if DEFAULT_GROUP[k] == nil then
-                    --print("found deprecated setting", k)
                     group[k] = nil
                 end
             end
@@ -523,11 +547,23 @@ local MigrateDB = {
             manualControl = {}
         }
 
-        for i, group in ipairs(profile) do
+        -- not doing ipairs because first entry will be nil if it's a default group, stoppig the loop
+        for i, group in pairs(profile) do
             MigrateGroup(group)
             CheckGroupForMissingEntries(group)
-            tinsert(newProfile.groups, group)
         end
+
+        -- going forward, defaultGroup is not included in defaultProfile anymore.
+        -- therefore we need to hard assign it's values here. 
+        if profile[1] == nil then
+            profile[1] = CopyTable(DEFAULT_GROUP)
+        else
+            local mergedTable = MergeGroups(DEFAULT_GROUP, profile[1])
+            profile[1] = mergedTable
+        end
+
+
+        newProfile.groups = profile
 
         return newProfile
     end
@@ -806,7 +842,7 @@ end
 local function ConditionVehicle()
     UpdateConditionForAllGroups(
         "inVehicle",
-        ( UnitInVehicle("player") and ( CanExitVehicle() or UnitInVehicleControlSeat("player") )) -- player controls a vehicle
+        ( UnitInVehicle("player") and ( CanExitVehicle() or UnitInVehicleControlSeat("player") or UnitHasVehiclePlayerFrameUI("player") )) -- player controls a vehicle
         or HasOverrideActionBar() -- player is unable to use their spells. playing a puzzle game or controlled in some way
     )
 end

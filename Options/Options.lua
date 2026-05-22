@@ -732,6 +732,13 @@ end
 -- Managing Settings
 -- ─────────────────────────────────────────────────────────────────────────────
 
+function Config.ResetCurrentProfile()
+    Private.db:ResetProfile()
+    local title = Main.GetErrorTitleString()
+    local message = Main.ColorString(L["print_resetSuccess"], "green")
+    print(title..message)
+end
+
 function Config.GetNewGroup(name, useDefaultFrameSelection)
     local newGroup = CopyTable(GROUP_TEMPLATE)
     newGroup.frames = GetCommonFrames()
@@ -757,12 +764,10 @@ function Config.GetDefaultConditionByName(conditionName)
 end
 
 function Config.GetDefaultProfile()
-    local defaultGroup = Config.GetDefaultGroup(L["name_defaultGroup"])
     local defaultProfile = {
         profile = {
             manualControl = {},
             groups = {
-                defaultGroup,
             }
         }
     }
@@ -853,6 +858,8 @@ function Config.RegisterOptions()
         if cmd == "override" then
             ManualControl:HandleMacro(arg)
             return
+        elseif cmd == "reset" then
+            Config.ResetCurrentProfile()
         end
 
         if AceConfigDialog.OpenFrames["AutoHideUI"] then

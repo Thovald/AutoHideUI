@@ -229,3 +229,6 @@ L["pageDown"] = "PageDown"
 L["ctrl"] = "Ctrl"
 L["alt"] = "Alt"
 L["shift"] = "Shift"
+
+L["print_resetSuccess"] = "Current Profile has been reset!"
+

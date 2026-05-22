@@ -2,10 +2,9 @@
 
 <h3><font color="83ff94">Notable recent changes:</font></h3>
 
-- Added option for Personal Resource Display.<br>
-Includes support for ResourceBars for Ayije_CDM and EllesmereUI.<br>
-- Added support for BasicMinimap.<br>
-- Added support for DandersFrames.<br>
+- New Changelog button in the options menu.<br>
+Changes will be documented there in the future.
+- If the options menu doesn't open because of corrupt settings, type "/autohide reset" to set your profile back to defaults.<br>
 ___
 <br>
 <h2><font color="83d2ff">What this does:</font></h2>
@@ -25,6 +24,15 @@ Frames will fade out or remain hidden until any of these conditions are true:
 - you <b>mouseover</b> a hidden frame
 - you are <b>missing health</b>
 - you are <b>in a vehicle</b>
+
+<h2><font color="83d2ff">Features:</font></h2>
+
+- Quick and easy to use while still being customizable.
+- Supports most popular UI AddOns. Your Fade-Setup will continue to work when you switch between AddOns or the Default UI. 
+- Fade-Settings and -Conditions are applied to groups of Frames instead of individual Frames.
+- Included Frame-Finder tool to add Frames that aren't listed in the options.
+- Create custom Mouseover areas.
+- Create Hotkeys and/or Macros to manually fade your Frames.
 
 <h2><font color="83d2ff">Customizability:</font></h2>
 

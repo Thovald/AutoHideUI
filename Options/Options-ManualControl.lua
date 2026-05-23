@@ -460,25 +460,28 @@ local function HandleGroupOverride(group, overrideInfo)
         if overrideInfo.isActive then
             group.overrideDB = overrideDB
             Fading.SetGroupAlpha(group)
+            Fading.UpdateAllFrameVisibility()
             return true
         else
             group.overrideDB = nil
             Fading.SetGroupAlpha(group)
+            Fading.UpdateAllFrameVisibility()
             return false
         end
-
     end
 
     -- disengage previous override
     if group.overrideDB == overrideDB then
         group.overrideDB = nil
         Fading.SetGroupAlpha(group)
+        Fading.UpdateAllFrameVisibility()
         return false
     end
 
     -- apply override
     group.overrideDB = overrideDB
     Fading.SetGroupAlpha(group)
+    Fading.UpdateAllFrameVisibility()
 
     return true
 end

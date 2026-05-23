@@ -231,3 +231,4 @@ L["alt"] = "Alt"
 L["shift"] = "Shift"
 
 L["print_resetSuccess"] = "Aktuelles Profil wurde zurückgesetzt!"
+L["header_viewingGroup"] = "Zeige Gruppierung: "

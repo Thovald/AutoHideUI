@@ -621,7 +621,7 @@ Config.OPTIONS_MENU = {
                     type = "header",
                     name = function()
                         local groupName = Private.db and Private.db.profile.groups and Private.db.profile.groups[Config.selectedGroup] and Private.db.profile.groups[Config.selectedGroup].name or "?"
-                        return groupName
+                        return L["header_viewingGroup"] .. "|cffffffff" .. groupName .. "|r"
                     end,
                     order = 1,
                 },

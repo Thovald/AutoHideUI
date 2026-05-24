@@ -6,7 +6,7 @@ local L = LibStub("AceLocale-3.0"):GetLocale("AutoHideUI")
 local CHANGELOG_DATA = {
     {
         version = "1.2.0",
-        date = "May 15th",
+        date = "May 24th",
         entries = {
             {
                 title = "New - Grouped Conditions",

@@ -5,6 +5,18 @@ local L = LibStub("AceLocale-3.0"):GetLocale("AutoHideUI")
 
 local CHANGELOG_DATA = {
     {
+        version = "1.2.1",
+        date = "May 27th",
+        entries = {
+            {
+                title = "Fixes",
+                content =  {
+                    "Lowered the hotkey listener's frame strata to reduce likelyhood of it blocking other AddOn Frames from receiving inputs.",
+                },
+            },
+        },
+    },
+    {
         version = "1.2.0",
         date = "May 24th",
         entries = {

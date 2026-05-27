@@ -277,7 +277,7 @@ do
     listenerFrame:SetPropagateKeyboardInput(true)
     listenerFrame:SetPropagateMouseClicks(true)
     listenerFrame:SetPropagateMouseMotion(true)
-    listenerFrame:SetFrameStrata("TOOLTIP")
+    listenerFrame:SetFrameStrata("DIALOG")
     listenerFrame:SetAllPoints(UIParent)
     listenerFrame:Hide()
 

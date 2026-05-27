@@ -515,9 +515,14 @@ end
 
 function ManualControl.StartListening()
     capturingKeybind = false
-    ManualControl.UpdateActiveKeybindsAndMacros()
+    local hasOverrides = ManualControl.UpdateActiveKeybindsAndMacros()
     ManualControl.captureFrame:Hide()
-    ManualControl.listenerFrame:Show()
+
+    if hasOverrides then
+        ManualControl.listenerFrame:Show()
+    else
+        ManualControl.listenerFrame:Hide()
+    end
 end
 
 function ManualControl.StopListening()
@@ -529,6 +534,7 @@ function ManualControl.UpdateActiveKeybindsAndMacros()
     activeKeybinds = {}
     activeMacros = {}
     activeOverrides = {}
+    local foundKeyOrMacro = false
 
     for _, overrideDB in ipairs(Private.db.profile.manualControl) do
         if overrideDB.enabled then
@@ -539,15 +545,19 @@ function ManualControl.UpdateActiveKeybindsAndMacros()
             tinsert(activeOverrides, overrideInfo)
 
             if keybind and keybind ~= "" then
+                foundKeyOrMacro = true
                 activeKeybinds[keybind] = overrideInfo
             end
 
             if macro and macro ~= "" then
+                foundKeyOrMacro = true
                 activeMacros[macro] = overrideInfo
             end
 
         end
     end
+
+    return foundKeyOrMacro
 end
 
 function ManualControl.GetNewOverrideEntry(name)

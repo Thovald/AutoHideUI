@@ -5,6 +5,36 @@ local L = LibStub("AceLocale-3.0"):GetLocale("AutoHideUI")
 
 local CHANGELOG_DATA = {
     {
+        version = "1.2.3",
+        date = "June 1st",
+        entries = {
+            {
+                title = "New Commands",
+                comment = "Added a bunch of commands that can be used in a macro.",
+                content =  {
+                    '/autohide setProfile NAME|n'..
+                    'Switches to the specified profile.',
+
+                    '/autohide toggleProfile NAME1 NAME2|n'..
+                    'Switches between the two specified profiles.',
+
+                    '/autohide resetProfile|n'..
+                    'Resets current profile to default.',
+
+                    'Lua command: AutoHideUI:SetProfile("NAME")|n'..
+                    'Switches to the specified profile. Could be used for automatic switching.'
+                },
+            },
+
+            {
+                title = "Fixes",
+                content =  {
+                    "Fixed an issue that could allow frames to fade out while the options menu was open.",
+                },
+            },
+        },
+    },
+    {
         version = "1.2.2",
         date = "May 27th",
         entries = {
@@ -12,6 +42,7 @@ local CHANGELOG_DATA = {
                 title = "Fixes",
                 content =  {
                     "Lowered the hotkey listener's frame strata to reduce likelyhood of it blocking other AddOn Frames from receiving inputs.",
+                    
                     "Listener frame is now hidden when there are no keybinds or macros assigned to overrides."
                 },
             },

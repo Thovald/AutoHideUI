@@ -232,3 +232,7 @@ L["shift"] = "Shift"
 
 L["print_resetSuccess"] = "Current Profile has been reset!"
 L["header_viewingGroup"] = "Viewing Group: "
+
+L["print_switchMissing"] = "Profile does not exist: "
+L["print_switchSame"] = "Already set to Profile: "
+L["print_switchSuccess"] = "Switched to Profile: "

@@ -732,11 +732,88 @@ end
 -- Managing Settings
 -- ─────────────────────────────────────────────────────────────────────────────
 
-function Config.ResetCurrentProfile()
+function Config.ResetProfile()
     Private.db:ResetProfile()
+    Config.SetSelectedGroup()
+    Config.RebuildUI()
+
+    if not AceConfigDialog.OpenFrames["AutoHideUI"] and not IsOtherWindowsShown() then
+        AceConfigDialog:Open("AutoHideUI")
+    end
+
     local title = Main.GetErrorTitleString()
     local message = Main.ColorString(L["print_resetSuccess"], "green")
     print(title..message)
+end
+
+function Config.SetProfile(newProfile)
+    local title = Main.GetErrorTitleString()
+
+    local profileExists = false
+    for _, profile in ipairs(Private.db:GetProfiles()) do
+        if profile == newProfile then
+            profileExists = true
+            break
+        end
+    end
+
+    if not profileExists then
+        local message = Main.ColorString(L["print_switchMissing"], "red")
+        print(title..message..newProfile)
+        return
+    elseif Private.db:GetCurrentProfile() == newProfile then
+        local message = Main.ColorString(L["print_switchSame"], "red")
+        print(title..message..newProfile)
+        return
+    end
+
+    Main.SuspendAddon()
+    Private.db:SetProfile(newProfile)
+    Config.SetSelectedGroup()
+    Config.RebuildUI()
+    Main.ResumeAddon()
+    local message = Main.ColorString(L["print_switchSuccess"], "green")
+    print(title..message..newProfile)
+
+end
+
+function Config.ToggleProfile(msg)
+    local title = Main.GetErrorTitleString()
+
+    local profile1, profile2 = strsplit(" ", msg, 2)
+    local profile1Exists, profile2Exists
+
+    if not profile1 or not profile2 then
+        print("need two profiles")
+        return
+    elseif profile1 == profile2 then
+        print("need different profiles")
+        return
+    else
+        for _, profile in ipairs(Private.db:GetProfiles()) do
+            if profile == profile1 then
+                profile1Exists = true
+            elseif profile == profile2 then
+                profile2Exists = true
+            end
+        end
+
+        if not profile1Exists or not profile2Exists then
+            print("profiles don't exist", not profile1Exists and profile1 or "", not profile2Exists and profile2 or "")
+            return
+        end
+    end
+
+    local currentProfile = Private.db:GetCurrentProfile()
+    local newProfile = currentProfile == profile1 and profile2 or profile1
+
+    Main.SuspendAddon()
+    Private.db:SetProfile(newProfile)
+    Config.SetSelectedGroup()
+    Config.RebuildUI()
+    Main.ResumeAddon()
+    local message = Main.ColorString(L["print_switchSuccess"], "green")
+    print(title..message..newProfile)
 end
 
 function Config.GetNewGroup(name, useDefaultFrameSelection)
@@ -858,8 +935,15 @@ function Config.RegisterOptions()
         if cmd == "override" then
             ManualControl:HandleMacro(arg)
             return
-        elseif cmd == "reset" then
-            Config.ResetCurrentProfile()
+        elseif cmd == "reset" or cmd == "resetProfile" then
+            Config.ResetProfile()
+            return
+        elseif cmd == "setProfile" then
+            Config.SetProfile(arg)
+            return
+        elseif cmd == "toggleProfile" then
+            Config.ToggleProfile(arg)
+            return
         end
 
         if AceConfigDialog.OpenFrames["AutoHideUI"] then

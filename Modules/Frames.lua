@@ -387,7 +387,7 @@ local ADDON_FRAME_MAPPING = {
         isLoaded = function()
                 local isLoaded = false
                 if EllesmereUI and C_AddOns.IsAddOnLoaded("EllesmereUIBasics") then
-                    for _, info in ipairs(EllesmereUI.Lite._dbRegistry) do
+                    for _, info in pairs(EllesmereUI.Lite._dbRegistry) do
                         if info.folder == "EllesmereUIBasics" then
                             isLoaded = info.profile.questTracker.enabled
                             break

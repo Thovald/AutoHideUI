@@ -348,7 +348,7 @@ function Fading.FadeAllGroups()
 end
 
 function Fading.ResetPendingFades()
-    for _, fadeInfo in ipairs(pendingFades) do
+    for _, fadeInfo in pairs(pendingFades) do
         if fadeInfo and fadeInfo.timer then
             fadeInfo.timer:Cancel()
         end

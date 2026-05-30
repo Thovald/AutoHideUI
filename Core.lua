@@ -21,7 +21,7 @@ local MouseoverAreas = Private.MouseoverAreas
 local DB_SCHEMA_VERSION = 1
 
 -- unlike systemFrame, Main.frame's events are registered based on which conditions are enabled
-Main.frame = CreateFrame("Frame")
+Main.frame = CreateFrame("Frame", "AutoHideUI")
 local systemFrame = CreateFrame("Frame")
 systemFrame:RegisterEvent("PLAYER_LOGIN")
 systemFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
@@ -119,6 +119,10 @@ local UnitCastingInfo, UnitChannelInfo, IsResting, IsFlying, UnitExists, UnitCan
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Setup
 -- ─────────────────────────────────────────────────────────────────────────────
+
+function Main.frame:SetProfile(newProfile)
+    Config.SetProfile(newProfile)
+end
 
 function Private:OnProfileChanged()
     Config.SetSelectedGroup(true)
@@ -840,6 +844,9 @@ local function CheckMissingHealthChange(key)
 end
 
 local function ConditionVehicle()
+    print( "inVehicle:", UnitInVehicle("player"), "canExit:", CanExitVehicle(), "inControl:", UnitInVehicleControlSeat("player"), "vehicleUI:", UnitHasVehiclePlayerFrameUI("player"), "isOverride:", HasOverrideActionBar())
+    print("  isActive:", ( UnitInVehicle("player") and ( CanExitVehicle() or UnitInVehicleControlSeat("player") or UnitHasVehiclePlayerFrameUI("player") )) -- player controls a vehicle
+        or HasOverrideActionBar())
     UpdateConditionForAllGroups(
         "inVehicle",
         ( UnitInVehicle("player") and ( CanExitVehicle() or UnitInVehicleControlSeat("player") or UnitHasVehiclePlayerFrameUI("player") )) -- player controls a vehicle

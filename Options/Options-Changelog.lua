@@ -5,6 +5,18 @@ local L = LibStub("AceLocale-3.0"):GetLocale("AutoHideUI")
 
 local CHANGELOG_DATA = {
     {
+        version = "1.2.4",
+        date = "May 31st",
+        entries = {
+            {
+                title = "Fixes",
+                content =  {
+                    "Fixed druid flight forms not triggering the Flying Condition anymore.",
+                },
+            },
+        },
+    },
+    {
         version = "1.2.3",
         date = "May 30th",
         entries = {

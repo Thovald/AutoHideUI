@@ -84,6 +84,7 @@ Main.DEFAULT_STATES = {
 
 Main.inCombat = InCombatLockdown()
 local isMounted = IsMounted()
+local isFlightShape = false
 local isFlying = IsFlying()
 local isGliding = C_PlayerInfo.GetGlidingInfo()
 local isFlyingTicker
@@ -780,7 +781,7 @@ local function StartIsFlyingTicker()
 end
 
 local function HandleIsFlyingTicker()
-    if not isMounted then
+    if not isMounted and not isFlightShape then
         if isFlyingTicker then
             isFlyingTicker:Cancel()
             isFlyingTicker = nil
@@ -804,15 +805,16 @@ local function ConditionMounted()
 end
 
 local function ConditionShapeshift()
-    local shapeId = GetShapeshiftFormID()
+    local shapeID = GetShapeshiftFormID()
 
     for _, group in ipairs(Main.activeGroups) do
         local formsKey = group.conditions.mounted.druidForms
         local validShapes = DRUID_FORMS[formsKey]
-        local isMountShape = validShapes[shapeId]
+        local isMountShape = validShapes[shapeID]
         UpdateActiveConditions(group, "mounted", isMounted or isMountShape)
     end
 
+    isFlightShape = shapeID == 27 or shapeID == 29
     RunNextFrame(HandleIsFlyingTicker)
 end
 

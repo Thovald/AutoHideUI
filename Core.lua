@@ -868,9 +868,9 @@ local function CheckMissingHealthChange(key)
 end
 
 local function ConditionVehicle()
-    print( "inVehicle:", UnitInVehicle("player"), "canExit:", CanExitVehicle(), "inControl:", UnitInVehicleControlSeat("player"), "vehicleUI:", UnitHasVehiclePlayerFrameUI("player"), "isOverride:", HasOverrideActionBar())
-    print("  isActive:", ( UnitInVehicle("player") and ( CanExitVehicle() or UnitInVehicleControlSeat("player") or UnitHasVehiclePlayerFrameUI("player") )) -- player controls a vehicle
-        or HasOverrideActionBar())
+    -- print( "inVehicle:", UnitInVehicle("player"), "canExit:", CanExitVehicle(), "inControl:", UnitInVehicleControlSeat("player"), "vehicleUI:", UnitHasVehiclePlayerFrameUI("player"), "isOverride:", HasOverrideActionBar())
+    -- print("  isActive:", ( UnitInVehicle("player") and ( CanExitVehicle() or UnitInVehicleControlSeat("player") or UnitHasVehiclePlayerFrameUI("player") )) -- player controls a vehicle
+    --     or HasOverrideActionBar())
     UpdateConditionForAllGroups(
         "inVehicle",
         ( UnitInVehicle("player") and ( CanExitVehicle() or UnitInVehicleControlSeat("player") or UnitHasVehiclePlayerFrameUI("player") )) -- player controls a vehicle
@@ -916,12 +916,14 @@ end
 -- ─────────────────────────────────────────────────────────────────────────────
 
 local function OnLogin()
-    -- deferred to ensure all AddOn frames have been created.
+    InitDB()
+    UpdateVersion()
+    UpdateDB()
+    InitOptions()
+    ManualControl.StartListening()
+
+    -- delayed to ensure all AddOn frames have been created.
     C_Timer.After(3, function()
-        InitDB()
-        UpdateVersion()
-        UpdateDB()
-        InitOptions()
         InitAddon()
     end)
 

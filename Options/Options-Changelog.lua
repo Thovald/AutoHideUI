@@ -6,8 +6,27 @@ local L = LibStub("AceLocale-3.0"):GetLocale("AutoHideUI")
 local CHANGELOG_DATA = {
     {
         version = "1.2.3",
-        date = "June 1st",
+        date = "May 30th",
         entries = {
+            {
+                title = "Hotkey Changes",
+                comment = "Replaced the system that handles Hotkeys with something more robust.|n"..
+                "Your existing Overrides will carry over, but some new restrictions apply.",
+                content =  {
+                    "The previous system could potentially block inputs for other AddOns.|n"..
+                    "The new system has no such risk.",
+
+                    "Unlike the previous system, bindings are now exclusive.|n"..
+                    "You can't have an Override and something else bound to the same key-combination anymore.",
+
+                    "The Middle Mouse Button is no longer supported, unfortunately.|n"..
+                    "Any Override-bindings that were using it will be reset automatically and print a warning in chat.",
+
+                    "Override Hotkeys can't be set or changed during combat anymore.|n"..
+                    "The AddOn will block that and try again when combat ends.|n"..
+                    "Logging in or reloading during combat should be unaffected."
+                },
+            },
             {
                 title = "New Commands",
                 comment = "Added a bunch of commands that can be used in a macro.",
@@ -25,7 +44,6 @@ local CHANGELOG_DATA = {
                     'Switches to the specified profile. Could be used for automatic switching.'
                 },
             },
-
             {
                 title = "Fixes",
                 content =  {

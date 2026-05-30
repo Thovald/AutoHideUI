@@ -784,10 +784,10 @@ function Config.ToggleProfile(msg)
     local profile1Exists, profile2Exists
 
     if not profile1 or not profile2 then
-        print("need two profiles")
+        print(title..Main.ColorString(L["print_toggleError1"], "red"))
         return
     elseif profile1 == profile2 then
-        print("need different profiles")
+        print(title..Main.ColorString(L["print_toggleError2"], "red"))
         return
     else
         for _, profile in ipairs(Private.db:GetProfiles()) do
@@ -799,7 +799,8 @@ function Config.ToggleProfile(msg)
         end
 
         if not profile1Exists or not profile2Exists then
-            print("profiles don't exist", not profile1Exists and profile1 or "", not profile2Exists and profile2 or "")
+            local missingProfiles = (not profile1Exists and profile1 or "") .. (not profile2Exists and (", "..profile2) or "")
+            print(title..Main.ColorString(L["print_toggleError3"], "red")..missingProfiles)
             return
         end
     end

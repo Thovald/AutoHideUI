@@ -232,3 +232,11 @@ L["shift"] = "Shift"
 
 L["print_resetSuccess"] = "Aktuelles Profil wurde zurückgesetzt!"
 L["header_viewingGroup"] = "Zeige Gruppierung: "
+
+L["print_switchMissing"] = "Profil existiert nicht: "
+L["print_switchSame"] = "Profil bereits aktiv: "
+L["print_switchSuccess"] = "Profil gewechselt zu: "
+L["print_toggleError1"] = "Es werden zwei Profil-Namen benötigt!"
+L["print_toggleError2"] = "Beide Profile sind identisch!"
+L["print_toggleError3"] = "Die folgenden Profile existieren nicht: "
+L["warning_schema2"] = "Die mittlere Maus Taste wird nicht mehr unterstützt!|nEin Hotkey im folgenden Profil wurde zurückgesetzt: "

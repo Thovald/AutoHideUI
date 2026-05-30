@@ -9,8 +9,9 @@ local capturingKeybind = false
 local activeKeybinds = {}
 local activeMacros = {}
 local activeOverrides = {}
-local GetCurrentKeyBoardFocus, IsControlKeyDown, IsShiftKeyDown, IsAltKeyDown
-    = GetCurrentKeyBoardFocus, IsControlKeyDown, IsShiftKeyDown, IsAltKeyDown
+local hotkeyButtons = {}
+local IsControlKeyDown, IsShiftKeyDown, IsAltKeyDown
+    = IsControlKeyDown, IsShiftKeyDown, IsAltKeyDown
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- UI Data
@@ -230,10 +231,10 @@ local FORBIDDEN_KEYS = {
     RALT = true,
 
     LeftButton = true,
+    MiddleButton = true,
 }
 
 local DISPLAY_NAMES = {
-    MiddleButton = L["mouseMiddle"],
     Button4 = L["mouseBtn4"],
     Button5 = L["mouseBtn5"],
 
@@ -245,11 +246,7 @@ local DISPLAY_NAMES = {
 }
 
 do
-    -- using two frames to capture and listen to keybinds.
-    -- because switching SetPopagate on the fly during keybinding doesn't intercept key presses.
-    -- could use one frame and change the state on options open/close, but combat may prevent it. 
-
-    -- capturing
+    -- frame to capture user's hotkey
     local captureFrame = CreateFrame("Frame", nil, UIParent)
 
     captureFrame:EnableKeyboard(true)
@@ -268,29 +265,7 @@ do
         ManualControl.StartCapture(button)
     end)
 
-        -- listening
-    local listenerFrame = CreateFrame("Frame", nil, UIParent)
-
-    listenerFrame:EnableKeyboard(true)
-    listenerFrame:EnableMouse(true)
-    listenerFrame:EnableMouseWheel(true)
-    listenerFrame:SetPropagateKeyboardInput(true)
-    listenerFrame:SetPropagateMouseClicks(true)
-    listenerFrame:SetPropagateMouseMotion(true)
-    listenerFrame:SetFrameStrata("DIALOG")
-    listenerFrame:SetAllPoints(UIParent)
-    listenerFrame:Hide()
-
-    listenerFrame:SetScript("OnKeyDown", function(_, key)
-        ManualControl.OnListenerKeyPress(key)
-    end)
-
-    listenerFrame:SetScript("OnMouseDown", function(_, button)
-        ManualControl.OnListenerKeyPress(button)
-    end)
-
     ManualControl.captureFrame = captureFrame
-    ManualControl.listenerFrame = listenerFrame
 end
 
 function ManualControl.RecordKeybind(index, buttonArg)
@@ -305,6 +280,12 @@ local function BuildBindingData(key)
     local bindingParts = {}
     local displayParts = {}
 
+    -- modifier order actually matters! "ALT-SHIFT-2" works but "SHIFT-ALT-2" won't. 
+    if IsAltKeyDown() then
+        table.insert(bindingParts, "ALT")
+        table.insert(displayParts, L["alt"])
+    end
+
     if IsControlKeyDown() then
         table.insert(bindingParts, "CTRL")
         table.insert(displayParts, L["ctrl"])
@@ -313,11 +294,6 @@ local function BuildBindingData(key)
     if IsShiftKeyDown() then
         table.insert(bindingParts, "SHIFT")
         table.insert(displayParts, L["shift"])
-    end
-
-    if IsAltKeyDown() then
-        table.insert(bindingParts, "ALT")
-        table.insert(displayParts, L["alt"])
     end
 
     table.insert(bindingParts, key)
@@ -369,17 +345,6 @@ function ManualControl.StartCapture(key)
     activeKeybinds[bindData.binding] = ManualControl.captureFrame.db
 
     StopCapture()
-end
-
-function ManualControl.OnListenerKeyPress(key)
-    local bindData = BuildBindingData(key)
-
-    if activeKeybinds[bindData.binding] then
-        if GetCurrentKeyBoardFocus() then
-            return
-        end
-        ManualControl.ToggleOverride(activeKeybinds[bindData.binding])
-    end
 end
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -515,26 +480,64 @@ end
 
 function ManualControl.StartListening()
     capturingKeybind = false
-    local hasOverrides = ManualControl.UpdateActiveKeybindsAndMacros()
+    ManualControl.UpdateActiveKeybindsAndMacros()
+    ManualControl.SetupButtons()
     ManualControl.captureFrame:Hide()
-
-    if hasOverrides then
-        ManualControl.listenerFrame:Show()
-    else
-        ManualControl.listenerFrame:Hide()
-    end
 end
 
 function ManualControl.StopListening()
     capturingKeybind = false
-    ManualControl.listenerFrame:Hide()
+    ManualControl.ClearButtons()
+end
+
+function ManualControl.GetHotkeyButtonName(count)
+    return "AutoHideUI_HotkeyButton"..count
+end
+
+function ManualControl.CreateNewHotkeyButton(count)
+    local buttonName = ManualControl.GetHotkeyButtonName(count)
+    local button = CreateFrame("Button", buttonName)
+    button:Hide()
+    tinsert(hotkeyButtons, button)
+    return button
+end
+
+function ManualControl.SetupButtons()
+    if Main.inCombat then
+        tinsert(Main.runAfterCombat, {ManualControl.SetupButtons})
+        return
+    end
+
+    local count = 1
+    for keybind, overrideInfo in pairs(activeKeybinds) do
+        local button = hotkeyButtons[count] or ManualControl.CreateNewHotkeyButton(count)
+        local buttonName = ManualControl.GetHotkeyButtonName(count)
+        button:SetScript("OnClick", function() ManualControl.ToggleOverride(overrideInfo) end)
+        SetOverrideBindingClick(button, true, keybind, buttonName)
+        count = count + 1
+    end
+end
+
+function ManualControl.ClearButtons()
+    if Main.inCombat then
+        tinsert(Main.runAfterCombat, {ManualControl.ClearButtons})
+        return
+    end
+
+    for _, button in pairs(hotkeyButtons) do
+        ClearOverrideBindings(button)
+        button:SetScript("OnClick", nil)
+    end
+end
+
+function ManualControl.IsValidKeybind(keybind)
+
 end
 
 function ManualControl.UpdateActiveKeybindsAndMacros()
     activeKeybinds = {}
     activeMacros = {}
     activeOverrides = {}
-    local foundKeyOrMacro = false
 
     for _, overrideDB in ipairs(Private.db.profile.manualControl) do
         if overrideDB.enabled then
@@ -545,19 +548,15 @@ function ManualControl.UpdateActiveKeybindsAndMacros()
             tinsert(activeOverrides, overrideInfo)
 
             if keybind and keybind ~= "" then
-                foundKeyOrMacro = true
                 activeKeybinds[keybind] = overrideInfo
             end
 
             if macro and macro ~= "" then
-                foundKeyOrMacro = true
                 activeMacros[macro] = overrideInfo
             end
 
         end
     end
-
-    return foundKeyOrMacro
 end
 
 function ManualControl.GetNewOverrideEntry(name)

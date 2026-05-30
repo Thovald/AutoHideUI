@@ -18,7 +18,7 @@ local Fading = Private.Fading
 local ManualControl = Private.ManualControl
 local Conditions = Private.Conditions
 local MouseoverAreas = Private.MouseoverAreas
-local DB_SCHEMA_VERSION = 1
+local DB_SCHEMA_VERSION = 2
 
 -- unlike systemFrame, Main.frame's events are registered based on which conditions are enabled
 Main.frame = CreateFrame("Frame", "AutoHideUI")
@@ -570,6 +570,30 @@ local MigrateDB = {
         newProfile.groups = profile
 
         return newProfile
+    end,
+
+    -- handling override hotkeys differently. middle mouse button is no longer supported.
+    [2] = function(profile, profileName)
+        if not profile.manualControl then
+            return profile
+        end
+
+        local printMessage = false
+        for _, info in ipairs(profile.manualControl) do
+            if string.match(info.keybind, "MiddleButton") then
+                info.keybind = ""
+                info.keybindDisplay = ""
+                printMessage = true
+            end
+        end
+
+        if printMessage then
+            local title = Main.GetErrorTitleString()
+            local message = L["warning_schema2"]
+            print(title..message..Main.ColorString(profileName, "red"))
+        end
+
+        return profile
     end
 }
 
@@ -581,7 +605,7 @@ local function UpdateDB()
         if migration then
             -- migrating every profile
             for profileName, profileData in pairs(Private.db.profiles) do
-                local newProfile = migration(profileData)
+                local newProfile = migration(profileData, profileName)
                 if newProfile then
                     Private.db.profiles[profileName] = newProfile
                 end

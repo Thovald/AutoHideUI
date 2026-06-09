@@ -502,6 +502,14 @@ local ADDON_FRAME_MAPPING = {
         args = {forceAlpha = true, includeDefaultFrames = true},
     },
     {
+        name = "EllesmereUI_PartyFrames",
+        isLoaded = function() return C_AddOns.IsAddOnLoaded("EllesmereUIRaidFrames") end,
+        frames = {
+            PartyFrame = {"ERFPartyHeader"},
+        },
+        args = {forceAlpha = true},
+    },
+    {
         name = "BasicMinimap",
         isLoaded = function() return C_AddOns.IsAddOnLoaded("BasicMinimap") end,
         frames = {
@@ -919,7 +927,7 @@ local function CheckForAddOnFrames(frameString, groupDB)
 end
 
 local function IsDefaultFrame(frameString)
-    for _, info in ipairs(Config.DEFAULT_FRAMES) do
+    for _, info in ipairs(Private.FramesTab.DEFAULT_FRAMES) do
         if frameString == info.frame then
             return true
         end

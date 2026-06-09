@@ -43,14 +43,14 @@ L["ActionBar 5"] = "Aktionsleiste 5"
 L["ActionBar 6"] = "Aktionsleiste 6"
 L["ActionBar 7"] = "Aktionsleiste 7"
 L["ActionBar 8"] = "Aktionsleiste 8"
-L["Stance Bar"] = "Haltungsanzeige"
-L["Pet Bar"] = "Haustierbalken"
+L["Stance Bar"] = "Haltungsleiste"
+L["Pet Bar"] = "Begleiterleiste"
 L["Micro Menu"] = "Mikro Menü"
 L["Bags Bar"] = "Taschen Menü"
-L["CDManager Bars"] = "CDManager Balken"
-L["CDManager Buffs"] = true
-L["CDManager Essential"] = "CDManager Essenziell"
-L["CDManager Utility"] = "CDManager Strategisch"
+L["CDM Bars"] = "CDManager Balken"
+L["CDM Buffs"] = true
+L["CDM Essential"] = "CDManager Essenziell"
+L["CDM Utility"] = "CDManager Strategisch"
 L["Buff Frame"] = "Verstärkungszauber"
 L["Debuff Frame"] = "Schwächungszauber"
 L["Player Castbar"] = "Zauberbalken"
@@ -194,7 +194,7 @@ L["collapse"] = "Reduzieren"
 L["buttonChangelog"] = "Zeige Changelog"
 L["tab_manualControl"] = "Manuelle Steuerung"
 L["descr_manualControl"] = "Erstelle ein Tastenkürzel oder Makro um manuell die Alpha der Gruppierungen zu steuern.".."|n|n"..
-                            "Während eine Übersteuerung aktiv ist, werden die betroffenen Gruppierungen auf den entsprechenden Alpha-Wert gesetzt und ihre Bedingungen ignoriert.".."|n|n"..
+                            "Während eine Übersteuerung aktiv ist, werden die entsprechenden Gruppierungen auf den entsprechenden Alpha-Wert gesetzt und ihre Bedingungen ignoriert.".."|n|n"..
                             "Sobald deaktiviert, greifen die Gruppierungen wieder auf Bedingungen zurück um den Alpha-Wert zu bestimmen"
 L["button_newOverride"] = "Neue Steuerung"
 L["name_newGroup"] = "Neue Gruppe"
@@ -210,7 +210,7 @@ L["input_macro"] = "Makro (optional)"
 L["description_macro"] = "Zusätzlich zu oder anstelle von Tastenkürzeln kann ein Makro verwendet werden.".."|n|n"..
                          "Erstelle das folgende Makro und ersetze 'MeinMakro' mit deinem eigenen Begriff:".."|n|n"..
                          "/autohide override MeinMakro"
-L["dropdown_affectedGroups"] = "Betroffene Gruppierungen"
+L["dropdown_affectedGroups"] = "Beeinflusste Gruppierungen"
 L["dropdownOption_affectedGroups1"] = "Alle"
 L["dropdownOption_affectedGroups2"] = "Benutzerdefiniert"
 L["print_overrideResult"] = "AutoHideUI Steuerung: "
@@ -240,3 +240,8 @@ L["print_toggleError1"] = "Es werden zwei Profil-Namen benötigt!"
 L["print_toggleError2"] = "Beide Profile sind identisch!"
 L["print_toggleError3"] = "Die folgenden Profile existieren nicht: "
 L["warning_schema2"] = "Die mittlere Maus Taste wird nicht mehr unterstützt!|nEin Hotkey im folgenden Profil wurde zurückgesetzt: "
+
+L["Show active Frames:"] = "Zeige aktive Frames:"
+L["Common"] = "Gewöhnliche"
+L["Custom"] = "Benutzerdef."
+L["Mouseover"] = true

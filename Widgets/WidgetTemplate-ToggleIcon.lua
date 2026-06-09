@@ -18,6 +18,10 @@ local function UpdateIcon(self)
     local method = tex.method or "SetTexture"
     if self.checked == true then
         self.icon[method](self.icon, tex.checked or tex.unchecked)
+        if self.textures.flipWhenToggled then
+            self.icon:SetRotation(math.pi)
+            self.iconHighlight:SetRotation(math.pi)
+        end
     elseif self.checked == nil then
         self.icon[method](self.icon, tex.tristate or tex.unchecked)
     else
@@ -148,7 +152,10 @@ end
 -- Constructor factory
 -- ─────────────────────────────────────────────────────────────────────────────
 
-local function CreateToggleIconWidget(texTable, width, height)
+local function CreateToggleIconWidget(texTable, sizeInfo)
+    -- width = width or 24
+    -- height = height or 24
+
     -- base checkbox and hide default visuals
     local baseConstructor = AceGUI.WidgetRegistry["CheckBox"]
     local widget = baseConstructor()
@@ -156,16 +163,41 @@ local function CreateToggleIconWidget(texTable, width, height)
     widget.check:Hide()
     widget.highlight:Hide()
 
+    -- resizing widget
+    if sizeInfo and sizeInfo.frame then
+        if sizeInfo.frame.width then
+            widget._baseSetWidth = widget.SetWidth
+            widget.SetWidth = function(self, _) self._baseSetWidth(self, sizeInfo.frame.width) end
+        end
+
+        if sizeInfo.frame.height then
+            widget._baseSetHeight = widget.SetHeight
+            widget.SetHeight = function(self, _) self._baseSetHeight(self, sizeInfo.frame.height) end
+        end
+    end
+
     -- custom icon
     local icon = widget.frame:CreateTexture(nil, "ARTWORK")
-    icon:SetWidth(width or 24)
-    icon:SetHeight(height or 24)
-    icon:SetPoint("LEFT", widget.frame, "LEFT", 1, 0)
+    if sizeInfo and sizeInfo.icon then
+        icon:SetPoint("CENTER")
+
+        if sizeInfo.icon.width then
+            icon:SetWidth(sizeInfo.icon.width)
+        end
+
+        if sizeInfo.icon.height then
+            icon:SetHeight(sizeInfo.icon.height)
+        end
+    else
+        icon:SetAllPoints()
+    end
     widget.icon = icon
 
+    -- overriding functions
     widget._baseSetValue = widget.SetValue
     widget._baseSetDisabled = widget.SetDisabled
     widget._baseOnRelease = widget.OnRelease
+    widget._baseOnAcquire = widget.OnAcquire
 
     widget.frame:HookScript("OnEnter", OnEnter)
     widget.frame:HookScript("OnLeave", OnLeave)
@@ -178,6 +210,9 @@ local function CreateToggleIconWidget(texTable, width, height)
     widget.SetDisabled = SetDisabled
     widget.OnRelease = OnRelease
     widget.SetTextures = SetTextures
+    if sizeInfo and sizeInfo.fullWidth then
+        widget.width = "fill"
+    end
 
     widget:SetTextures(texTable)
     widget.text:Hide()
@@ -185,8 +220,8 @@ local function CreateToggleIconWidget(texTable, width, height)
     return AceGUI:RegisterAsWidget(widget)
 end
 
-Private.AceWidgetTemplates.RegisterToggleWidget = function(self, type, version, texTable, width, height)
+Private.AceWidgetTemplates.RegisterToggleWidget = function(self, type, version, texTable, sizeInfo)
     AceGUI:RegisterWidgetType(type, function()
-        return CreateToggleIconWidget(texTable, width, height)
+        return CreateToggleIconWidget(texTable, sizeInfo)
     end, version)
 end

@@ -46,10 +46,10 @@ L["Stance Bar"] = true
 L["Pet Bar"] = true
 L["Micro Menu"] = true
 L["Bags Bar"] = true
-L["CDManager Bars"] = true
-L["CDManager Buffs"] = true
-L["CDManager Essential"] = true
-L["CDManager Utility"] = true
+L["CDM Bars"] = true
+L["CDM Buffs"] = true
+L["CDM Essential"] = true
+L["CDM Utility"] = true
 L["Buff Frame"] = true
 L["Debuff Frame"] = true
 L["Player Castbar"] = true
@@ -81,7 +81,7 @@ L["Lowest"] = true
 L["tab_fadeConditions"] = "Fade Conditions"
 L["group_conditions"] = "Conditions"
 L["descr_conditions"] = "Enable which Conditions should fade the Frames and what Alpha they should fade to.|nWhile no Condition is active, the Alpha in the 'Fade Settings' tab is used."
-L["descr_prioConditions"] = "Conditions can be promoted to Priority-Conditions.|nIf a Priority-Condition is active, their Alpha only competes with other Priority-Conditions.|nThe Alpha of any normal Conditions isn't even considered in that case."
+L["descr_prioConditions"] = "Conditions can be promoted to Priority-ConditionsTab.|nIf a Priority-Condition is active, their Alpha only competes with other Priority-ConditionsTab.|nThe Alpha of any normal Conditions isn't even considered in that case."
 L["enable"] = "Enable"
 L["alpha"] = "Alpha"
 L["priority"] = "Priority Condition"
@@ -194,7 +194,7 @@ L["collapse"] = "Collapse"
 L["buttonChangelog"] = "View Changelog"
 L["tab_manualControl"] = "Manual Control"
 L["descr_manualControl"] = "Define a Keybind or Macro to manually set the Alpha of your Groups.".."|n|n"..
-                            "While an override is engaged, affected Groups will be set to that Alpha and ignore Conditions.".."|n|n"..
+                            "While an override is engaged, affected Groups will be set to that Alpha and ignore ConditionsTab.".."|n|n"..
                             "When disengaged, the Groups will go back to using Conditions to determine their Alpha."
 L["button_newOverride"] = "New Override"
 L["name_newGroup"] = "New Group"
@@ -240,3 +240,8 @@ L["print_toggleError1"] = "Need to provide two profile names!"
 L["print_toggleError2"] = "Both profiles are the same!"
 L["print_toggleError3"] = "These profiles don't exist: "
 L["warning_schema2"] = "Middle Mouse Button is no longer supported!|nA Hotkey in the following Profile has been reset: "
+
+L["Show active Frames:"] = true
+L["Common"] = true
+L["Custom"] = true
+L["Mouseover"] = true

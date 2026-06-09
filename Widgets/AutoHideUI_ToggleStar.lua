@@ -11,6 +11,11 @@ do
         pushedOn  = "Interface\\AddOns\\AutoHideUI\\Media\\star_on_pushed.png",
         highlight = "Interface\\AddOns\\AutoHideUI\\Media\\star_highlight.png",
     }
-    
-    Private.AceWidgetTemplates:RegisterToggleWidget(type, version, texTable)
+    local sizeInfo = {
+        icon = {
+            width = 25,
+            height = 25,
+        },
+    }
+    Private.AceWidgetTemplates:RegisterToggleWidget(type, version, texTable, sizeInfo)
 end

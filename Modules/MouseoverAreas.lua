@@ -110,14 +110,15 @@ end
 
 local function AddAreaToDB(frame)
     local db = Private.db.profile.groups[Config.selectedGroup].mouseoverAreas
+    local point,_,relativePoint,x,y = frame:GetPoint()
 
     local areaData = {
         width = frame:GetWidth(),
         height = frame:GetHeight(),
-        point = "CENTER",
-        relativePoint = "CENTER",
-        xOffset = 0,
-        yOffset = 0,
+        point = point,
+        relativePoint = relativePoint,
+        xOffset = x,
+        yOffset = y,
     }
 
     tinsert(db, areaData)

@@ -6,16 +6,12 @@ do
 
         widget.frame:HookScript("OnEnter", function(self)
             local frameString = self.obj.userdata.option.arg.frameString
-            local frameList = Private.Main.FetchFramesFromString(frameString)
-            if frameList then
-                for _,frame in pairs(frameList) do
-                    Private.Config.ShowHighlight(frame)
-                end
-            end
+            Private.FramesTab.OnHover(frameString, true)
         end)
 
-        widget.frame:HookScript("OnLeave", function()
-            Private.Config.HideAllHighlights()
+        widget.frame:HookScript("OnLeave", function(self)
+            local frameString = self.obj.userdata.option.arg.frameString
+            Private.FramesTab.OnHover(frameString, false)
         end)
 
         return widget

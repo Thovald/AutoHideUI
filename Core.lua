@@ -9,14 +9,15 @@ Private.FrameFinder = {}
 Private.MouseoverAreas = {}
 Private.Changelog = {}
 Private.ManualControl = {}
-Private.Conditions = {}
+Private.ConditionsTab = {}
+Private.FramesTab = {}
 
 local Main = Private.Main
 local Config = Private.Config
 local Frames = Private.Frames
 local Fading = Private.Fading
 local ManualControl = Private.ManualControl
-local Conditions = Private.Conditions
+local ConditionsTab = Private.ConditionsTab
 local MouseoverAreas = Private.MouseoverAreas
 local DB_SCHEMA_VERSION = 2
 
@@ -112,8 +113,8 @@ local DRUID_FORMS= {
 
 local GetTime, pairs, ipairs, C_Timer
     = GetTime, pairs, ipairs, C_Timer
-local IsInInstance, IsMounted, GetShapeshiftFormID, UnitInVehicle,             HasOverrideActionBar, CanExitVehicle, UnitInVehicleControlSeat, UnitHasVehiclePlayerFrameUI
-    = IsInInstance, IsMounted, GetShapeshiftFormID, UnitInVehicle, C_ActionBar.HasOverrideActionBar, CanExitVehicle, UnitInVehicleControlSeat, UnitHasVehiclePlayerFrameUI
+local IsInInstance, IsMounted, GetShapeshiftFormID, UnitInVehicle,             HasOverrideActionBar, CanExitVehicle, UnitInVehicleControlSeat, UnitHasVehicleUI
+    = IsInInstance, IsMounted, GetShapeshiftFormID, UnitInVehicle, C_ActionBar.HasOverrideActionBar, CanExitVehicle, UnitInVehicleControlSeat, UnitHasVehicleUI
 local UnitCastingInfo, UnitChannelInfo, IsResting, IsFlying, UnitExists, UnitCanAttack
     = UnitCastingInfo, UnitChannelInfo, IsResting, IsFlying, UnitExists, UnitCanAttack
 
@@ -128,6 +129,9 @@ end
 function Private:OnProfileChanged()
     Config.SetSelectedGroup(true)
     Config.RebuildUI()
+    -- if Config.isOptionsOpen then
+    --     Private.Frames.InitFrames()
+    -- end
 end
 
 function Private:OnNewProfile(_, AceTable)
@@ -167,7 +171,7 @@ local function RegisterEventsInCondition(condition)
     local events
     local parents = {}
 
-    for _, info in ipairs(Conditions.CONDITION_DEFINITIONS) do
+    for _, info in ipairs(ConditionsTab.CONDITION_DEFINITIONS) do
         if info.name == condition and info.events then
             events = info.events
             break
@@ -356,7 +360,7 @@ local function RunAfterCombatQueue()
 end
 
 local function GetConditionRelationships(conditionName)
-    for _, conditionInfo in ipairs(Conditions.CONDITION_DEFINITIONS) do
+    for _, conditionInfo in ipairs(ConditionsTab.CONDITION_DEFINITIONS) do
         if conditionInfo.name == conditionName then
             return conditionInfo.type, conditionInfo.parent
         end
@@ -870,12 +874,12 @@ local function CheckMissingHealthChange(key)
 end
 
 local function ConditionVehicle()
-    -- print( "inVehicle:", UnitInVehicle("player"), "canExit:", CanExitVehicle(), "inControl:", UnitInVehicleControlSeat("player"), "vehicleUI:", UnitHasVehiclePlayerFrameUI("player"), "isOverride:", HasOverrideActionBar())
+    -- print( "inVehicle:", UnitInVehicle("player"), "canExit:", CanExitVehicle(), "inControl:", UnitInVehicleControlSeat("player"), "vehicleUI:", UnitHasVehicleUI("player"), "vehiclePlayerUI:", UnitHasVehiclePlayerFrameUI("player"), "isOverride:", HasOverrideActionBar())
     -- print("  isActive:", ( UnitInVehicle("player") and ( CanExitVehicle() or UnitInVehicleControlSeat("player") or UnitHasVehiclePlayerFrameUI("player") )) -- player controls a vehicle
     --     or HasOverrideActionBar())
     UpdateConditionForAllGroups(
         "inVehicle",
-        ( UnitInVehicle("player") and ( CanExitVehicle() or UnitInVehicleControlSeat("player") or UnitHasVehiclePlayerFrameUI("player") )) -- player controls a vehicle
+        ( UnitInVehicle("player") and ( CanExitVehicle() or UnitInVehicleControlSeat("player") or UnitHasVehicleUI("player") )) -- player controls a vehicle
         or HasOverrideActionBar() -- player is unable to use their spells. playing a puzzle game or controlled in some way
     )
 end
@@ -923,14 +927,21 @@ local function OnLogin()
     UpdateDB()
     InitOptions()
     ManualControl.StartListening()
+    --InitAddon()
 
     -- delayed to ensure all AddOn frames have been created.
     C_Timer.After(3, function()
+        if Config.isOptionsOpen then
+            return
+        end
         InitAddon()
     end)
 
     -- on very slow logins minimap pins don't remain hidden.
     C_Timer.After(10, function()
+        if Config.isOptionsOpen then
+            return
+        end
         Fading.UpdateAllFrameVisibility()
     end)
 end

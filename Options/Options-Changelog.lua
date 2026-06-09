@@ -5,6 +5,32 @@ local L = LibStub("AceLocale-3.0"):GetLocale("AutoHideUI")
 
 local CHANGELOG_DATA = {
     {
+        version = "1.2.5",
+        date = "June 9th",
+        entries = {
+            {
+                title = "Misc",
+                content =  {
+                    'Viewing the Frames-tab can now highlight active Common Frames, Custom Frames and Mouseover Areas of the current Group.',
+
+                    "Added support for EllesmereUI's Party Frames.",
+
+                    'The height of the options menu is now based on the UI scale to better fit all screens.',
+
+                    'Changed the look of the Expand-Widget in the Conditions tab to make its purpose more obvious.',
+                },
+            },
+            {
+                title = "Fixes",
+                content =  {
+                    'Fixed newly created mouseover-areas saving the wrong position if they were never moved after creation.',
+
+                    'Further improved Vehicle Condition to hopefully only fire when player is unable to use their own spells.'
+                },
+            },
+        },
+    },
+    {
         version = "1.2.4",
         date = "May 31st",
         entries = {
@@ -378,5 +404,12 @@ function Changelog.HideButton()
 end
 
 changelogButton:SetScript("OnClick", function(self)
+    local uiScale = UIParent:GetEffectiveScale()
+    local t0, t1 = 0.65, 1.0
+    local v0, v1 = 790, 555
+
+    local scaledHeight = v0 + (v1 - v0) * ((uiScale - t0) / (t1 - t0))
+    changelogFrame:SetHeight(min(max(555, scaledHeight), 790))
+
     changelogFrame:SetShown(not changelogFrame:IsShown())
 end)

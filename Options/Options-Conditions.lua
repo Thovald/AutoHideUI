@@ -1,7 +1,7 @@
 local _, Private = ...
 local Main = Private.Main
 local Config = Private.Config
-local Conditions = Private.Conditions
+local ConditionsTab = Private.ConditionsTab
 local L = LibStub("AceLocale-3.0"):GetLocale("AutoHideUI")
 
 local sessionOptionStates = {} -- misc option states that don't need to be stored in SV
@@ -13,7 +13,7 @@ local CONDITION_MAXIMUM_WIDTH = 2.95
 
 -- same order as these will appear in the options.
 -- it's important to list parents before their children!
-Conditions.CONDITION_DEFINITIONS = {
+ConditionsTab.CONDITION_DEFINITIONS = {
     {
         name = "combat",
         db = {
@@ -259,7 +259,7 @@ Conditions.CONDITION_DEFINITIONS = {
             "PLAYER_SOFT_INTERACT_CHANGED",
         },
         type = "default",
-        description = L["descr_interactable"],
+        descr = L["descr_interactable"],
         extraOptions = {
             {
                 entryName = "checkbox_excludeNPCs",
@@ -313,7 +313,7 @@ Conditions.CONDITION_DEFINITIONS = {
             "UNIT_MAX_HEALTH_MODIFIERS_CHANGED",
         },
         type = "default",
-        description = L["descr_health"],
+        descr = L["descr_health"],
         extraOptions = {
             {
                 entryName = "dropdown_health",
@@ -418,7 +418,7 @@ local CONDITIONS_TAB = {
                     type = "execute",
                     confirm = true,
                     width = 0.7,
-                    func = function() Conditions.DisableSelectedGroupConditions() end,
+                    func = function() ConditionsTab.DisableSelectedGroupConditions() end,
                     order = 1,
                 },
                 buttonReset = {
@@ -426,7 +426,7 @@ local CONDITIONS_TAB = {
                     type = "execute",
                     confirm = true,
                     width = 1,
-                    func = function()  Conditions.SetSelectedGroupToDefault() end,
+                    func = function()  ConditionsTab.SetSelectedGroupToDefault() end,
                     order = 2,
                 },
                 spacer1 = {
@@ -485,7 +485,7 @@ local CONDITION_ENTRY_BLUEPRINT = {
         name = "alpha",
         label = L["alpha"],
         widget = "range",
-        width = 0.7,
+        width = 0.9,
         setting = "alpha",
         allowedTypes = {default = true, parent = true, child = true},
         disabledKeys = {
@@ -521,9 +521,6 @@ local CONDITION_ENTRY_BLUEPRINT = {
         widget = "description",
         width = "remaining",
         allowedTypes = {default = true, parent = true, child = true},
-        widthOffset = {
-            parent =  - 0.2, -- subtracting width of expand toggle
-        },
     },
     {
         name = "expand",
@@ -534,6 +531,7 @@ local CONDITION_ENTRY_BLUEPRINT = {
         allowedTypes = {parent = true},
         ignoreDisabled = true,
         dialogControl = "AutoHideUI_ToggleExpand",
+        order = 99,
     },
 
 }
@@ -542,22 +540,22 @@ local CONDITION_ENTRY_BLUEPRINT = {
 -- UI Logic
 -- ─────────────────────────────────────────────────────────────────────────────
 
-function Conditions.GetDefaultConditions()
+function ConditionsTab.GetDefaultConditions()
     local conditions = {}
-    for _, condition in ipairs(Conditions.CONDITION_DEFINITIONS) do
+    for _, condition in ipairs(ConditionsTab.CONDITION_DEFINITIONS) do
         conditions[condition.name] = CopyTable(condition.db)
     end
     return conditions
 end
 
-function Conditions.DisableSelectedGroupConditions()
+function ConditionsTab.DisableSelectedGroupConditions()
     for _, info in pairs(Private.db.profile.groups[Config.selectedGroup].conditions) do
         info.enabled = false
     end
 end
 
-function Conditions.SetSelectedGroupToDefault()
-    for cName, cDB in pairs(Conditions.GetDefaultConditions()) do
+function ConditionsTab.SetSelectedGroupToDefault()
+    for cName, cDB in pairs(ConditionsTab.GetDefaultConditions()) do
         Private.db.profile.groups[Config.selectedGroup].conditions[cName] = cDB
     end
 end
@@ -649,7 +647,7 @@ end
 local function CreateConditionWidget(widgetInfo, conditionInfo, entryInfo)
 
     local widget = GetConditionWidget(widgetInfo, conditionInfo)
-    widget.order = entryInfo.widgetOrder
+    widget.order = widgetInfo.order or entryInfo.widgetOrder
     widget.desc = conditionInfo.description or widgetInfo.description
 
     if widgetInfo.width == "remaining" then
@@ -763,12 +761,12 @@ local function CreateConditionsEntry(path, conditionInfo, order)
     return order
 end
 
-function Conditions.CreateOptions()
+function ConditionsTab.CreateOptions()
     local root = CopyTable(CONDITIONS_TAB)
     local conditionsPath = root.args.group_conditionSelect.args
 
     local order = 5
-    for _, conditionInfo in ipairs(Conditions.CONDITION_DEFINITIONS) do
+    for _, conditionInfo in ipairs(ConditionsTab.CONDITION_DEFINITIONS) do
         order = CreateConditionsEntry(conditionsPath, conditionInfo, order)
     end
 

@@ -2,7 +2,8 @@ local _, Private = ...
 local Main = Private.Main
 local Config = Private.Config
 local ManualControl = Private.ManualControl
-local Conditions = Private.Conditions
+local ConditionsTab = Private.ConditionsTab
+local FramesTab = Private.FramesTab
 
 local AceConfig = LibStub("AceConfig-3.0")
 local AceConfigDialog = LibStub("AceConfigDialog-3.0")
@@ -12,16 +13,14 @@ local L = LibStub("AceLocale-3.0"):GetLocale("AutoHideUI")
 
 local pairs, ipairs  = pairs, ipairs
 
-Config.selectedGroup = nil
-local isAceHooked = false
-local isOptionsOpen
+Config.selectedGroup = 1
+Config.isOptionsOpen = false
 local MENU_WIDTH = 630
-local MENU_HEIGHT = 830
+local MENU_HEIGHT = 835 -- this is now set on options open, based on ui scale
 local MENU_HEIGHT_MIN = 400
 local MENU_HEIGHT_MAX = 1000
-local UI_WIDTH, UI_HEIGHT
+local UI_WIDTH, UI_HEIGHT = UIParent:GetSize()
 local UI_PADDING = 5
-local highlightFrames = {}
 
 Config.popupContext = {
     titleText = "",
@@ -37,52 +36,6 @@ Config.popupContext = {
 -- ─────────────────────────────────────────────────────────────────────────────
 -- UI Data
 -- ─────────────────────────────────────────────────────────────────────────────
-
--- same order as these will appear in the options
-Config.DEFAULT_FRAMES = {
-    -- unitframes
-    { frame = "PlayerFrame", label = L["Player Frame"], enabled = true },
-    { frame = "TargetFrame", label = L["Target Frame"], enabled = true },
-    { frame = "FocusFrame", label = L["Focus Frame"], enabled = false },
-    { frame = "PetFrame", label = L["Pet Frame"], enabled = true },
-    { frame = "PartyFrame", label = L["Party Frame"], enabled = false },
-    { frame = "PlayerCastingBarFrame", label = L["Player Castbar"], enabled = false },
-    -- actionbars
-    { frame = "MainActionBar", label = L["ActionBar 1"], enabled = true, description = L["descr_ActionBar1"] },
-    { frame = "MultiBarBottomLeft", label = L["ActionBar 2"], enabled = true },
-    { frame = "MultiBarBottomRight", label = L["ActionBar 3"], enabled = true },
-    { frame = "MultiBarRight", label = L["ActionBar 4"], enabled = true },
-    { frame = "MultiBarLeft", label = L["ActionBar 5"], enabled = true },
-    { frame = "MultiBar5", label = L["ActionBar 6"], enabled = true },
-    { frame = "MultiBar6", label = L["ActionBar 7"], enabled = true },
-    { frame = "MultiBar7", label = L["ActionBar 8"], enabled = true },
-    { frame = "StanceBar", label = L["Stance Bar"], enabled = true },
-    { frame = "PetActionBar", label = L["Pet Bar"], enabled = true },
-    -- CDM
-    { frame = "EssentialCooldownViewer", label = L["CDManager Essential"], enabled = true },
-    { frame = "UtilityCooldownViewer", label = L["CDManager Utility"], enabled = true },
-    { frame = "BuffIconCooldownViewer", label = L["CDManager Buffs"], enabled = true },
-    { frame = "BuffBarCooldownViewer", label = L["CDManager Bars"], enabled = true },
-    { frame = "BuffFrame", label = L["Buff Frame"], enabled = false },
-    { frame = "DebuffFrame", label = L["Debuff Frame"], enabled = false },
-    { frame = "PersonalResourceDisplayFrame", label = L["Personal Resource"], enabled = true },
-    -- other
-    { frame = "DamageMeter", label = L["Damage Meter"], enabled = true },
-    { frame = "MinimapCluster", label = L["Minimap"], enabled = false , description = L["descr_Minimap"]},
-    { frame = "MicroMenu", label = L["Micro Menu"], enabled = false },
-    { frame = "ObjectiveTrackerFrame", label = L["Objectives Frame"], enabled = false },
-    { frame = "MainStatusTrackingBarContainer", label = L["Experience Bar"], enabled = false },
-    { frame = "BagsBar", label = L["Bags Bar"], enabled = true },
-
-}
-
-local function GetCommonFrames()
-    local frameList = {}
-    for _, frameInfo in ipairs(Config.DEFAULT_FRAMES) do
-        frameList[frameInfo.frame] = frameInfo.enabled
-    end
-    return frameList
-end
 
 local GROUP_TEMPLATE = {
     name = "New Group",
@@ -160,66 +113,6 @@ function Config.CheckTextBounds(frame)
     frame.text:SetPointsOffset(x, y)
 end
 
-local function CreateNewHighlight()
-    -- to highlight frames when user hovers over frame selection options.
-    local frame = CreateFrame("Frame", nil, UIParent)
-    local texture = frame:CreateTexture()
-    texture:SetAllPoints()
-    texture:SetColorTexture(1, 1, 1, 0.6)
-    frame.texture = texture
-    frame:Hide()
-    frame:SetFrameStrata("HIGH")
-    local text = frame:CreateFontString()
-    text:SetFont(GameFontNormal:GetFont(), 35, "THICKOUTLINE")
-    text:SetPoint("BOTTOM", frame, "TOP")
-    frame.text = text
-    local hlInfo = {frame = frame, inUse = false}
-    tinsert(highlightFrames, hlInfo)
-
-    return hlInfo
-end
-
-local function GetNextHighlight()
-    for i, info in pairs(highlightFrames) do
-        if info.frame and not info.inUse then
-            info.inUse = true
-            return info.frame
-        end
-    end
-
-    local newInfo = CreateNewHighlight()
-    newInfo.inUse = true
-    return newInfo.frame
-end
-
-function Config.ShowHighlight(frame)
-    if Main.helperFrames[frame] and not Main.helperFrames[frame].isAnchor then
-        return
-    end
-
-    local highlight = GetNextHighlight()
-
-    if frame:IsVisible() then
-        highlight.texture:SetVertexColor(0, 1, 0)
-    else
-        highlight.texture:SetVertexColor(1, 1, 0)
-    end
-
-    highlight:SetAllPoints(frame)
-    highlight.text:SetText(frame:GetName())
-    Config.CheckTextBounds(highlight)
-    highlight:Show()
-end
-
-function Config.HideAllHighlights()
-    for i, info in pairs(highlightFrames) do
-        if info.frame then
-            info.frame:Hide()
-            info.inUse = false
-        end
-    end
-end
-
 local function GetGroupNames()
     local groupNames = {}
     for _, group in ipairs(Private.db.profile.groups) do
@@ -254,15 +147,6 @@ end
 
 function Config.RefreshUI()
     AceConfigRegistry:NotifyChange("AutoHideUI")
-end
-
-local function IsFrameSelectedElsewhere(frameString)
-    for index, group in pairs(Private.db.profile.groups) do
-        if index ~= Config.selectedGroup and group.frames[frameString] then
-            return true
-        end
-    end
-    return false
 end
 
 local function ShowGroupCreateDialog()
@@ -324,7 +208,7 @@ StaticPopupDialogs["AUTOHIDEUI_CREATE_ENTITY"] = {
     end,
 
     OnAccept = function(self)
-        if not isOptionsOpen then
+        if not Config.isOptionsOpen then
             Config.PrintOptionsOpenError()
             return
         end
@@ -361,7 +245,7 @@ StaticPopupDialogs["AUTOHIDEUI_RENAME_ENTITY"] = {
     end,
 
     OnAccept = function(self)
-        if not isOptionsOpen then
+        if not Config.isOptionsOpen then
             Config.PrintOptionsOpenError()
             return
         end
@@ -396,7 +280,7 @@ StaticPopupDialogs["AUTOHIDEUI_DELETE_ENTITY"] = {
     end,
 
     OnAccept = function(self)
-        if not isOptionsOpen then
+        if not Config.isOptionsOpen then
             Config.PrintOptionsOpenError()
             return
         end
@@ -420,74 +304,6 @@ end
 -- ─────────────────────────────────────────────────────────────────────────────
 -- UI Layout
 -- ─────────────────────────────────────────────────────────────────────────────
-
-local OPTIONS_TAB_FRAMES = {
-    name = L["tab_frameSelect"],
-    type = "group",
-    disabled = Config.NoSelectedGroup,
-    args = {
-        spacer_frames1 = {
-            type = "description",
-            name = "",
-            fontSize = "small",
-            order = 1,
-        },
-        group_defaultFrames = {
-            name = L["group_defaultFrames"],
-            type = "group",
-            inline = true,
-            order = 5,
-            args = {}, -- filled in later
-        },
-        group_customFrames = {
-            name = L["group_customFrames"],
-            type = "group",
-            inline = true,
-            order = 10,
-            args = {
-                button_frameFinder = {
-                    name = L["frameFinder"],
-                    desc = L["descr_frameFinder"],
-                    type = "execute",
-                    width = 1,
-                    func = function() Private.FrameFinder.Start() end,
-                    order = 1,
-                },
-                spacer1 = {
-                    type = "description",
-                    name = " ",
-                    width = 0.1,
-                    order = 2
-                },
-                button_mouseoverArea = {
-                    name = L["mouseoverAreas"],
-                    desc = L["descr_mouseoverAreas"],
-                    type = "execute",
-                    width = 1,
-                    func = function() Private.MouseoverAreas.Start() end,
-                    order = 3,
-                },
-                descr_customFrames = {
-                    type = "description",
-                    fontSize = "medium",
-                    name = L["descr_customFrames"].."|n",
-                    width = "full",
-                    order = 4,
-                },
-                editbox_customFrames = {
-                    type = "input",
-                    name = "",
-                    width = "full",
-                    get = function(info) return Private.db.profile.groups[Config.selectedGroup].config.customFrames end,
-                    set = function(info, value) Private.db.profile.groups[Config.selectedGroup].config.customFrames = value end,
-                    multiline = true,
-                    order = 5,
-                },
-            },
-        },
-    },
-    order = 21,
-}
 
 local OPTIONS_TAB_FADE = {
     name = L["tab_fadeSetup"],
@@ -658,8 +474,7 @@ Config.OPTIONS_MENU = {
                     disabled = function() return #Private.db.profile.groups == 1 end,
                     order = 15,
                 },
-                tabFrames = OPTIONS_TAB_FRAMES,
-                tabFade = OPTIONS_TAB_FADE,
+                
             },
 
         },
@@ -673,57 +488,23 @@ Config.OPTIONS_MENU = {
     },
 }
 
-local function GetElementForFrameSelection(order, frameInfo)
-    local frameString = frameInfo.frame
-    local checkbox = {
-        name = frameInfo.label,
-        type = "toggle",
-        get = function(info) return Private.db.profile.groups[Config.selectedGroup].frames[frameString] end,
-        set = function(info, value) Private.db.profile.groups[Config.selectedGroup].frames[frameString] = value end,
-        disabled = function(info)
-            return IsFrameSelectedElsewhere(frameString)
-        end,
-        dialogControl = "AutoHideUI_ToggleHover",
-        desc = frameInfo.description, -- most times is nil
-        order = order,
-        arg = {frameString = frameString},
-    }
 
-    return frameInfo.frame, checkbox
-end
-
-local function SetupFrameSelection()
-    local path = Config.OPTIONS_MENU.args.setup.args.tabFrames.args.group_defaultFrames.args
-
-    local spacerLocation = {PlayerCastingBarFrame = true, PetActionBar = true, PersonalResourceDisplayFrame = true}
-    local order = 1
-    local spacerCount = 1
-
-    for _, frameInfo in ipairs(Config.DEFAULT_FRAMES) do
-        local name, checkbox = GetElementForFrameSelection(order, frameInfo)
-        path[name] = checkbox
-        order = order + 1
-
-        if spacerLocation[frameInfo.frame] then
-            path["space"..spacerCount] = {
-                name = "",
-                type = "header",
-                order = order,
-            }
-            spacerCount = spacerCount + 1
-            order = order + 1
-        end
-    end
-end
 
 function Config.CreateOptionsMenu()
-    SetupFrameSelection()
-    local tabConditions = Conditions.CreateOptions()
+    UI_WIDTH, UI_HEIGHT = UIParent:GetSize()
+    local tabFrames = FramesTab.CreateOptions()
+    local tabFade = OPTIONS_TAB_FADE
+    local tabConditions = ConditionsTab.CreateOptions()
     local tabManualControl = ManualControl.CreateOptions()
 
-    tabManualControl.order = 2
-    tabConditions.order = 23
+    tabFrames.order = 20
+    tabFade.order = 25
+    tabConditions.order = 30
 
+    tabManualControl.order = 2
+
+    Config.OPTIONS_MENU.args.setup.args.tabFrames = tabFrames
+    Config.OPTIONS_MENU.args.setup.args.tabFade = tabFade
     Config.OPTIONS_MENU.args.setup.args.tabConditions = tabConditions
     Config.OPTIONS_MENU.args.tabManualControl = tabManualControl
 end
@@ -734,8 +515,10 @@ end
 
 function Config.ResetProfile()
     Private.db:ResetProfile()
+    Main.SuspendAddon()
     Config.SetSelectedGroup()
     Config.RebuildUI()
+    Main.ResumeAddon()
 
     if not AceConfigDialog.OpenFrames["AutoHideUI"] and not IsOtherWindowsShown() then
         AceConfigDialog:Open("AutoHideUI")
@@ -819,8 +602,8 @@ end
 
 function Config.GetNewGroup(name, useDefaultFrameSelection)
     local newGroup = CopyTable(GROUP_TEMPLATE)
-    newGroup.frames = GetCommonFrames()
-    newGroup.conditions = Conditions.GetDefaultConditions()
+    newGroup.frames = FramesTab.GetCommonFrames()
+    newGroup.conditions = ConditionsTab.GetDefaultConditions()
     newGroup.name = name
 
     -- use defaults if no groups exist
@@ -834,7 +617,7 @@ function Config.GetNewGroup(name, useDefaultFrameSelection)
 end
 
 function Config.GetDefaultConditionByName(conditionName)
-    for _, conditionInfo in ipairs(Conditions.CONDITION_DEFINITIONS) do
+    for _, conditionInfo in ipairs(ConditionsTab.CONDITION_DEFINITIONS) do
         if conditionInfo.name == conditionName then
             return conditionInfo
         end
@@ -845,8 +628,12 @@ function Config.GetDefaultProfile()
     local defaultProfile = {
         profile = {
             manualControl = {},
-            groups = {
-            }
+            groups = {},
+            previewFrames = {
+                common = false,
+                custom = true,
+                mouseover = true,
+            },
         }
     }
 
@@ -864,9 +651,9 @@ local function OnOptionsClose()
         return
     end
 
-    Config.HideAllHighlights()
+    FramesTab.HideAllHighlights()
     CloseAllPopups()
-    isOptionsOpen = false
+    Config.isOptionsOpen = false
     Main.ResumeAddon()
 end
 
@@ -881,7 +668,7 @@ local function OnOptionsOpen(frame)
 
     UI_WIDTH, UI_HEIGHT = UIParent:GetSize()
 
-    isOptionsOpen = true
+    Config.isOptionsOpen = true
     Main.SuspendAddon()
 end
 
@@ -905,11 +692,11 @@ local function SetHooksForAce()
         local frame = f.frame
         f:SetStatusText(L["chatCommands"].." /autohide /autohideui")
 
-        if not isAceHooked then
+        if not frame._isAutoHideHooked then
             frame:SetResizeBounds(MENU_WIDTH, MENU_HEIGHT_MIN, MENU_WIDTH, MENU_HEIGHT_MAX)
             frame:HookScript("OnShow", function() OnOptionsOpen(frame) end)
             frame:HookScript("OnHide", function() OnOptionsClose() end)
-            isAceHooked = true
+            frame._isAutoHideHooked = true
             OnOptionsOpen(frame) -- need to run this manually on first open
         end
     end)
@@ -950,6 +737,7 @@ function Config.RegisterOptions()
         if AceConfigDialog.OpenFrames["AutoHideUI"] then
             AceConfigDialog:Close("AutoHideUI")
         elseif not IsOtherWindowsShown() then
+            Config.SetOptionsHeight()
             AceConfigDialog:Open("AutoHideUI")
         end
     end
@@ -960,6 +748,18 @@ end
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Misc
 -- ─────────────────────────────────────────────────────────────────────────────
+
+-- determining default height of options window, based on resolution and ui scale.
+-- the optimal height to fit all elements doesn't fit into a 1080p screen at 100% scale.
+function Config.SetOptionsHeight()
+    local uiScale = UIParent:GetEffectiveScale()
+    local t0, t1 = 0.65, 1.0
+    local v0, v1 = 835, 600
+
+    local scaledHeight = v0 + (v1 - v0) * ((uiScale - t0) / (t1 - t0))
+    MENU_HEIGHT = min(max(MENU_HEIGHT_MIN, scaledHeight), MENU_HEIGHT_MAX)
+    AceConfigDialog:SetDefaultSize("AutoHideUI", MENU_WIDTH, MENU_HEIGHT)
+end
 
 function Config.SetHeaderText(frame, title)
     frame.header.title:SetText(title .. " - " .. Private.db.profile.groups[Config.selectedGroup].name)

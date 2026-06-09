@@ -3,14 +3,28 @@ do
 
     local type = "AutoHideUI_ToggleExpand"
     local version = 1
+
     local texTable = {
-        method = "SetAtlas",
-        unchecked = "common-button-collapseExpand-down",
-        checked   = "common-button-collapseExpand-up",
-        pushedOff = "common-button-collapseExpand-down-pressed",
-        pushedOn  = "common-button-collapseExpand-up-pressed",
-        highlight = "common-button-collapseExpand-hover",
+        method = "SetTexture",
+        unchecked = "Interface\\AddOns\\AutoHideUI\\Media\\expand_off.png",
+        checked   = "Interface\\AddOns\\AutoHideUI\\Media\\expand_on.png",
+        pushedOff = "Interface\\AddOns\\AutoHideUI\\Media\\expand_off.png",
+        pushedOn  = "Interface\\AddOns\\AutoHideUI\\Media\\expand_on.png",
+        highlight = "Interface\\AddOns\\AutoHideUI\\Media\\expand_highlight.png",
+        flipWhenToggled = true,
     }
 
-    Private.AceWidgetTemplates:RegisterToggleWidget(type, version, texTable, 30, 30)
+    local sizeInfo = {
+        frame = {
+            --width = 30,
+            height = 15,
+        },
+        -- icon = {
+        --     width = 30,
+        --     height = 45,
+        -- },
+        fullWidth = true,
+    }
+
+    Private.AceWidgetTemplates:RegisterToggleWidget(type, version, texTable, sizeInfo)
 end

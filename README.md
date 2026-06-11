@@ -1,12 +1,5 @@
 <h1>Auto Hide UI</h1>
 
-<h3><font color="83ff94">Notable recent changes:</font></h3>
-
-- New Changelog button in the options menu.<br>
-Changes will be documented there in the future.
-- If the options menu doesn't open because of corrupt settings, type "/autohide reset" to set your profile back to defaults.<br>
-___
-<br>
 <h2><font color="83d2ff">What this does:</font></h2>
 
 Fades out UI Elements and brings them back when certain conditions (like mouseover or combat) are met.<br>

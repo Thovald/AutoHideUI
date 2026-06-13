@@ -8,6 +8,7 @@ local FADE_QUEUE = {}
 local totalElapsed = 0
 local FADE_THROTTLE = 0.02
 local pendingFades = {}
+local originalAlpha = {}
 Fading.offsetForFadeDelay = 0
 
 local function PickPreferredAlpha(a1, a2, mode)
@@ -80,6 +81,21 @@ function Fading.SetAllAlpha(targetAlpha)
         Fading.SetGroupAlpha(group, targetAlpha)
     end
     Fading.UpdateAllFrameVisibility()
+
+    for frame, frameInfo in pairs(Main.activeFrames) do
+        if originalAlpha[frame] and not frameInfo.isInUse then
+            local alphaFunc = frame._origSetAlpha or frame.SetAlpha
+            alphaFunc(frame, originalAlpha[frame])
+        end
+    end
+end
+
+function Fading.SaveOriginalAlphas()
+    for frame in pairs(Main.activeFrames) do
+        if not originalAlpha[frame] then
+            originalAlpha[frame] = frame:GetAlpha()
+        end
+    end
 end
 
 -- ─────────────────────────────────────────────────────────────────────────────

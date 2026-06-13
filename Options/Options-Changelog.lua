@@ -5,6 +5,23 @@ local L = LibStub("AceLocale-3.0"):GetLocale("AutoHideUI")
 
 local CHANGELOG_DATA = {
     {
+        version = "1.2.7",
+        date = "June 13th",
+        entries = {
+            {
+                title = "Fixes",
+                content =  {
+                    "Fixed Flying Condition not updating immediately when dismounting mid-air with steady flight.",
+
+                    "Improved frame initialization on first login and after loading screens.|n"..
+                    "This should resolve issues with some AddOns loading their frames very late, such as EllesmereUI's DamageMeter.",
+
+                    "Improved method to restore frames to their original state when user disables them for all groups.",
+                },
+            },
+        },
+    },
+    {
         version = "1.2.5",
         date = "June 9th",
         entries = {

@@ -699,9 +699,9 @@ end
 local function GetFramesByArg(arg, val, includeDefault)
     local frameList = {}
     for _, frameInfo in pairs(Main.activeStrings) do
-        local isInUse = frameInfo.args.isInUse
+        --local isInUse = frameInfo.args.isInUse
         local isValidFrame = includeDefault or not frameInfo.args.isDefault
-        if isInUse and isValidFrame and frameInfo.args[arg] == val then
+        if isValidFrame and frameInfo.args[arg] == val then
             for _, frame in pairs(frameInfo.frames) do
                 local frameString = frame:GetName()
                 -- this may be a mix of addon and default frames. don't want to operate on default frames.
@@ -718,6 +718,7 @@ local function RestoreOriginalAlphaFunctions()
     local arg, val = "forceAlpha", true
     local frameList = GetFramesByArg(arg, val)
     for frame in pairs(frameList) do
+
         if frame._origSetAlpha then
             frame.SetAlpha = frame._origSetAlpha
             frame._origSetAlpha = nil
@@ -739,6 +740,8 @@ local function ReplaceAlphaFunctions(frame, groupInfo)
 
     frame._origSetAlpha = frame.SetAlpha
     frame.SetAlpha = function(self, alpha) end
+
+
 
     if frame.SetAlphaFromBoolean then
         frame._origSetAlphaFromBoolean = frame.SetAlphaFromBoolean
@@ -792,8 +795,10 @@ local function ReparentAllCustomFrames()
 
     local arg, val = "reparent", true
     local frameList = GetFramesByArg(arg, val)
-    for frame in pairs(frameList) do
-        ReparentFrame(frame)
+    for frame, frameInfo in pairs(frameList) do
+        if frameInfo.args.isInUse then
+            ReparentFrame(frame)
+        end
     end
 end
 
@@ -801,7 +806,9 @@ local function ReplaceAllAlphaFunctions()
     local arg, val = "forceAlpha", true
     local frameList = GetFramesByArg(arg, val)
     for frame, frameInfo in pairs(frameList) do
-        ReplaceAlphaFunctions(frame, frameInfo.group)
+        if frameInfo.args.isInUse then
+            ReplaceAlphaFunctions(frame, frameInfo.group)
+        end
     end
 end
 

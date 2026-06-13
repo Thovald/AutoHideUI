@@ -518,7 +518,7 @@ function Config.ResetProfile()
     Main.SuspendAddon()
     Config.SetSelectedGroup()
     Config.RebuildUI()
-    Main.ResumeAddon()
+    Main.ReInitAddon()
 
     if not AceConfigDialog.OpenFrames["AutoHideUI"] and not IsOtherWindowsShown() then
         AceConfigDialog:Open("AutoHideUI")
@@ -554,7 +554,7 @@ function Config.SetProfile(newProfile)
     Private.db:SetProfile(newProfile)
     Config.SetSelectedGroup()
     Config.RebuildUI()
-    Main.ResumeAddon()
+    Main.ReInitAddon()
     local message = Main.ColorString(L["print_switchSuccess"], "green")
     print(title..message..newProfile)
 
@@ -595,7 +595,7 @@ function Config.ToggleProfile(msg)
     Private.db:SetProfile(newProfile)
     Config.SetSelectedGroup()
     Config.RebuildUI()
-    Main.ResumeAddon()
+    Main.ReInitAddon()
     local message = Main.ColorString(L["print_switchSuccess"], "green")
     print(title..message..newProfile)
 end
@@ -654,7 +654,7 @@ local function OnOptionsClose()
     FramesTab.HideAllHighlights()
     CloseAllPopups()
     Config.isOptionsOpen = false
-    Main.ResumeAddon()
+    Main.ReInitAddon()
 end
 
 local function OnOptionsOpen(frame)

@@ -27,6 +27,7 @@ local systemFrame = CreateFrame("Frame")
 systemFrame:RegisterEvent("PLAYER_LOGIN")
 systemFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
 systemFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
+systemFrame:RegisterEvent("FIRST_FRAME_RENDERED")
 
 -- these are what we read and write to on runtime
 Main.activeStrings = {} -- [frameString] = { frames = {frameObject, ...}, args = {} , group = reference to parent group}
@@ -91,6 +92,7 @@ local isGliding = C_PlayerInfo.GetGlidingInfo()
 local isFlyingTicker
 local lastLowHealthVis = LowHealthFrame:IsVisible()
 local lastInstanceCheck = 0
+local lastDelve = C_DelvesUI.HasActiveDelve()
 local INSTANCE_THROTTLE = 1
 Main.runAfterCombat = {} -- {{fn, arg1, arg2, ...}, ...}
 Main.framesThatToggleVisibility = {} -- {frame = {threshold = 0.1, group = groupTable }, ...}
@@ -115,8 +117,8 @@ local GetTime, pairs, ipairs, C_Timer
     = GetTime, pairs, ipairs, C_Timer
 local IsInInstance, IsMounted, GetShapeshiftFormID, UnitInVehicle,             HasOverrideActionBar, CanExitVehicle, UnitInVehicleControlSeat, UnitHasVehicleUI
     = IsInInstance, IsMounted, GetShapeshiftFormID, UnitInVehicle, C_ActionBar.HasOverrideActionBar, CanExitVehicle, UnitInVehicleControlSeat, UnitHasVehicleUI
-local UnitCastingInfo, UnitChannelInfo, IsResting, IsFlying, UnitExists, UnitCanAttack
-    = UnitCastingInfo, UnitChannelInfo, IsResting, IsFlying, UnitExists, UnitCanAttack
+local UnitCastingInfo, UnitChannelInfo, IsResting, IsFlying, UnitExists, UnitCanAttack,            HasActiveDelve
+    = UnitCastingInfo, UnitChannelInfo, IsResting, IsFlying, UnitExists, UnitCanAttack, C_DelvesUI.HasActiveDelve
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Setup
@@ -129,9 +131,6 @@ end
 function Private:OnProfileChanged()
     Config.SetSelectedGroup(true)
     Config.RebuildUI()
-    -- if Config.isOptionsOpen then
-    --     Private.Frames.InitFrames()
-    -- end
 end
 
 function Private:OnNewProfile(_, AceTable)
@@ -304,6 +303,7 @@ end
 
 local function InitAddon()
     Frames.InitFrames()
+    Fading.SaveOriginalAlphas()
     Fading.ResetPendingFades()
     RegisterAllEvents()
     MouseoverAreas.CreateAreas()
@@ -324,7 +324,7 @@ function Main.SuspendAddon()
     Fading.SetAllAlpha(1)
 end
 
-function Main.ResumeAddon()
+function Main.ReInitAddon()
     ResetAddon()
     InitAddon()
 end
@@ -708,6 +708,7 @@ end
 
 local function ConditionInstance()
     local isInInstance, currentInstanceType = IsInInstance()
+    lastDelve = HasActiveDelve()
 
     if not isInInstance and currentInstanceType ~= "scenario" then
         for _, instanceCondition in pairs(INSTANCE_TYPE_MAPPING) do
@@ -790,6 +791,11 @@ local function HandleIsFlyingTicker()
             isFlyingTicker:Cancel()
             isFlyingTicker = nil
         end
+
+        isFlying = false
+        ConditionFlying()
+        Fading.FadeAllGroups()
+
         return
     end
 
@@ -804,6 +810,7 @@ end
 
 local function ConditionMounted()
     isMounted = IsMounted()
+
     UpdateConditionForAllGroups("mounted", isMounted)
     RunNextFrame(HandleIsFlyingTicker)
 end
@@ -927,21 +934,14 @@ local function OnLogin()
     UpdateDB()
     InitOptions()
     ManualControl.StartListening()
-    --InitAddon()
+end
 
-    -- delayed to ensure all AddOn frames have been created.
-    C_Timer.After(3, function()
+local function OnFirstFrame()
+    C_Timer.After(1, function()
         if Config.isOptionsOpen then
             return
         end
         InitAddon()
-    end)
-
-    -- on very slow logins minimap pins don't remain hidden.
-    C_Timer.After(10, function()
-        if Config.isOptionsOpen then
-            return
-        end
         Fading.UpdateAllFrameVisibility()
     end)
 end
@@ -1013,10 +1013,17 @@ local function OnInstanceChange()
     if currentTime - lastInstanceCheck < INSTANCE_THROTTLE then
         return
     end
-    ResetStates()
-    Main.UpdateAllConditions()
-    Fading.SetAllAlpha()
+
+    Main.ReInitAddon()
     lastInstanceCheck = currentTime
+end
+
+local function OnZoneChange()
+    local currentDelve = HasActiveDelve()
+    if currentDelve ~= lastDelve then
+        lastDelve = currentDelve
+        Main.ReInitAddon()
+    end
 end
 
 local function OnMountChange()
@@ -1116,7 +1123,7 @@ local EVENT_HANDLER = {
     PLAYER_REGEN_ENABLED = function() OnCombatChange(false) end,
     PLAYER_ENTERING_WORLD = OnInstanceChange,
     LOADING_SCREEN_DISABLED = OnInstanceChange,
-    ZONE_CHANGED_NEW_AREA = OnInstanceChange,
+    ZONE_CHANGED_NEW_AREA = OnZoneChange,
     WORLD_CURSOR_TOOLTIP_UPDATE = OnMouseover,
     UPDATE_MOUSEOVER_UNIT = OnMouseover,
     PLAYER_MOUNT_DISPLAY_CHANGED = OnMountChange,
@@ -1139,6 +1146,7 @@ local SYSTEM_EVENT_HANDLER = {
     PLAYER_LOGIN = OnLogin,
     PLAYER_REGEN_ENABLED = OnCombatEnd,
     PLAYER_REGEN_DISABLED = OnCombatStart,
+    FIRST_FRAME_RENDERED = OnFirstFrame,
 }
 
 function systemFrame:OnEvent(event, ...)

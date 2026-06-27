@@ -5,6 +5,24 @@ local L = LibStub("AceLocale-3.0"):GetLocale("AutoHideUI")
 
 local CHANGELOG_DATA = {
     {
+        version = "1.2.9",
+        date = "June 27th",
+        entries = {
+            {
+                title = "Misc",
+                content =  {
+                    "Added new tab to the ManualControl tab to document all available commands.",
+                },
+            },
+            {
+                title = "Fixes",
+                content =  {
+                    "Fixed EllesmereUI's QuestTracker.",
+                },
+            },
+        },
+    },
+    {
         version = "1.2.7",
         date = "June 13th",
         entries = {

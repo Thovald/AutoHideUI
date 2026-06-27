@@ -384,22 +384,11 @@ local ADDON_FRAME_MAPPING = {
     },
     {
         name = "EllesmereUI_ObjectivesTracker",
-        isLoaded = function()
-                local isLoaded = false
-                if EllesmereUI and C_AddOns.IsAddOnLoaded("EllesmereUIBasics") then
-                    for _, info in pairs(EllesmereUI.Lite._dbRegistry) do
-                        if info.folder == "EllesmereUIBasics" then
-                            isLoaded = info.profile.questTracker.enabled
-                            break
-                        end
-                    end
-                end
-                return isLoaded
-            end,
+        isLoaded = function() return C_AddOns.IsAddOnLoaded("EllesmereUIQuestTracker") end,
         frames = {
-            ObjectiveTrackerFrame = {"EUI_QuestTrackerFrame"},
+            ObjectiveTrackerFrame = {"EllesmereUIQTBackground"},
         },
-        args = {forceAlpha = true},
+        args = {forceAlpha = true, includeDefaultFrames = true},
     },
     {
         name = "EllesmereUI_Minimap",

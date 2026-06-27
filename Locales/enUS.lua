@@ -245,3 +245,19 @@ L["Show active Frames:"] = true
 L["Common"] = true
 L["Custom"] = true
 L["Mouseover"] = true
+
+L["tab_hotkeys"] = "Alpha Override"
+L["tab_commands"] = "All Commands"
+L["cmd_options"] = "/autohide|n/autohideui"
+L["descr_options"] = "Opens the options menu."
+L["cmd_override"] = "/autohide override MACRO"
+L["descr_override"] = "Engages the specified Alpha Override."
+L["cmd_setProfile"] = "/autohide setProfile PROFILE"
+L["descr_setProfile"] = "Switches to the specified profile."
+L["cmd_toggleProfile"] = "/autohide toggleProfile PROFILE1 PROFILE2"
+L["descr_toggleProfile"] = "Switches between the two specified profiles."
+L["cmd_resetProfile"] = "/autohide resetProfile"
+L["descr_resetProfile"] = "Resets the current profile to default."
+L["cmd_setProfileLua"] = 'AutoHideUI:SetProfile("PROFILE")'
+L["descr_setProfileLua"] = "Lua command to switch to specified profile.".."|n"..
+                           "Can be used by AddOns to automatice profile-switching."

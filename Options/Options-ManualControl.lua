@@ -189,30 +189,79 @@ local MANUAL_CONTROL_TEMPLATE = {
 local MANUAL_CONTROL_TAB = {
     name = L["tab_manualControl"],
     type = "group",
-    disabled = Config.NoSelectedGroup,
+    childGroups = "tab",
     args = {
-        descrConditions = {
-            type = "description",
-            name = "|n"..L["descr_manualControl"].."|n|n",
-            fontSize = "medium",
-            order = 5,
-        },
-        buttonNew = {
-            name = L["button_newOverride"],
-            type = "execute",
-            width = 1,
-            func = function() ManualControl.ShowCreateDialog() end,
-            order = 10,
-        },
-        overrideContainer = {
+        tab_hotkeys = {
             type = "group",
-            name = "",
-            inline = true,
-            order = 15,
-            args = {}
+            name = L["tab_hotkeys"],
+            order = 1,
+            disabled = Config.NoSelectedGroup,
+            args = {
+                descrConditions = {
+                    type = "description",
+                    name = "|n"..L["descr_manualControl"].."|n|n",
+                    fontSize = "medium",
+                    order = 5,
+                },
+                buttonNew = {
+                    name = L["button_newOverride"],
+                    type = "execute",
+                    width = 1,
+                    func = function() ManualControl.ShowCreateDialog() end,
+                    order = 10,
+                },
+                overrideContainer = {
+                    type = "group",
+                    name = "",
+                    inline = true,
+                    order = 15,
+                    args = {}
+                },
+            },
+        },
+        tab_commands = {
+            type = "group",
+            name = L["tab_commands"],
+            order = 2,
+            args = {
+            }
         },
     },
+
 }
+
+do
+    local commands = {"options", "override", "setProfile", "toggleProfile", "resetProfile", "setProfileLua"}
+    local order = 5
+    local root = MANUAL_CONTROL_TAB.args.tab_commands.args
+    for _, name in ipairs(commands) do
+        root["header_"..name] = {
+            type = "header",
+            width = "full",
+            name = "",
+            order = order,
+        }
+        order = order + 1
+
+        root["cmd_"..name] = {
+            type = "description",
+            name = L["cmd_"..name],
+            fontSize = "medium",
+            order = order,
+            width = 1.6,
+        }
+        order = order + 1
+
+        root["descr_"..name] = {
+            type = "description",
+            name = L["descr_"..name],
+            fontSize = "medium",
+            order = order,
+            width = 1.4,
+        }
+        order = order + 1
+    end
+end
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Keybind Capture
@@ -611,6 +660,7 @@ end
 
 function ManualControl.CreateOptions()
     local root = CopyTable(MANUAL_CONTROL_TAB)
+    local tabHotkeys = root.args.tab_hotkeys
     local order = 1
 
     for overrideIndex, overrideDB in ipairs(Private.db.profile.manualControl) do
@@ -621,7 +671,7 @@ function ManualControl.CreateOptions()
             name = "",
             order = order,
         }
-        root.args.overrideContainer.args["header" .. overrideIndex] = header
+        tabHotkeys.args.overrideContainer.args["header" .. overrideIndex] = header
         order = order + 1
 
         -- main options
@@ -650,7 +700,7 @@ function ManualControl.CreateOptions()
             }
         end
 
-        root.args.overrideContainer.args["override"..overrideIndex] = overrideGroup
+        tabHotkeys.args.overrideContainer.args["override"..overrideIndex] = overrideGroup
     end
 
     return root

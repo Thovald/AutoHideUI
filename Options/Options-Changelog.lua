@@ -5,6 +5,22 @@ local L = LibStub("AceLocale-3.0"):GetLocale("AutoHideUI")
 
 local CHANGELOG_DATA = {
     {
+        version = "1.2.10",
+        date = "June 29th",
+        entries = {
+            {
+                title = "EllesmereUI's ResourceBars",
+                comment = "Improved compatibility with EllesmereUI's ResourceBars.",
+                content =  {
+                    "Added support for the Health Bar.",
+                    "User's spec-specific bar visibility settings are now respected by AutoHideUI.",
+                    "Respeccing will update AutoHideUI's frames accordingly.",
+                    "Changing some of EllesmereUI's spec-specific bar visibility settings may require a reload to be picked up by AutoHideUI."
+                },
+            },
+        },
+    },
+    {
         version = "1.2.9",
         date = "June 27th",
         entries = {

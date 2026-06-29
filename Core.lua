@@ -97,6 +97,7 @@ local INSTANCE_THROTTLE = 1
 Main.runAfterCombat = {} -- {{fn, arg1, arg2, ...}, ...}
 Main.framesThatToggleVisibility = {} -- {frame = {threshold = 0.1, group = groupTable }, ...}
 Main.helperFrames = {} -- generic helper frames for mouseover
+Main.refreshFramesOnSpecChange = false
 
 local DRUID_FORMS= {
     {
@@ -1109,6 +1110,12 @@ local function OnRestingChange()
     Fading.FadeAllGroups()
 end
 
+local function OnSpecChange()
+    if Main.refreshFramesOnSpecChange then
+        Main.ReInitAddon()
+    end
+end
+
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Event Handler
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -1147,6 +1154,7 @@ local SYSTEM_EVENT_HANDLER = {
     PLAYER_REGEN_ENABLED = OnCombatEnd,
     PLAYER_REGEN_DISABLED = OnCombatStart,
     FIRST_FRAME_RENDERED = OnFirstFrame,
+    ACTIVE_PLAYER_SPECIALIZATION_CHANGED = function() RunNextFrame(OnSpecChange) end
 }
 
 function systemFrame:OnEvent(event, ...)

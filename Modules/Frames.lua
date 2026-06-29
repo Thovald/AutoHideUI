@@ -456,13 +456,56 @@ local ADDON_FRAME_MAPPING = {
             PersonalResourceDisplayFrame = {},
         },
         customGetter = function()
-            local frameList = {}
+            if not EllesmereUI.Lite and not EllesmereUI.Lite._dbRegistry then
+                return
+            end
 
-            for _,frameString in pairs({"ERB_PrimaryBar", "ERB_SecondaryFrame", "EllesmereUIResourceBarsFrame"}) do
-                local frame = Frames.GetFrameObjectFromString(frameString)
+            local frameList = {}
+            local erbProfile
+            Main.refreshFramesOnSpecChange = false
+
+            for _, dbInfo in pairs(EllesmereUI.Lite._dbRegistry) do
+                if dbInfo.folder == "EllesmereUIResourceBars" then
+                    erbProfile = dbInfo.profile
+                    break
+                end
+            end
+
+            local pbEnabled = erbProfile.primary.enabled
+            local sbEnabled = erbProfile.secondary.enabled
+            local hbEnabled = erbProfile.health.enabled
+
+            if not pbEnabled and not sbEnabled and not hbEnabled then
+                return
+            end
+
+            local specID = GetSpecializationInfo(GetSpecialization())
+            Main.refreshFramesOnSpecChange = true
+
+            if pbEnabled and erbProfile.primary.disabledSpecs and not erbProfile.primary.disabledSpecs[specID] then
+                local frame = Frames.GetFrameObjectFromString("ERB_PrimaryBar")
                 if frame then
                     tinsert(frameList, frame)
                 end
+            end
+
+            if sbEnabled and erbProfile.secondary.disabledSpecs and not erbProfile.secondary.disabledSpecs[specID] then
+                local frame = Frames.GetFrameObjectFromString("ERB_SecondaryFrame")
+                if frame then
+                    tinsert(frameList, frame)
+                end
+            end
+
+            if hbEnabled and erbProfile.health.disabledSpecs and not erbProfile.health.disabledSpecs[specID] then
+                local frame = Frames.GetFrameObjectFromString("ERB_HealthBar")
+                if frame then
+                    tinsert(frameList, frame)
+                end
+            end
+
+            local frame = Frames.GetFrameObjectFromString("EllesmereUIResourceBarsFrame")
+            if frame then
+                tinsert(frameList, frame)
             end
 
             return frameList

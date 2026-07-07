@@ -15,7 +15,7 @@ local pi = math.pi
 
 local COLORS = {
     bodySelected = {0.5, 1, 1, 0.3},
-    bodyUnselected = {0.5, 1, 1, 0.15},
+    bodyUnselected = {0.5, 1, 1, 0.2},
     borderSelected = {0.5, 1, 1, 1},
     borderUnselected = {0.5, 1, 1, 0.5},
     selected = {1, 1, 1},

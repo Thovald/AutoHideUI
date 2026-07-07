@@ -5,6 +5,18 @@ local L = LibStub("AceLocale-3.0"):GetLocale("AutoHideUI")
 
 local CHANGELOG_DATA = {
     {
+        version = "1.2.11",
+        date = "July 07th",
+        entries = {
+            {
+                title = "Misc",
+                content =  {
+                    'Applied the new Slug-style Outline to all Frames labels.',
+                },
+            },
+        },
+    },
+    {
         version = "1.2.10",
         date = "June 29th",
         entries = {

@@ -356,7 +356,7 @@ local function CreateHighlightFrame()
 
     -- text
     local text = frame:CreateFontString()
-    text:SetFont(GameFontNormal:GetFont(), 20, "THICKOUTLINE")
+    text:SetFont(GameFontNormal:GetFont(), 20, "SLUG,OUTLINE")
     text:SetPoint("CENTER", frame, "CENTER")
     frame.text = text
     frame.text:Show()

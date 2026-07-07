@@ -171,7 +171,7 @@ do
     b:SetVertexColor(1,1,1,1)
     f.border = b
     local t = f:CreateFontString()
-    t:SetFont(GameFontNormal:GetFont(), 35, "THICKOUTLINE")
+    t:SetFont(GameFontNormal:GetFont(), 20, "SLUG,OUTLINE")
     t:SetPoint("BOTTOM", f, "TOP")
     f.text = t
     mouseoverFrame = f

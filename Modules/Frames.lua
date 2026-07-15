@@ -639,6 +639,15 @@ local ADDON_FRAME_MAPPING = {
         },
         args = {forceAlpha = true},
     },
+    {
+        name = "BetterPersonalResourceDisplay",
+        isLoaded = function() return C_AddOns.IsAddOnLoaded("BetterPersonalResourceDisplay") end,
+        frames = {
+            PersonalResourceDisplayFrame = {"PersonalResourceDisplayFrame"},
+        },
+        args = {forceAlpha = true},
+    },
+
 }
 
 -- used for frames in the GUI's frame selector

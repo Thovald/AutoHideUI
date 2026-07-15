@@ -171,6 +171,7 @@ do
     b:SetVertexColor(1,1,1,1)
     f.border = b
     local t = f:CreateFontString()
+---@diagnostic disable-next-line: param-type-mismatch
     t:SetFont(GameFontNormal:GetFont(), 20, "SLUG,OUTLINE")
     t:SetPoint("BOTTOM", f, "TOP")
     f.text = t

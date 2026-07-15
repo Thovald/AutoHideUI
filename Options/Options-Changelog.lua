@@ -5,6 +5,18 @@ local L = LibStub("AceLocale-3.0"):GetLocale("AutoHideUI")
 
 local CHANGELOG_DATA = {
     {
+        version = "1.2.12",
+        date = "July 15th",
+        entries = {
+            {
+                title = "Misc",
+                content =  {
+                    'Improved support for Better Personal Resource Display.',
+                },
+            },
+        },
+    },
+    {
         version = "1.2.11",
         date = "July 07th",
         entries = {

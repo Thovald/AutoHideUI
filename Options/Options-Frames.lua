@@ -356,6 +356,7 @@ local function CreateHighlightFrame()
 
     -- text
     local text = frame:CreateFontString()
+---@diagnostic disable-next-line: param-type-mismatch
     text:SetFont(GameFontNormal:GetFont(), 20, "SLUG,OUTLINE")
     text:SetPoint("CENTER", frame, "CENTER")
     frame.text = text

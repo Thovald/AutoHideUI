@@ -177,7 +177,6 @@ local function UpdateFrameVisibility(frame, frameInfo)
     if (Main.inCombat and frame:IsProtected()) or not frameInfo then
         return
     end
-
     local isShown = frame:IsShown()
 
     if frameInfo.group.states.endAlpha >= frameInfo.threshold and not isShown then

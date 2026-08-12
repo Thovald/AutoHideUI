@@ -424,11 +424,34 @@ local ADDON_FRAME_MAPPING = {
         name = "EllesmereUI_UnitFrames",
         isLoaded = function() return C_AddOns.IsAddOnLoaded("EllesmereUIUnitFrames") end,
         frames = {
-            PlayerFrame = {"EllesmereUIUnitFrames_Player"},
-            TargetFrame = {"EllesmereUIUnitFrames_Target", "EllesmereUIUnitFrames_TargetTarget"},
-            FocusFrame = {"EllesmereUIUnitFrames_Focus", "EllesmereUIUnitFrames_FocusTarget"},
-            PetFrame = {"EllesmereUIUnitFrames_Pet"},
+            PlayerFrame = {},
+            TargetFrame = {},
+            FocusFrame = {},
+            PetFrame = {},
         },
+        customGetter = function(frameString)
+            local EUI_Lookup = {
+                PlayerFrame = {"EllesmereUIUnitFrames_Player"},
+                TargetFrame = {"EllesmereUIUnitFrames_Target", "EllesmereUIUnitFrames_TargetTarget"},
+                FocusFrame = {"EllesmereUIUnitFrames_Focus", "EllesmereUIUnitFrames_FocusTarget"},
+                PetFrame = {"EllesmereUIUnitFrames_Pet"},
+            }
+
+            local frameList = {}
+
+            for _, euiFrameString in pairs(EUI_Lookup[frameString]) do
+                local frame = Frames.GetFrameObjectFromString(euiFrameString)
+                if frame then
+                    tinsert(frameList, frame)
+                end
+
+                if frame.Portrait and frame.Portrait.backdrop and frame.Portrait.backdrop._3d then
+                    Main.framesThatToggleVisibility[frame.Portrait.backdrop._3d] = {threshold = 0.1, parent = frame}
+                end
+            end
+
+            return frameList
+        end,
         args = {forceAlpha = true},
     },
     {
@@ -1089,9 +1112,10 @@ end
 
 local function FinishVisibilityFrames()
     for frame, frameInfo in pairs(Main.framesThatToggleVisibility) do
-        if Main.activeFrames[frame] then
-            frameInfo.group = Main.activeFrames[frame].group
-            frameInfo.isInUse = Main.activeFrames[frame].isInUse
+        local parentFrame = frameInfo.parent or frame
+        if Main.activeFrames[parentFrame] then
+            frameInfo.group = Main.activeFrames[parentFrame].group
+            frameInfo.isInUse = Main.activeFrames[parentFrame].isInUse
         end
     end
 end

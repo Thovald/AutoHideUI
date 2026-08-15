@@ -722,6 +722,19 @@ local SPECIAL_FRAMES = {
     MinimapCluster = {
         customGetter = MINIMAPCLUSTER_CUSTOMGETTER,
     },
+    PersonalResourceDisplayFrame = {
+        onAdded = function()
+            if not C_AddOns.IsAddOnLoaded("BetterBlizzFrames") then return end
+            local borderContainer = _G["PersonalResourceDisplayFrame"].bbfBorderContainer
+            if not borderContainer then return end
+            for _, child in ipairs({borderContainer:GetChildren()}) do
+                child:SetIgnoreParentAlpha(false)
+            end
+            for _, region in ipairs({borderContainer:GetRegions()}) do
+                region:SetIgnoreParentAlpha(false)
+            end
+        end
+    },
 }
 
 function Frames.ToggleHelperFrames()

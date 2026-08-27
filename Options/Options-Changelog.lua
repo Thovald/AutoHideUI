@@ -5,6 +5,18 @@ local L = LibStub("AceLocale-3.0"):GetLocale("AutoHideUI")
 
 local CHANGELOG_DATA = {
     {
+        version = "1.2.16",
+        date = "Aug 27th",
+        entries = {
+            {
+                title = "Fixes",
+                content =  {
+                    'Fixed a potential error that could happen when EllesmereUI UnitFrames was loaded.',
+                },
+            },
+        },
+    },
+    {
         version = "1.2.12",
         date = "July 15th",
         entries = {

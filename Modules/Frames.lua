@@ -443,10 +443,9 @@ local ADDON_FRAME_MAPPING = {
                 local frame = Frames.GetFrameObjectFromString(euiFrameString)
                 if frame then
                     tinsert(frameList, frame)
-                end
-
-                if frame.Portrait and frame.Portrait.backdrop and frame.Portrait.backdrop._3d then
-                    Main.framesThatToggleVisibility[frame.Portrait.backdrop._3d] = {threshold = 0.1, parent = frame}
+                    if frame.Portrait and frame.Portrait.backdrop and frame.Portrait.backdrop._3d then
+                        Main.framesThatToggleVisibility[frame.Portrait.backdrop._3d] = {threshold = 0.1, parent = frame}
+                    end
                 end
             end
 

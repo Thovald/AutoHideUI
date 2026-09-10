@@ -6,7 +6,7 @@ L["error_optionsOpen"] = "Das Options Menü muss geöffnet sein um Optionen zu �
 
 -- Main menu
 L["descr_groups"] = "Erstelle Gruppierungen um andere Einstellungen für andere Frames zu verwenden"
-L["tab_setup"] = "Konfiguration"
+L["tab_setup"] = "Gruppierungen Setup"
 L["dropdown_groupSelect"] = "Gruppierungen"
 L["name_defaultGroup"] = "Standard Gruppierung"
 L["button_newGroup"] = "Neue Gruppierung"
@@ -248,7 +248,7 @@ L["Mouseover"] = true
 
 L["tab_hotkeys"] = "Alpha Übersteuerung"
 L["tab_commands"] = "Alle Befehle"
-L["cmd_options"] = "/autohide|n/autohideui"
+L["cmd_options"] = "/ahui|n/autohide|n/autohideui"
 L["descr_options"] = "Öffnet das Options Menü."
 L["cmd_override"] = "/autohide override MAKRO"
 L["descr_override"] = "Aktiviert die entsprechende Alpha Übersteuerung."
@@ -261,3 +261,5 @@ L["descr_resetProfile"] = "Setzt das gerade aktive Profil zurück."
 L["cmd_setProfileLua"] = 'AutoHideUI:SetProfile("PROFIL")'
 L["descr_setProfileLua"] = "Lua-Befehl um zum angegebenen Profil zu wechseln.".."|n"..
                            "Kann von AddOns benutzt werden um Profil-Wechsel zu automatisieren."
+L["tab_other"] = "Sonstiges"
+L["MinimapButton"] = "Zeige Minimap Knopf"

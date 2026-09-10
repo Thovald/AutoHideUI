@@ -5,6 +5,19 @@ local L = LibStub("AceLocale-3.0"):GetLocale("AutoHideUI")
 
 local CHANGELOG_DATA = {
     {
+        version = "1.2.17",
+        date = "Sept 10th",
+        entries = {
+            {
+                title = "Misc",
+                content =  {
+                    'Added Minimap Button. Disabled by default. Can be toggled in the option menu\'s "Misc" tab.',
+                    'Added new "/ahui" command to open the options menu.'
+                },
+            },
+        },
+    },
+    {
         version = "1.2.16",
         date = "Aug 27th",
         entries = {

@@ -140,8 +140,18 @@ function Config.NoSelectedGroup()
     return not Config.selectedGroup
 end
 
+function Config.UpdateMinimapButtonVisibility()
+    local icon = LibStub("LibDBIcon-1.0")
+    if Private.db.profile.showMinimapButton then
+        icon:Show("AutoHideUI")
+    else
+        icon:Hide("AutoHideUI")
+    end
+end
+
 function Config.RebuildUI()
     Config.CreateOptionsMenu()
+    Config.UpdateMinimapButtonVisibility()
     AceConfigRegistry:NotifyChange("AutoHideUI")
 end
 
@@ -422,6 +432,26 @@ local OPTIONS_TAB_FADE = {
     order = 22,
 }
 
+local OPTIONS_TAB_MISC = {
+            name = L["tab_other"],
+            type = "group",
+            childGroups = "tab",
+            order = 1,
+            args = {
+                checkbox_minimapButton = {
+                    type = "toggle",
+                    name = L["MinimapButton"],
+                    width = 1.5,
+                    get = function(info) return Private.db.profile.showMinimapButton end,
+                    set = function(info, value)
+                        Private.db.profile.showMinimapButton = value
+                        Config.UpdateMinimapButtonVisibility()
+                    end,
+                    order = 1,
+                },
+            }
+}
+
 Config.OPTIONS_MENU = {
     type = "group",
     name = "Auto Hide UI",
@@ -496,17 +526,20 @@ function Config.CreateOptionsMenu()
     local tabFade = OPTIONS_TAB_FADE
     local tabConditions = ConditionsTab.CreateOptions()
     local tabManualControl = ManualControl.CreateOptions()
+    local tabMisc = OPTIONS_TAB_MISC
 
     tabFrames.order = 20
     tabFade.order = 25
     tabConditions.order = 30
 
     tabManualControl.order = 2
+    tabMisc.order = 3
 
     Config.OPTIONS_MENU.args.setup.args.tabFrames = tabFrames
     Config.OPTIONS_MENU.args.setup.args.tabFade = tabFade
     Config.OPTIONS_MENU.args.setup.args.tabConditions = tabConditions
     Config.OPTIONS_MENU.args.tabManualControl = tabManualControl
+    Config.OPTIONS_MENU.args.tabMisc = tabMisc
 end
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -627,6 +660,7 @@ end
 function Config.GetDefaultProfile()
     local defaultProfile = {
         profile = {
+            showMinimapButton = false,
             manualControl = {},
             groups = {},
             previewFrames = {
@@ -707,6 +741,15 @@ local function SetHooksForMenus()
     SetHooksForAce()
 end
 
+function Config.ToggleOptionsMenu()
+    if AceConfigDialog.OpenFrames["AutoHideUI"] then
+        AceConfigDialog:Close("AutoHideUI")
+    elseif not IsOtherWindowsShown() then
+        Config.SetOptionsHeight()
+        AceConfigDialog:Open("AutoHideUI")
+    end
+end
+
 function Config.RegisterOptions()
     -- setting profiles tab in options menu
     Config.OPTIONS_MENU.args.profiles = AceDBOptions:GetOptionsTable(Private.db)
@@ -717,6 +760,7 @@ function Config.RegisterOptions()
 
     SLASH_AUTOHIDEUI1 = "/autohide"
     SLASH_AUTOHIDEUI2 = "/autohideui"
+    SLASH_AUTOHIDEUI3 = "/ahui"
     SlashCmdList["AUTOHIDEUI"] = function(msg)
         local cmd, arg = strsplit(" ", msg, 2)
 
@@ -734,12 +778,7 @@ function Config.RegisterOptions()
             return
         end
 
-        if AceConfigDialog.OpenFrames["AutoHideUI"] then
-            AceConfigDialog:Close("AutoHideUI")
-        elseif not IsOtherWindowsShown() then
-            Config.SetOptionsHeight()
-            AceConfigDialog:Open("AutoHideUI")
-        end
+        Config.ToggleOptionsMenu()
     end
 
     SetHooksForMenus()

@@ -5,7 +5,7 @@ L["error_optionsOpen"] = "Options Window needs to be open to change options!"
 
 -- Main menu
 L["descr_groups"] = "Create Groups to assign different settings to different Frames"
-L["tab_setup"] = "Setup"
+L["tab_setup"] = "Group Setup"
 L["dropdown_groupSelect"] = "Group Selection"
 L["name_defaultGroup"] = "Default Group"
 L["button_newGroup"] = "New Group"
@@ -248,7 +248,7 @@ L["Mouseover"] = true
 
 L["tab_hotkeys"] = "Alpha Override"
 L["tab_commands"] = "All Commands"
-L["cmd_options"] = "/autohide|n/autohideui"
+L["cmd_options"] = "/ahui|n/autohide|n/autohideui"
 L["descr_options"] = "Opens the options menu."
 L["cmd_override"] = "/autohide override MACRO"
 L["descr_override"] = "Engages the specified Alpha Override."
@@ -261,3 +261,5 @@ L["descr_resetProfile"] = "Resets the current profile to default."
 L["cmd_setProfileLua"] = 'AutoHideUI:SetProfile("PROFILE")'
 L["descr_setProfileLua"] = "Lua command to switch to specified profile.".."|n"..
                            "Can be used by AddOns to automatice profile-switching."
+L["tab_other"] = "Misc"
+L["MinimapButton"] = "Show Minimap Button"

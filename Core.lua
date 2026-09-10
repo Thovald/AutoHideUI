@@ -125,6 +125,31 @@ local UnitCastingInfo, UnitChannelInfo, IsResting, IsFlying, UnitExists, UnitCan
 -- Setup
 -- ─────────────────────────────────────────────────────────────────────────────
 
+do
+    -- minimap button
+    local LDB = LibStub("LibDataBroker-1.1")
+    local icon = LibStub("LibDBIcon-1.0")
+
+    local myDataObject = LDB:NewDataObject("AutoHideUI", {
+        type = "data source",
+        text = "Auto Hide UI",
+        icon = "Interface\\AddOns\\AutoHideUI\\Media\\Icon.tga",
+
+        OnClick = function(self, button)
+            if button == "LeftButton" then
+                Config.ToggleOptionsMenu()
+            end
+        end,
+
+        OnTooltipShow = function(tooltip)
+            tooltip:AddLine("Auto Hide UI")
+        end,
+    })
+
+    Private.minimap = Private.minimap or { hide = true }
+    icon:Register("AutoHideUI", myDataObject, Private.minimap)
+end
+
 function Main.frame:SetProfile(newProfile)
     Config.SetProfile(newProfile)
 end
@@ -155,6 +180,7 @@ local function InitDB()
     Private.db.RegisterCallback(Private, "OnProfileCopied", "OnProfileChanged")
 
     Config.RegisterOptions()
+    Config.UpdateMinimapButtonVisibility()
 end
 
 local function InitOptions()

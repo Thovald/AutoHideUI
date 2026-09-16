@@ -263,3 +263,7 @@ L["descr_setProfileLua"] = "Lua-Befehl um zum angegebenen Profil zu wechseln."..
                            "Kann von AddOns benutzt werden um Profil-Wechsel zu automatisieren."
 L["tab_other"] = "Sonstiges"
 L["MinimapButton"] = "Zeige Minimap Knopf"
+
+L["label_isInteracting"] = "Am Interagieren"
+L["descr_isInteracting"] = "Wenn der Spieler gerade mit einem NPC interagiert."
+L["expandForMore"] = "Erweitern um weitere Optionen zu sehen."

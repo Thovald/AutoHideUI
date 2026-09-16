@@ -267,4 +267,3 @@ L["MinimapButton"] = "Show Minimap Button"
 L["label_isInteracting"] = "Is Interacting"
 L["descr_isInteracting"] = "When the player is interacting with an NPC."
 L["expandForMore"] = "Expand for more options"
-L["Arena Frame"] = true

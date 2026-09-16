@@ -1,5 +1,5 @@
 ## Interface: 120100
-## Version: 1.2.17
+## Version: 1.2.18
 ## Title: Auto Hide UI
 ## Notes: /ahui|n/autohide|n/autohideui
 ## Author: Thovald
@@ -27,6 +27,7 @@ Options\Options-Changelog.lua
 Options\Options-ManualControl.lua
 Options\Options-Conditions.lua
 Options\Options-Frames.lua
+Options\Options-Migration.lua
 
 Modules\Fading.lua
 Modules\Frames.lua

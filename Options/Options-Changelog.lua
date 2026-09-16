@@ -5,6 +5,25 @@ local L = LibStub("AceLocale-3.0"):GetLocale("AutoHideUI")
 
 local CHANGELOG_DATA = {
     {
+        version = "1.2.18",
+        date = "Sept 15th",
+        entries = {
+            {
+                title = "New",
+                content =  {
+                    'Added new "Is Interacting" condition for when player is interacting with an NPC.',
+                    'Renamed "Interactable" condition to "Can Interact".',
+                },
+            },
+            {
+                title = "Fixes",
+                content =  {
+                    'Fixed tooltips not being shown when hovering over Conditions.',
+                },
+            },
+        },
+    },
+    {
         version = "1.2.17",
         date = "Sept 10th",
         entries = {

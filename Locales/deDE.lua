@@ -132,7 +132,7 @@ L["dropdownOption_flight3"] = "Beides"
 L["checkbox_softTarget"] = "Soft-Ziel einschliessen"
 L["descr_softTarget"] = "Für Spieler, welche die Spiel-Option für automatische Zielerfassung eingeschaltet haben."
 L["label_interactable"] = "Kann interagieren"
-L["descr_interactable"] = "Wenn sich etwas interagierbares in der Reichweite des Spielers befindet."
+L["descr_canInteract"] = "Wenn sich etwas interagierbares in der Reichweite des Spielers befindet."
 L["checkbox_excludeNPCs"] = "NPCs ausschliessen"
 L["descr_excludeNPCs"] = "Ignoriert interagierbare Objekte, die nicht anvisiert werden können, wie zB NPCs."
 L["button_disableAll"] = "Alle Aus"
@@ -142,7 +142,7 @@ L["frameFinder"] = "Frame Sucher"
 L["descr_frameFinder"] = "Started ein Tool, das dabei hilft Frames zu finden, die nicht oben aufgelistet sind."
 L["ffButton_clear"] = "Auswahl zurücksetzen"
 L["ffDescr_howTo"] =    "Maus über ein Frame fahren".."|n"..
-                        "Mausrad um durch die Frames zu blättern".."|n"..
+                        "Mausrad um durch überlappende Frames zu blättern".."|n"..
                         "Suche bis das gewünschte Element blinkt".."|n"..
                         "Mausklick zum aus-/abwählen".."|n|n"..
                         "oder".."|n|n"..

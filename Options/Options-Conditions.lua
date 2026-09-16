@@ -248,7 +248,7 @@ ConditionsTab.CONDITION_DEFINITIONS = {
     -- END focus
     -- ─────────────────────────────────────────────────────────────────────────────----
     {
-        name = "interactable",
+        name = "canInteract",
         db = {
             enabled = false,
             alpha = 1,
@@ -259,7 +259,7 @@ ConditionsTab.CONDITION_DEFINITIONS = {
             "PLAYER_SOFT_INTERACT_CHANGED",
         },
         type = "default",
-        descr = L["descr_interactable"],
+        description = L["descr_canInteract"],
         extraOptions = {
             {
                 entryName = "checkbox_excludeNPCs",
@@ -270,6 +270,21 @@ ConditionsTab.CONDITION_DEFINITIONS = {
                     width = 0.8,
                 },
             },
+        },
+    },
+    {
+        name = "isInteracting",
+        db = {
+            enabled = false,
+            alpha = 1,
+            priority = false,
+        },
+        type = "default",
+        description = L["descr_isInteracting"],
+        events = {
+            "PLAYER_INTERACTION_MANAGER_FRAME_SHOW",
+            "PLAYER_INTERACTION_MANAGER_FRAME_HIDE",
+            "QUEST_DETAIL"
         },
     },
     {
@@ -313,7 +328,7 @@ ConditionsTab.CONDITION_DEFINITIONS = {
             "UNIT_MAX_HEALTH_MODIFIERS_CHANGED",
         },
         type = "default",
-        descr = L["descr_health"],
+        description = L["descr_health"],
         extraOptions = {
             {
                 entryName = "dropdown_health",
@@ -648,7 +663,7 @@ local function CreateConditionWidget(widgetInfo, conditionInfo, entryInfo)
 
     local widget = GetConditionWidget(widgetInfo, conditionInfo)
     widget.order = widgetInfo.order or entryInfo.widgetOrder
-    widget.desc = conditionInfo.description or widgetInfo.description
+    widget.desc = conditionInfo.description or widgetInfo.description or (entryInfo.type == "parent" and L["expandForMore"] or nil)
 
     if widgetInfo.width == "remaining" then
         widget.width = CONDITION_MAXIMUM_WIDTH - entryInfo.totalWidth

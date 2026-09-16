@@ -11,6 +11,7 @@ Private.Changelog = {}
 Private.ManualControl = {}
 Private.ConditionsTab = {}
 Private.FramesTab = {}
+Private.Migration = {}
 
 local Main = Private.Main
 local Config = Private.Config
@@ -19,7 +20,7 @@ local Fading = Private.Fading
 local ManualControl = Private.ManualControl
 local ConditionsTab = Private.ConditionsTab
 local MouseoverAreas = Private.MouseoverAreas
-local DB_SCHEMA_VERSION = 2
+local Migration = Private.Migration
 
 -- unlike systemFrame, Main.frame's events are registered based on which conditions are enabled
 Main.frame = CreateFrame("Frame", "AutoHideUI")
@@ -89,6 +90,7 @@ local isMounted = IsMounted()
 local isFlightShape = false
 local isFlying = IsFlying()
 local isGliding = C_PlayerInfo.GetGlidingInfo()
+local isInteracting = false
 local isFlyingTicker
 local lastLowHealthVis = LowHealthFrame:IsVisible()
 local lastInstanceCheck = 0
@@ -118,8 +120,8 @@ local GetTime, pairs, ipairs, C_Timer
     = GetTime, pairs, ipairs, C_Timer
 local IsInInstance, IsMounted, GetShapeshiftFormID, UnitInVehicle,             HasOverrideActionBar, CanExitVehicle, UnitInVehicleControlSeat, UnitHasVehicleUI
     = IsInInstance, IsMounted, GetShapeshiftFormID, UnitInVehicle, C_ActionBar.HasOverrideActionBar, CanExitVehicle, UnitInVehicleControlSeat, UnitHasVehicleUI
-local UnitCastingInfo, UnitChannelInfo, IsResting, IsFlying, UnitExists, UnitCanAttack,            HasActiveDelve
-    = UnitCastingInfo, UnitChannelInfo, IsResting, IsFlying, UnitExists, UnitCanAttack, C_DelvesUI.HasActiveDelve
+local UnitCastingInfo, UnitChannelInfo, IsResting, IsFlying, UnitExists, UnitCanAttack,            HasActiveDelve,                            IsInteractingWithNpcOfType
+    = UnitCastingInfo, UnitChannelInfo, IsResting, IsFlying, UnitExists, UnitCanAttack, C_DelvesUI.HasActiveDelve, C_PlayerInteractionManager.IsInteractingWithNpcOfType
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Setup
@@ -434,219 +436,7 @@ end
 -- Repairing DB
 -- ─────────────────────────────────────────────────────────────────────────────
 
-local MigrateDB = {
-    -- when parent/child conditions were introduced
-    [1] = function(profile)
-        local OLD_CONDITION_DEFAULTS = {
-            housing        = { enabled = false, alpha = 0, priority = true },
-            instance       = { enabled = true,  alpha = 1, priority = false },
-            targetFriendly = { enabled = true,  alpha = 1, priority = false, softTarget = false },
-            targetHostile  = { enabled = true,  alpha = 1, priority = false, softTarget = false },
-        }
 
-        local DEFAULT_GROUP = Config.GetDefaultGroup(L["name_defaultGroup"])
-
-        local function ResolveOldCondition(c, name)
-            local result = CopyTable(OLD_CONDITION_DEFAULTS[name])
-            if c[name] then
-                for k, v in pairs(c[name]) do
-                    result[k] = v
-                end
-            end
-            return result
-        end
-
-        function MergeGroups(defaultGroup, userGroup)
-            local result = CopyTable(defaultGroup)
-
-            for key, value in pairs(userGroup) do
-                if type(value) == "table" and type(result[key]) == "table" then
-                    result[key] = MergeGroups(result[key], value)
-                else
-                    result[key] = value
-                end
-            end
-
-            return result
-        end
-
-        local function MigrateGroup(group)
-            local c = group.conditions
-            if not c then
-                -- is using defaults
-                return
-            end
-
-            local housing  = ResolveOldCondition(c, "housing")
-            local instance = ResolveOldCondition(c, "instance")
-            local tFriendly = ResolveOldCondition(c, "targetFriendly")
-            local tHostile  = ResolveOldCondition(c, "targetHostile")
-
-            -- instance and housing
-            c.instanceNeighborhood = CopyTable(housing)
-            c.instanceHousing      = CopyTable(housing)
-
-            if housing.alpha ~= instance.alpha or housing.priority ~= instance.priority then
-                c.instanceNeighborhood.customize = true
-                c.instanceHousing.customize      = true
-            else
-                c.instanceNeighborhood.customize = false
-                c.instanceHousing.customize      = false
-            end
-
-            if housing.enabled and not instance.enabled then
-                c.instance = c.instance or {}
-                c.instance.enabled = true
-                for _, name in ipairs({ "instanceDungeon", "instanceRaid", "instanceBattleground", "instanceArena", "instanceScenario" }) do
-                    c[name] = c[name] or {}
-                    c[name].enabled = false
-                end
-            end
-
-            c.housing = nil
-
-            -- target and focus
-            local targetEnabled = tFriendly.enabled or tHostile.enabled
-
-            local targetSettingsMatch = tFriendly.alpha == tHostile.alpha
-                            and tFriendly.priority  == tHostile.priority
-                            and tFriendly.softTarget == tHostile.softTarget
-
-            if targetSettingsMatch then
-                c.target = CopyTable(tFriendly)
-                c.focus  = CopyTable(tFriendly)
-                c.targetFriendly = c.targetFriendly or {}
-                c.targetHostile  = c.targetHostile  or {}
-                c.targetFriendly.customize = false
-                c.targetHostile.customize  = false
-                c.focusFriendly = CopyTable(tFriendly)
-                c.focusHostile  = CopyTable(tHostile)
-                c.focusFriendly.customize = false
-                c.focusHostile.customize  = false
-            else
-                c.target = CopyTable(Config.GetDefaultConditionByName("target").db)
-                c.focus  = CopyTable(Config.GetDefaultConditionByName("focus").db)
-                c.targetFriendly = c.targetFriendly or {}
-                c.targetHostile  = c.targetHostile  or {}
-                c.targetFriendly.customize = true
-                c.targetHostile.customize  = true
-                c.focusFriendly = CopyTable(tFriendly)
-                c.focusHostile  = CopyTable(tHostile)
-                c.focusFriendly.customize = true
-                c.focusHostile.customize  = true
-            end
-
-            c.target.enabled = targetEnabled
-            c.focus.enabled  = targetEnabled
-            c.focusFriendly.softTarget = nil
-            c.focusHostile.softTarget  = nil
-        end
-
-        local function CheckGroupForMissingEntries(group)
-            -- AceDB would not keep user's groups up to date with updates to conditions.
-            -- doing a one-time check here to update everything and use migration feature in the future.
-
-            -- looking for missing settings
-            for k,v in pairs(DEFAULT_GROUP) do
-                if not group[k] then
-                    if type(v) == "table" then
-                        group[k] = CopyTable(v)
-                    else
-                        group[k] = v
-                    end
-                end
-            end
-
-            -- looking for missing conditions
-            for conditionName, conditionInfo in pairs(DEFAULT_GROUP.conditions) do
-                if not group.conditions[conditionName] then
-                    group.conditions[conditionName] = CopyTable(conditionInfo)
-                else
-                    for setting, value in pairs(conditionInfo) do
-                        if group.conditions[conditionName][setting] == nil then
-                            group.conditions[conditionName][setting] = value
-                        end
-                    end
-                end
-            end
-
-            -- checking for settings that are no longer in use
-            for k,v in pairs(group) do
-                if DEFAULT_GROUP[k] == nil then
-                    group[k] = nil
-                end
-            end
-        end
-
-        local newProfile = {
-            groups= {},
-            manualControl = {}
-        }
-
-        -- not doing ipairs because first entry will be nil if it's a default group, stoppig the loop
-        for i, group in pairs(profile) do
-            MigrateGroup(group)
-            CheckGroupForMissingEntries(group)
-        end
-
-        -- going forward, defaultGroup is not included in defaultProfile anymore.
-        -- therefore we need to hard assign it's values here. 
-        if profile[1] == nil then
-            profile[1] = CopyTable(DEFAULT_GROUP)
-        else
-            local mergedTable = MergeGroups(DEFAULT_GROUP, profile[1])
-            profile[1] = mergedTable
-        end
-
-
-        newProfile.groups = profile
-
-        return newProfile
-    end,
-
-    -- handling override hotkeys differently. middle mouse button is no longer supported.
-    [2] = function(profile, profileName)
-        if not profile.manualControl then
-            return profile
-        end
-
-        local printMessage = false
-        for _, info in ipairs(profile.manualControl) do
-            if string.match(info.keybind, "MiddleButton") then
-                info.keybind = ""
-                info.keybindDisplay = ""
-                printMessage = true
-            end
-        end
-
-        if printMessage then
-            local title = Main.GetErrorTitleString()
-            local message = L["warning_schema2"]
-            print(title..message..Main.ColorString(profileName, "red"))
-        end
-
-        return profile
-    end
-}
-
-local function UpdateDB()
-    local lastSchemaVersion = Private.db.global.db_schema or 0
-
-    for i = lastSchemaVersion + 1, DB_SCHEMA_VERSION do
-        local migration = MigrateDB[i]
-        if migration then
-            -- migrating every profile
-            for profileName, profileData in pairs(Private.db.profiles) do
-                local newProfile = migration(profileData, profileName)
-                if newProfile then
-                    Private.db.profiles[profileName] = newProfile
-                end
-            end
-        end
-    end
-
-    Private.db.global.db_schema = DB_SCHEMA_VERSION
-end
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Conditions
@@ -721,16 +511,20 @@ local function ConditionSoftTarget()
     end
 end
 
-local function ConditionInteractable(canInteract)
+local function ConditionCanInteract(canInteract)
     local softTarget = UnitExists("softinteract")
     for _, group in pairs(Main.activeGroups) do
-        if group.conditions.interactable.excludeNPCs and canInteract then
+        if group.conditions.canInteract.excludeNPCs and canInteract then
             canInteract = not softTarget
         else
             canInteract = canInteract or softTarget
         end
-        UpdateActiveConditions(group, "interactable", canInteract)
+        UpdateActiveConditions(group, "canInteract", canInteract)
     end
+end
+
+local function ConditonIsInteracting()
+    UpdateConditionForAllGroups("isInteracting", isInteracting)
 end
 
 local function ConditionInstance()
@@ -939,7 +733,7 @@ function Main.UpdateAllConditions()
     ConditionTarget("target")
     ConditionTarget("focus")
     ConditionSoftTarget()
-    ConditionInteractable()
+    ConditionCanInteract()
     ConditionInstance()
     ConditionMounted()
     ConditionShapeshift()
@@ -949,6 +743,7 @@ function Main.UpdateAllConditions()
     ConditionResting()
     ConditionHealth()
     ConditionFlying()
+    ConditonIsInteracting()
 end
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -958,7 +753,7 @@ end
 local function OnLogin()
     InitDB()
     UpdateVersion()
-    UpdateDB()
+    Migration.UpdateDB()
     InitOptions()
     ManualControl.StartListening()
 end
@@ -985,9 +780,9 @@ end
 
 local function OnInteractableChange(_, newTarget)
     if newTarget then
-        ConditionInteractable(true)
+        ConditionCanInteract(true)
     else
-        UpdateConditionForAllGroups("interactable", false)
+        UpdateConditionForAllGroups("canInteract", false)
     end
     Fading.FadeAllGroups()
 end
@@ -1142,6 +937,29 @@ local function OnSpecChange()
     end
 end
 
+local function OnInteractStart()
+    -- this won't fire when talking to most questgivers
+    isInteracting = true
+    ConditonIsInteracting()
+    Fading.FadeAllGroups()
+end
+
+local function OnInteractEnd()
+    isInteracting = false
+    ConditonIsInteracting()
+    Fading.FadeAllGroups()
+end
+
+local function OnQuestDetail()
+    -- talking to a questgiver that immediately opens the quest window won't fire PLAYER_INTERACTION_MANAGER_FRAME_SHOW
+    local isInteractingQuest = IsInteractingWithNpcOfType(Enum.PlayerInteractionType.QuestGiver)
+    if isInteractingQuest and not isInteracting then
+        isInteracting = true
+        ConditonIsInteracting()
+        Fading.FadeAllGroups()
+    end
+end
+
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Event Handler
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -1173,6 +991,10 @@ local EVENT_HANDLER = {
     UNIT_SPELLCAST_STOP = OnCastEnd,
     UNIT_SPELLCAST_CHANNEL_STOP = OnCastEnd,
     PLAYER_UPDATE_RESTING = OnRestingChange,
+    PLAYER_INTERACTION_MANAGER_FRAME_SHOW = OnInteractStart,
+    PLAYER_INTERACTION_MANAGER_FRAME_HIDE = OnInteractEnd,
+    QUEST_DETAIL = OnQuestDetail,
+
 }
 
 local SYSTEM_EVENT_HANDLER = {

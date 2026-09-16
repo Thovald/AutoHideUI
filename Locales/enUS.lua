@@ -130,8 +130,8 @@ L["dropdownOption_flight3"] = "Both"
 
 L["checkbox_softTarget"] = "Incl. Soft Target"
 L["descr_softTarget"] = "For players that have the game's 'Action Targeting' option enabled."
-L["label_interactable"] = "Can Interact"
-L["descr_interactable"] = "When something interactable is in reach of the player character."
+L["label_canInteract"] = "Can Interact"
+L["descr_canInteract"] = "When something interactable is in reach of the player character."
 L["checkbox_excludeNPCs"] = "Exclude NPCs"
 L["descr_excludeNPCs"] = "Will ignore interactable objects that can be targeted, like NPCs."
 L["button_disableAll"] = "Disable All"
@@ -141,7 +141,7 @@ L["frameFinder"] = "Frame Finder"
 L["descr_frameFinder"] = "Launches a Tool to help you find and add Frames that aren't listed above."
 L["ffButton_clear"] = "Clear Selection"
 L["ffDescr_howTo"] =    "Mouseover a Frame".."|n"..
-                        "Mousewheel to cycle through Frames".."|n"..
+                        "Mousewheel to cycle overlapping Frames".."|n"..
                         "Cycle until correct Frame is fading".."|n"..
                         "Click to select/deselect".."|n|n"..
                         "or".."|n|n"..
@@ -260,6 +260,11 @@ L["cmd_resetProfile"] = "/autohide resetProfile"
 L["descr_resetProfile"] = "Resets the current profile to default."
 L["cmd_setProfileLua"] = 'AutoHideUI:SetProfile("PROFILE")'
 L["descr_setProfileLua"] = "Lua command to switch to specified profile.".."|n"..
-                           "Can be used by AddOns to automatice profile-switching."
+                           "Can be used by AddOns to automate profile-switching."
 L["tab_other"] = "Misc"
 L["MinimapButton"] = "Show Minimap Button"
+
+L["label_isInteracting"] = "Is Interacting"
+L["descr_isInteracting"] = "When the player is interacting with an NPC."
+L["expandForMore"] = "Expand for more options"
+L["Arena Frame"] = true

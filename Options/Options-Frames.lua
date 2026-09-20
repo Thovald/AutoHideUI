@@ -415,7 +415,8 @@ function FramesTab.SetHighlightVisibility(frame, isHover)
 end
 
 function FramesTab.SetHighlightFrame(uiFrame, type, shouldShow, isSelected)
-    if Main.helperFrames[uiFrame] and not Main.helperFrames[uiFrame].isAnchor then
+    if (Main.helperFrames[uiFrame] and not Main.helperFrames[uiFrame].isAnchor)
+    or uiFrame:HasAnyForbiddenAspects(Enum.ForbiddenAspect.UntrustedLayoutScriptExecution) then -- ElvUI's Buff and Debuff frames necessitate this
         return
     end
 
@@ -428,10 +429,14 @@ function FramesTab.SetHighlightFrame(uiFrame, type, shouldShow, isSelected)
     hlFrame.uiType = type
     FramesTab.SetHighlightColors(hlFrame)
 
-    hlFrame:SetAllPoints(uiFrame)
+    local point, relativeTo, relativePoint, offsetX, offsetY = uiFrame:GetPoint()
+    local sizeX, sizeY = uiFrame:GetSize()
+    hlFrame:ClearAllPoints()
+    hlFrame:SetPoint(point, relativeTo, relativePoint, offsetX, offsetY)
+    hlFrame:SetSize(sizeX, sizeY)
+
     hlFrame.text:SetText(uiFrame:GetName() or "")
     Config.CheckTextBounds(hlFrame)
-
     return hlFrame
 end
 

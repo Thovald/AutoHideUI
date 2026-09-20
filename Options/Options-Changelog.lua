@@ -5,6 +5,20 @@ local L = LibStub("AceLocale-3.0"):GetLocale("AutoHideUI")
 
 local CHANGELOG_DATA = {
     {
+        version = "1.2.19",
+        date = "Sept 20th",
+        entries = {
+            {
+                title = "Fixes",
+                content =  {
+                    "ElvUI: Fixed various errors caused by the Buff and Debuff frames.|n"..
+                    "These frames are no longer checked for mouseover events in AutoHideUI and won't show a preview frame in the AutoHideUI options anymore.",
+                    "EllesmereUI: Fixed Buff and Debuff Frames not being automatically recognized."
+                },
+            },
+        },
+    },
+    {
         version = "1.2.18",
         date = "Sept 16th",
         entries = {

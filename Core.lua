@@ -281,7 +281,9 @@ function Main.CreateMouseoverLists()
 
     for group in pairs(mouseoverGroups) do
         for _, frame in pairs(group.frames) do
-            if not frame:IsAnchoringRestricted(group) then
+            local mouseoverState = frame:IsMouseOver()
+            local visibilityState = frame:IsVisible()
+            if not frame:IsAnchoringRestricted(group) and canaccessvalue(mouseoverState) and canaccessvalue(visibilityState) then
                 mouseoverFrames[frame] = GetGroupsForMouseoverFrame(group, globalGroups)
             end
         end

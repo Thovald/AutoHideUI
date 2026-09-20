@@ -428,6 +428,8 @@ local ADDON_FRAME_MAPPING = {
             TargetFrame = {},
             FocusFrame = {},
             PetFrame = {},
+            BuffFrame = {},
+            DebuffFrame = {},
         },
         customGetter = function(frameString)
             local EUI_Lookup = {
@@ -435,6 +437,8 @@ local ADDON_FRAME_MAPPING = {
                 TargetFrame = {"EllesmereUIUnitFrames_Target", "EllesmereUIUnitFrames_TargetTarget"},
                 FocusFrame = {"EllesmereUIUnitFrames_Focus", "EllesmereUIUnitFrames_FocusTarget"},
                 PetFrame = {"EllesmereUIUnitFrames_Pet"},
+                BuffFrame = {"EllesmereUIPlayerAuraBars_Buffs"},
+                DebuffFrame = {"EllesmereUIPlayerAuraBars_Debuffs"},
             }
 
             local frameList = {}

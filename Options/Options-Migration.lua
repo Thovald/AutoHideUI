@@ -5,10 +5,10 @@ local Main = Private.Main
 local Migration = Private.Migration
 local Config = Private.Config
 
-local DB_SCHEMA_VERSION = 3
+Main.DB_SCHEMA_VERSION = 3
 
 local MigrationDB = {
-    -- when parent/child conditions were introduced
+    -- when parent/child conditions, manualControl and mouseover areas were introduced
     [1] = function(profile)
         local OLD_CONDITION_DEFAULTS = {
             housing        = { enabled = false, alpha = 0, priority = true },
@@ -29,7 +29,7 @@ local MigrationDB = {
             return result
         end
 
-        function MergeGroups(defaultGroup, userGroup)
+        local function MergeGroups(defaultGroup, userGroup)
             local result = CopyTable(defaultGroup)
 
             for key, value in pairs(userGroup) do
@@ -151,28 +151,25 @@ local MigrationDB = {
             end
         end
 
-        local newProfile = {
-            groups= {},
-            manualControl = {}
-        }
+        local newProfile = Config.GetDefaultProfile().profile
 
-        -- not doing ipairs because first entry will be nil if it's a default group, stoppig the loop
+        -- Keep profile-level settings out of the group list.
         for i, group in pairs(profile) do
-            MigrateGroup(group)
-            CheckGroupForMissingEntries(group)
+            if type(i) == "number" and type(group) == "table" and group.name then
+                MigrateGroup(group)
+                CheckGroupForMissingEntries(group)
+                newProfile.groups[i] = group
+            end
         end
 
         -- going forward, defaultGroup is not included in defaultProfile anymore.
         -- therefore we need to hard assign it's values here. 
-        if profile[1] == nil then
-            profile[1] = CopyTable(DEFAULT_GROUP)
+        if newProfile.groups[1] == nil then
+            newProfile.groups[1] = CopyTable(DEFAULT_GROUP)
         else
-            local mergedTable = MergeGroups(DEFAULT_GROUP, profile[1])
-            profile[1] = mergedTable
+            local mergedTable = MergeGroups(DEFAULT_GROUP, newProfile.groups[1])
+            newProfile.groups[1] = mergedTable
         end
-
-
-        newProfile.groups = profile
 
         return newProfile
     end,
@@ -282,21 +279,102 @@ function Migration.RemoveFrame(profile, frameName)
     end
 end
 
+function Migration.LastVersionIsOlderThan(version)
+    local lastVersion = Private.db.global.last_version or "0.0.0"
+    local lastMajor, lastMinor, lastPatch = strsplit(".", lastVersion)
+    local major, minor, patch = strsplit(".", version)
+
+    if tonumber(lastMajor) < tonumber(major) then
+        return true
+    elseif tonumber(lastMajor) == tonumber(major) and tonumber(lastMinor) < tonumber(minor) then
+        return true
+    elseif tonumber(lastMajor) == tonumber(major) and tonumber(lastMinor) == tonumber(minor) and tonumber(lastPatch) < tonumber(patch) then
+        return true
+    end
+
+    return false
+end
+
+function Migration.IsModernDB()
+    for profileName, profile in pairs(Private.db.profiles) do
+        for i, group in pairs(profile) do
+            if type(i) == "number" and type(group) == "table" then
+                return false
+            else
+                return true
+            end
+        end
+    end
+    return false
+end
+
+function Migration.HandleModernDB()
+    -- since its introduction, we never wrote the current schema version to the db of fresh installs ... oops!
+    -- on fresh installs that triggered an attempt to migrate a modern db, resulting in an error and a bricked profile.
+    -- it's fixed in 1.2.20, but bricked profiles from before that will need to be reset.
+    if Migration.LastVersionIsOlderThan("1.2.19") then
+        Migration.ResetCorruptedModernDB()
+    end
+
+    Private.db.global.db_schema = Main.DB_SCHEMA_VERSION
+end
+
+function Migration.ResetCorruptedModernDB()
+    local defaultProfile = Config.GetDefaultProfile().profile
+    local defaultGroup = Config.GetDefaultGroup(L["name_defaultGroup"])
+    tinsert(defaultProfile.groups, defaultGroup)
+
+    for profileName, profile in pairs(Private.db.profiles) do
+        for origKey, origVal in pairs(profile) do
+
+            if defaultProfile[origKey] == nil then
+                profile[origKey] = nil
+            end
+
+            for newKey, newVal in pairs(defaultProfile) do
+                if type(newVal) == "table" then
+                    profile[newKey] = CopyTable(newVal)
+                else
+                    profile[newKey] = newVal
+                end
+            end
+
+        end
+    end
+
+    Main.ReInitAddon()
+end
+
 function Migration.UpdateDB()
     local lastSchemaVersion = Private.db.global.db_schema or 0
 
-    for i = lastSchemaVersion + 1, DB_SCHEMA_VERSION do
+    -- fresh installs will have a schema version of 0
+    if lastSchemaVersion == 0 and Migration.IsModernDB() then
+        Migration.HandleModernDB()
+        return
+    end
+
+    for i = lastSchemaVersion + 1, Main.DB_SCHEMA_VERSION do
         local migrationFunc = MigrationDB[i]
         if migrationFunc then
             -- migrating every profile
             for profileName, profile in pairs(Private.db.profiles) do
                 local newProfile = migrationFunc(profile, profileName)
-                if newProfile then
-                    Private.db.profiles[profileName] = newProfile
+                if newProfile and newProfile ~= profile then
+                    for key in pairs(profile) do
+                        profile[key] = nil
+                    end
+                    for key, value in pairs(newProfile) do
+                        profile[key] = value
+                    end
                 end
             end
         end
     end
 
-    Private.db.global.db_schema = DB_SCHEMA_VERSION
+    if lastSchemaVersion ~= Main.DB_SCHEMA_VERSION then
+        Main.ReInitAddon()
+    end
+
+    Private.db.global.db_schema = Main.DB_SCHEMA_VERSION
 end

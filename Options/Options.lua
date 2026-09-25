@@ -16,7 +16,7 @@ local pairs, ipairs  = pairs, ipairs
 Config.selectedGroup = 1
 Config.isOptionsOpen = false
 local MENU_WIDTH = 630
-local MENU_HEIGHT = 835 -- this is now set on options open, based on ui scale
+local MENU_HEIGHT = 850 -- this is now set on options open, based on ui scale
 local MENU_HEIGHT_MIN = 400
 local MENU_HEIGHT_MAX = 1000
 local UI_WIDTH, UI_HEIGHT = UIParent:GetSize()
@@ -793,7 +793,7 @@ end
 function Config.SetOptionsHeight()
     local uiScale = UIParent:GetEffectiveScale()
     local t0, t1 = 0.65, 1.0
-    local v0, v1 = 835, 600
+    local v0, v1 = MENU_HEIGHT, 600
 
     local scaledHeight = v0 + (v1 - v0) * ((uiScale - t0) / (t1 - t0))
     MENU_HEIGHT = min(max(MENU_HEIGHT_MIN, scaledHeight), MENU_HEIGHT_MAX)

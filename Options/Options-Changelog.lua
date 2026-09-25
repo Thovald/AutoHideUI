@@ -5,6 +5,20 @@ local L = LibStub("AceLocale-3.0"):GetLocale("AutoHideUI")
 
 local CHANGELOG_DATA = {
     {
+        version = "1.2.20",
+        date = "Sept 25th",
+        entries = {
+            {
+                title = "Fixes",
+                content =  {
+                    "Fixed a major oversight that basically made this AddOn unusable on new installs when no prior profile was present.|n"..
+                    "The corrupted profiles that resulted from this will be reset to default.",
+                    "Fixed an error that could happen when migrating from a very old profile.",
+                },
+            },
+        },
+    },
+    {
         version = "1.2.19",
         date = "Sept 20th",
         entries = {

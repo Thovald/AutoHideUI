@@ -5,6 +5,19 @@ local L = LibStub("AceLocale-3.0"):GetLocale("AutoHideUI")
 
 local CHANGELOG_DATA = {
     {
+        version = "1.2.22",
+        date = "Nov 5th",
+        entries = {
+            {
+                title = "Misc",
+                content =  {
+                    "Added initial support for WoW Forever.|n"..
+                    "I won't be playing it much, so let me know if you encounter errors!",
+                },
+            },
+        },
+    },
+    {
         version = "1.2.20",
         date = "Sept 25th",
         entries = {

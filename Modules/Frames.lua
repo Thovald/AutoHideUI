@@ -821,8 +821,6 @@ local function ReplaceAlphaFunctions(frame, groupInfo)
     frame._origSetAlpha = frame.SetAlpha
     frame.SetAlpha = function(self, alpha) end
 
-
-
     if frame.SetAlphaFromBoolean then
         frame._origSetAlphaFromBoolean = frame.SetAlphaFromBoolean
         frame.SetAlphaFromBoolean = function(self)

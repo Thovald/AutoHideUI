@@ -13,6 +13,10 @@ Private.ConditionsTab = {}
 Private.FramesTab = {}
 Private.Migration = {}
 
+Private.isMainline = WOW_PROJECT_ID == WOW_PROJECT_MAINLINE
+Private.isForever = WOW_PROJECT_ID == WOW_PROJECT_CAMELOT
+Private.flavor = Private.isForever and "Forever" or "Mainline"
+
 local Main = Private.Main
 local Config = Private.Config
 local Frames = Private.Frames

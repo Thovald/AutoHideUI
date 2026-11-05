@@ -56,13 +56,31 @@ FramesTab.DEFAULT_FRAMES = {
     { frame = "PersonalResourceDisplayFrame",   label = L["Personal Resource"], enabled = true,     divide = true },
     -- other
     { frame = "DamageMeter",                    label = L["Damage Meter"],      enabled = true },
-    { frame = "MinimapCluster",                 label = L["Minimap"],           enabled = false ,   descr = L["descr_Minimap"]},
-    { frame = "MicroMenu",                      label = L["Micro Menu"],        enabled = false },
+    { frame = "MinimapCluster",                 label = L["Minimap"],           enabled = false,    descr = L["descr_Minimap"]},
+    {
+      frame = "MicroMenu",                      label = L["Micro Menu"],        enabled = false,
+      overrides = {Forever = {enabled = true}}
+    },
     { frame = "ObjectiveTrackerFrame",          label = L["Objectives Frame"],  enabled = false },
-    { frame = "MainStatusTrackingBarContainer", label = L["Experience Bar"],    enabled = false },
+    {
+      frame = "MainStatusTrackingBarContainer", label = L["Experience Bar"],    enabled = false,
+      overrides = {Forever = {enabled = true}}
+    },
     { frame = "BagsBar",                        label = L["Bags Bar"],          enabled = true },
-
 }
+
+-- resolving overrides
+do
+    local flavor = Private.flavor
+    for _, entry in ipairs(FramesTab.DEFAULT_FRAMES) do
+        local overrides = entry.overrides and entry.overrides[flavor]
+        if overrides then
+            for k,v in pairs(overrides) do
+                entry[k] = v
+            end
+        end
+    end
+end
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- UI Layout

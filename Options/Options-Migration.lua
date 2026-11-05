@@ -341,8 +341,6 @@ function Migration.ResetCorruptedModernDB()
 
         end
     end
-
-    Main.ReInitAddon()
 end
 
 function Migration.UpdateDB()
@@ -370,10 +368,6 @@ function Migration.UpdateDB()
                 end
             end
         end
-    end
-
-    if lastSchemaVersion ~= Main.DB_SCHEMA_VERSION then
-        Main.ReInitAddon()
     end
 
     Private.db.global.db_schema = Main.DB_SCHEMA_VERSION

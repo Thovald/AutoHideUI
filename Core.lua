@@ -846,7 +846,7 @@ local function OnInstanceChange()
     lastInstanceCheck = currentTime
 end
 
-local function OnZoneChange()
+local function OnDelveUpdate()
     local currentDelve = HasActiveDelve()
     if currentDelve ~= lastDelve then
         lastDelve = currentDelve
@@ -980,7 +980,7 @@ local EVENT_HANDLER = {
     PLAYER_REGEN_ENABLED = function() OnCombatChange(false) end,
     PLAYER_ENTERING_WORLD = OnInstanceChange,
     LOADING_SCREEN_DISABLED = OnInstanceChange,
-    ZONE_CHANGED_NEW_AREA = OnZoneChange,
+    ACTIVE_DELVE_DATA_UPDATE = OnDelveUpdate,
     WORLD_CURSOR_TOOLTIP_UPDATE = OnMouseover,
     UPDATE_MOUSEOVER_UNIT = OnMouseover,
     PLAYER_MOUNT_DISPLAY_CHANGED = OnMountChange,

@@ -5,6 +5,18 @@ local L = LibStub("AceLocale-3.0"):GetLocale("AutoHideUI")
 
 local CHANGELOG_DATA = {
     {
+        version = "1.2.24",
+        date = "Nov 7th",
+        entries = {
+            {
+                title = "Fixes",
+                content =  {
+                    "Fixed an issue where the Delve Condition could sometimes fail to fire.",
+                },
+            },
+        },
+    },
+    {
         version = "1.2.22",
         date = "Nov 5th",
         entries = {

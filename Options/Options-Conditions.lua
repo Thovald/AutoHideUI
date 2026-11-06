@@ -40,7 +40,7 @@ ConditionsTab.CONDITION_DEFINITIONS = {
         events = {
             "PLAYER_ENTERING_WORLD",
             "LOADING_SCREEN_DISABLED",
-            "ZONE_CHANGED_NEW_AREA",
+            "ACTIVE_DELVE_DATA_UPDATE",
         },
         type = "parent",
     },

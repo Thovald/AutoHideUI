@@ -90,7 +90,10 @@ local function MINIMAPCLUSTER_CUSTOMGETTER(frameString)
     end
     tinsert(frameList, helperFrame)
 
-    Main.framesThatToggleVisibility[minimapFrame] = {threshold = 0.1}
+    Main.framesThatToggleVisibility[minimapFrame] = {
+        threshold = 0.1,
+        instantVisibility = true,
+    }
 
     return frameList
 end
@@ -386,7 +389,7 @@ local ADDON_FRAME_MAPPING = {
         name = "EllesmereUI_ObjectivesTracker",
         isLoaded = function() return C_AddOns.IsAddOnLoaded("EllesmereUIQuestTracker") end,
         frames = {
-            ObjectiveTrackerFrame = {"EllesmereUIQTBackground"},
+            ObjectiveTrackerFrame = {"EllesmereUIQTBackground", "EUI_CustomQuestTracker"},
         },
         args = {forceAlpha = true, includeDefaultFrames = true},
     },
@@ -416,9 +419,8 @@ local ADDON_FRAME_MAPPING = {
             MicroMenu = {"EllesmereEAB_MicroBar"},
             BagsBar = {"EllesmereEAB_BagBar"},
             MainStatusTrackingBarContainer = {"EllesmereEAB_XPBar"},
-
         },
-        args = {forceAlpha = true},
+        args = {forceAlpha = true, includeDefaultFrames = true, forceAlphaDefault = true},
     },
     {
         name = "EllesmereUI_UnitFrames",
@@ -455,7 +457,7 @@ local ADDON_FRAME_MAPPING = {
 
             return frameList
         end,
-        args = {forceAlpha = true},
+        args = {forceAlpha = true, includeDefaultFrames = true},
     },
     {
         name = "EllesmereUI_CDM",
@@ -919,23 +921,21 @@ local function CreateFrameInfo(frameList, frameString, args)
 end
 
 local function GetAddOnFrames(frameStringList)
+
     if not frameStringList then
         return
     end
 
     local frameList = {}
-    -- specifically checking if first frame was found because that's the Main one.
-    -- no point in returning TargetOfTarget if Target couldn't be found.
-    local firstFrameFound
-    for index, frameString in ipairs(frameStringList) do
+
+    for _, frameString in ipairs(frameStringList) do
         local frame = Frames.GetFrameObjectFromString(frameString)
         if frame then
             tinsert(frameList, frame)
-            firstFrameFound = firstFrameFound or index == 1
         end
     end
 
-    if firstFrameFound and frameList then
+    if frameList then
         return frameList
     end
 end
@@ -1079,6 +1079,7 @@ local function GetAllCommonFrames(groupDB)
     local frameList = {}
     for frameString, isChecked in pairs(groupDB.frames) do
         local frameInfo = GetAllFrameObjectsFromString(frameString, groupDB)
+
         if frameInfo then
             frameList[frameString] = frameInfo
             frameInfo.args.isInUse = isChecked

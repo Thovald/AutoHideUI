@@ -5,7 +5,7 @@ local Main = Private.Main
 local Migration = Private.Migration
 local Config = Private.Config
 
-Main.DB_SCHEMA_VERSION = 3
+Main.DB_SCHEMA_VERSION = 4
 
 local MigrationDB = {
     -- when parent/child conditions, manualControl and mouseover areas were introduced
@@ -203,6 +203,12 @@ local MigrationDB = {
         Migration.RenameCondition(profile, "interactable", "canInteract")
     end,
 
+    [4] = function(profile)
+        if Private.db.global.minimapButton and profile.showMinimapButton then
+            Private.db.global.minimapButton.hide = false
+        end
+        profile.showMinimapButton = nil
+    end,
 }
 
 function Migration.AddCondition(profile, conditionName)

@@ -1,5 +1,5 @@
 ## Interface: 120105, 16001
-## Version: 1.2.24
+## Version: 1.2.25
 ## Title: Auto Hide UI
 ## Notes: /ahui|n/autohide|n/autohideui
 ## Author: Thovald

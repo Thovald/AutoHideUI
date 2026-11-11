@@ -36,7 +36,7 @@ FramesTab.DEFAULT_FRAMES = {
     { frame = "PartyFrame",                     label = L["Party Frame"],       enabled = false },
     { frame = "PlayerCastingBarFrame",          label = L["Player Castbar"],    enabled = false,    divide = true },
     -- actionbars
-    { frame = "MainActionBar",                  label = L["ActionBar 1"],       enabled = true,     descr = L["descr_ActionBar1"] },
+    { frame = "MainActionBar",                  label = L["ActionBar 1"],       enabled = true,     description = L["descr_ActionBar1"] },
     { frame = "MultiBarBottomLeft",             label = L["ActionBar 2"],       enabled = true },
     { frame = "MultiBarBottomRight",            label = L["ActionBar 3"],       enabled = true },
     { frame = "MultiBarRight",                  label = L["ActionBar 4"],       enabled = true },
@@ -56,20 +56,19 @@ FramesTab.DEFAULT_FRAMES = {
     { frame = "PersonalResourceDisplayFrame",   label = L["Personal Resource"], enabled = true,     divide = true },
     -- other
     { frame = "DamageMeter",                    label = L["Damage Meter"],      enabled = true },
-    { frame = "MinimapCluster",                 label = L["Minimap"],           enabled = false,    descr = L["descr_Minimap"]},
-    {
-      frame = "MicroMenu",                      label = L["Micro Menu"],        enabled = false,
-      overrides = {Forever = {enabled = true}}
-    },
+    { frame = "MinimapCluster",                 label = L["Minimap"],           enabled = false,    description = L["descr_Minimap"]},
+    { frame = "MicroMenu",                      label = L["Micro Menu"],        enabled = true },
     { frame = "ObjectiveTrackerFrame",          label = L["Objectives Frame"],  enabled = false },
-    {
-      frame = "MainStatusTrackingBarContainer", label = L["Experience Bar"],    enabled = false,
-      overrides = {Forever = {enabled = true}}
-    },
+    { frame = "MainStatusTrackingBarContainer", label = L["Experience Bar"],    enabled = true },
     { frame = "BagsBar",                        label = L["Bags Bar"],          enabled = true },
 }
 
 -- resolving overrides
+-- example:
+    -- {
+    --   frame = "MainStatusTrackingBarContainer", label = L["Experience Bar"],    enabled = true,
+    --   overrides = {Forever = {enabled = false}}
+    -- },
 do
     local flavor = Private.flavor
     for _, entry in ipairs(FramesTab.DEFAULT_FRAMES) do

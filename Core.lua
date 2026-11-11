@@ -29,6 +29,7 @@ local Migration = Private.Migration
 -- unlike systemFrame, Main.frame's events are registered based on which conditions are enabled
 Main.frame = CreateFrame("Frame", "AutoHideUI")
 local systemFrame = CreateFrame("Frame")
+systemFrame:RegisterEvent("ADDON_LOADED")
 systemFrame:RegisterEvent("PLAYER_LOGIN")
 systemFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
 systemFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
@@ -131,8 +132,7 @@ local UnitCastingInfo, UnitChannelInfo, IsResting, IsFlying, UnitExists, UnitCan
 -- Setup
 -- ─────────────────────────────────────────────────────────────────────────────
 
-do
-    -- minimap button
+local function InitMinimapButton()
     local LDB = LibStub("LibDataBroker-1.1")
     local icon = LibStub("LibDBIcon-1.0")
 
@@ -152,8 +152,9 @@ do
         end,
     })
 
-    Private.minimap = Private.minimap or { hide = true }
-    icon:Register("AutoHideUI", myDataObject, Private.minimap)
+    Private.db.global.minimapButton = Private.db.global.minimapButton or Config.MINIMAP_DEFAULTS
+    Private.minimapButton = Private.db.global.minimapButton
+    icon:Register("AutoHideUI", myDataObject, Private.minimapButton)
 end
 
 function Main.frame:SetProfile(newProfile)
@@ -186,6 +187,7 @@ local function InitDB()
     Private.db.RegisterCallback(Private, "OnProfileCopied", "OnProfileChanged")
 
     Config.RegisterOptions()
+    InitMinimapButton()
     Config.UpdateMinimapButtonVisibility()
 end
 
@@ -756,8 +758,14 @@ end
 -- Events
 -- ─────────────────────────────────────────────────────────────────────────────
 
+local function OnLoaded(addonName)
+    if addonName == "AutoHideUI" then
+        InitDB()
+    end
+end
+
 local function OnLogin()
-    InitDB()
+    --InitDB()
     UpdateVersion()
     Migration.UpdateDB()
     InitOptions()
@@ -765,7 +773,7 @@ local function OnLogin()
 end
 
 local function OnFirstFrame()
-    C_Timer.After(1, function()
+    C_Timer.After(2, function()
         if Config.isOptionsOpen then
             return
         end
@@ -1004,6 +1012,7 @@ local EVENT_HANDLER = {
 }
 
 local SYSTEM_EVENT_HANDLER = {
+    ADDON_LOADED = OnLoaded,
     PLAYER_LOGIN = OnLogin,
     PLAYER_REGEN_ENABLED = OnCombatEnd,
     PLAYER_REGEN_DISABLED = OnCombatStart,
@@ -1012,7 +1021,7 @@ local SYSTEM_EVENT_HANDLER = {
 }
 
 function systemFrame:OnEvent(event, ...)
-    SYSTEM_EVENT_HANDLER[event]()
+    SYSTEM_EVENT_HANDLER[event](...)
 end
 
 function Main.frame:OnEvent(event, ...)

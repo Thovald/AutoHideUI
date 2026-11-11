@@ -5,6 +5,23 @@ local L = LibStub("AceLocale-3.0"):GetLocale("AutoHideUI")
 
 local CHANGELOG_DATA = {
     {
+        version = "1.2.25",
+        date = "Nov 11th",
+        entries = {
+            {
+                title = "Fixes",
+                content =  {
+                    "Fixed minimap button.",
+                    "The minimap now fades instantly, fixing potential visibility issues.",
+                    "Fixed BagsBar sometimes popping up when it shouldn't.",
+                    "Fixed EllesmereUI's default Buff and Debuff frames not being recognized anymore",
+                    "Fixed EllesmereUI's BagBar and MicroMenu not being recognized anymore.",
+                    "Fixed EllesmereUI's custom QuestTracker not being recognized.",
+                },
+            },
+        },
+    },
+    {
         version = "1.2.24",
         date = "Nov 7th",
         entries = {

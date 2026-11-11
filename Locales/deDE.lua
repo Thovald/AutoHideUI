@@ -27,7 +27,8 @@ L["group_defaultFrames"] = "Gewöhnliche Frames"
 L["group_customFrames"] = "Benutzerdefinierte Frames"
 L["descr_customFrames"] =   "Benutze den Frame Sucher oder gebe hier die Namen beliebiger Frames ein.".."|n"..
                             "Trenne die Einträge mit einem Komma."
-L["descr_Minimap"] = "Die Minikarte ist ein Sonderfall!|n|nAm besten sollte sie im Kampf einen Alpha Wert von 1 haben und wenn sie ausgeblendet wird, sollte sie auf einen Alpha Wert von 0 gehen."
+L["descr_Minimap"] = "Die Minikarte ist ein Sonderfall!|n|n"..
+                     "Anstelle einer Fade Animation, wechselt sie sofort zwischen vollständig sichtbar und ausgeblendet."
 
 L["Player Frame"] = "Spieler"
 L["Target Frame"] = "Ziel"
@@ -267,3 +268,5 @@ L["MinimapButton"] = "Zeige Minimap Knopf"
 L["label_isInteracting"] = "Am Interagieren"
 L["descr_isInteracting"] = "Wenn der Spieler gerade mit einem NPC interagiert."
 L["expandForMore"] = "Erweitern um weitere Optionen zu sehen."
+
+L["MinimapButtonPosition"] = "Minimap Knopf Position"

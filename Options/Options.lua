@@ -60,6 +60,11 @@ local ALPHA_PREF = {
     L["Highest"], L["Lowest"],
 }
 
+Config.MINIMAP_DEFAULTS = {
+    hide = true,
+    minimapPos = 240
+}
+
 -- ─────────────────────────────────────────────────────────────────────────────
 -- UI Logic
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -142,10 +147,10 @@ end
 
 function Config.UpdateMinimapButtonVisibility()
     local icon = LibStub("LibDBIcon-1.0")
-    if Private.db.profile.showMinimapButton then
-        icon:Show("AutoHideUI")
-    else
+    if Private.minimapButton.hide then
         icon:Hide("AutoHideUI")
+    else
+        icon:Show("AutoHideUI")
     end
 end
 
@@ -442,12 +447,24 @@ local OPTIONS_TAB_MISC = {
                     type = "toggle",
                     name = L["MinimapButton"],
                     width = 1.5,
-                    get = function(info) return Private.db.profile.showMinimapButton end,
+                    get = function(info) return not Private.minimapButton.hide end,
                     set = function(info, value)
-                        Private.db.profile.showMinimapButton = value
+                        Private.minimapButton.hide = not value
                         Config.UpdateMinimapButtonVisibility()
                     end,
                     order = 1,
+                },
+                fadeOutDelay = {
+                    type = "range",
+                    name = L["MinimapButtonPosition"],
+                    width = 1,
+                    min = 0,
+                    max = 360,
+                    softMax = 360,
+                    bigStep = 1,
+                    get = function() return Private.minimapButton.minimapPos end,
+                    set = function(_, value) Private.minimapButton.minimapPos = value Config.UpdateMinimapButtonVisibility() end,
+                    order = 5,
                 },
             }
 }

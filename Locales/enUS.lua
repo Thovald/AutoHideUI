@@ -26,7 +26,8 @@ L["group_defaultFrames"] = "Common Frames"
 L["group_customFrames"] = "Custom Frames"
 L["descr_customFrames"] =   "Use the Frame Finder or manually add the name of any Frame here.".."|n"..
                             "Separate multiple entries with a comma."
-L["descr_Minimap"] = "The minimap is a special case!|n|nFor best results, set it to be at full Alpha when in combat and at 0 Alpha when faded out."
+L["descr_Minimap"] = "The minimap is a special case and ignores the fade duration setting!|n|n"..
+                     "Instead of fading smoothly, it switches instantly between fully visible and hidden."
 
 L["Player Frame"] = true
 L["Target Frame"] = true
@@ -267,3 +268,5 @@ L["MinimapButton"] = "Show Minimap Button"
 L["label_isInteracting"] = "Is Interacting"
 L["descr_isInteracting"] = "When the player is interacting with an NPC."
 L["expandForMore"] = "Expand for more options"
+
+L["MinimapButtonPosition"] = "Minimap Button Position"

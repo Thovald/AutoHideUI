@@ -1,5 +1,4 @@
 name: Package and Release
-name: Release
 
 on:
   # GitHub releases are created when a tag is pushed

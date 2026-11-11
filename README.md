@@ -3,10 +3,10 @@
 <h2><font color="83d2ff">What this does:</font></h2>
 
 Fades out UI Elements and brings them back when certain conditions (like mouseover or combat) are met.<br>
-You choose what, how and when to fade!<br>
-- Esc => "Options" => "Addons" => "Auto Hide UI"
-- /autohide
-- /autohideui
+You choose what, how and when to fade!<br><br>
+Access the options menu with:<br>
+<b>Esc => "Options" => "Addons" => "Auto Hide UI"</b><br>
+<b>/ahui</b> or <b>/autohide</b> or <b>/autohideui</b>
 
 <h2><font color="83d2ff">Default behavior:</font></h2>
 

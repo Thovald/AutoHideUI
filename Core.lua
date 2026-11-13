@@ -212,6 +212,7 @@ end
 local function InitOptions()
     Config.SetSelectedGroup()
     Config.CreateOptionsMenu()
+    Config.SetHooksForMenus()
 end
 
 local function RegisterEventsInCondition(condition)

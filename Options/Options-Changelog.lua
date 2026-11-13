@@ -5,6 +5,18 @@ local L = LibStub("AceLocale-3.0"):GetLocale("AutoHideUI")
 
 local CHANGELOG_DATA = {
     {
+        version = "1.2.28",
+        date = "Nov 13th",
+        entries = {
+            {
+                title = "Fixed",
+                content =  {
+                    "Fixed a recently introduced bug that could cause the AddOn to lock up when the options were opened."
+                },
+            },
+        },
+    },
+    {
         version = "1.2.27",
         date = "Nov 13th",
         entries = {

@@ -772,7 +772,7 @@ local function SetHooksForAce()
     end)
 end
 
-local function SetHooksForMenus()
+function Config.SetHooksForMenus()
     SetHooksForBlizzard()
     SetHooksForAce()
 end
@@ -817,7 +817,6 @@ function Config.RegisterOptions()
         Config.ToggleOptionsMenu()
     end
 
-    SetHooksForMenus()
 end
 
 -- ─────────────────────────────────────────────────────────────────────────────

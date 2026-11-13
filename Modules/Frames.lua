@@ -1,4 +1,5 @@
 local _, Private = ...
+local L = LibStub("AceLocale-3.0"):GetLocale("AutoHideUI")
 local Main = Private.Main
 local Config = Private.Config
 local Frames = Private.Frames
@@ -92,7 +93,7 @@ local function MINIMAPCLUSTER_CUSTOMGETTER(frameString)
 
     Main.framesThatToggleVisibility[minimapFrame] = {
         threshold = 0.1,
-        instantVisibility = true,
+        instantVisibility = true and Private.db.global.minimapNoIntermediateAlpha,
     }
 
     return frameList
@@ -1193,6 +1194,8 @@ function Frames.InitFrames()
     FinishVisibilityFrames()
     ReparentAllCustomFrames()
     ReplaceAllAlphaFunctions()
+
+    Frames.CheckMinimapSettings()
 end
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -1240,4 +1243,60 @@ function Frames.UpdateAyijeResourceBars()
     end
 
     Main.CreateMouseoverLists()
+end
+
+-- there's currently a bug that prevents the minimap to update if its alpha is anything other than 0 or 1.
+-- a workaround is in place to prevent intermediate alpha values.
+-- here we check if the minimap is enabled in a group with problematic alpha values.
+-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+-- REMOVE minimapWarningShown FROM DB IF THIS EVER GETS FIXED
+-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+function Frames.CheckMinimapSettings()
+    if (not Private.db.global.minimapNoIntermediateAlpha) or Private.db.profile.minimapWarningShown then
+        return
+    end
+
+    local minimapInfo = Main.activeStrings["MinimapCluster"]
+
+    if not minimapInfo or not minimapInfo.args.isInUse or not minimapInfo.group.config.enabled then
+        return
+    end
+
+    local function IsInvalidAlphaForMinimap(alpha)
+        return alpha > 0 and alpha < 1
+    end
+
+    local offenders = {}
+
+    if IsInvalidAlphaForMinimap(minimapInfo.group.config.idleAlpha) then
+        table.insert(offenders, L["slider_idleAlpha"])
+    end
+
+    for k, v in pairs (minimapInfo.group.conditions) do
+        if v.enabled and IsInvalidAlphaForMinimap(v.alpha) then
+            table.insert(offenders, L["label_"..k])
+        end
+    end
+
+    if #offenders > 0 then
+        Frames.PrintMinimapWarning(minimapInfo.group.name, offenders)
+    end
+end
+
+function Frames.PrintMinimapWarning(groupName, offenders)
+    local title = Main.GetErrorTitleString()
+    local warningText = string.format(L["MinimapWarningText"], L["tab_frameSelect"] )
+    local groupText = Main.ColorString(L["MinimapWarningGroup"], "red")..groupName
+    local settingsText = Main.ColorString(L["MinimapWarningSettings"], "red")
+
+    for _, v in ipairs(offenders) do
+        settingsText = settingsText..v..", "
+    end
+
+    print(title..Main.ColorString(L["attention"], "red"))
+    print(title..warningText)
+    print(title..groupText)
+    print(title..settingsText)
+
+    Private.db.profile.minimapWarningShown = true
 end

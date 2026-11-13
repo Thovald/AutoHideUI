@@ -152,7 +152,6 @@ local function InitMinimapButton()
         end,
     })
 
-    Private.db.global.minimapButton = Private.db.global.minimapButton or Config.MINIMAP_DEFAULTS
     Private.minimapButton = Private.db.global.minimapButton
     icon:Register("AutoHideUI", myDataObject, Private.minimapButton)
 end
@@ -177,6 +176,22 @@ function Private:OnNewProfile(_, AceTable)
     Config.RebuildUI()
 end
 
+local function UpdateVersion()
+    Private.db.global.version_last = Private.db.global.version or "1.0.0"
+    Private.db.global.version = C_AddOns.GetAddOnMetadata("AutoHideUI", "version")
+end
+
+local function UpdateGlobalDB()
+    -- anything that's not profile-specific
+    for k,v in pairs(Config.DB_GLOBALS) do
+        if Private.db.global[k] == nil then
+            Private.db.global[k] = v
+        end
+    end
+
+    UpdateVersion()
+end
+
 local function InitDB()
     local defaultProfile = Config.GetDefaultProfile()
     Private.db = LibStub("AceDB-3.0"):New("AutoHideUIDB", defaultProfile, true)
@@ -187,6 +202,9 @@ local function InitDB()
     Private.db.RegisterCallback(Private, "OnProfileCopied", "OnProfileChanged")
 
     Config.RegisterOptions()
+    UpdateGlobalDB()
+    Migration.UpdateDB()
+
     InitMinimapButton()
     Config.UpdateMinimapButtonVisibility()
 end
@@ -194,11 +212,6 @@ end
 local function InitOptions()
     Config.SetSelectedGroup()
     Config.CreateOptionsMenu()
-end
-
-local function UpdateVersion()
-    Private.db.global.version_last = Private.db.global.version or "1.0.0"
-    Private.db.global.version = C_AddOns.GetAddOnMetadata("AutoHideUI", "version")
 end
 
 local function RegisterEventsInCondition(condition)
@@ -765,9 +778,6 @@ local function OnLoaded(addonName)
 end
 
 local function OnLogin()
-    --InitDB()
-    UpdateVersion()
-    Migration.UpdateDB()
     InitOptions()
     ManualControl.StartListening()
 end

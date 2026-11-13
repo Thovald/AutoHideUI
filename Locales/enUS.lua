@@ -26,8 +26,9 @@ L["group_defaultFrames"] = "Common Frames"
 L["group_customFrames"] = "Custom Frames"
 L["descr_customFrames"] =   "Use the Frame Finder or manually add the name of any Frame here.".."|n"..
                             "Separate multiple entries with a comma."
-L["descr_Minimap"] = "The minimap is a special case and ignores the fade duration setting!|n|n"..
-                     "Instead of fading smoothly, it switches instantly between fully visible and hidden."
+L["descr_Minimap"] = "The Minimap is a special case and will only consider Alpha values of exactly 0 or 1.|n|n"..
+                     "If your group uses other Alpha values, they won't be applied to the Minimap to prevent it from bugging.|n|n"..
+                     "There is an option in the \"Misc\" tab to turn this safety off."
 
 L["Player Frame"] = true
 L["Target Frame"] = true
@@ -263,10 +264,21 @@ L["cmd_setProfileLua"] = 'AutoHideUI:SetProfile("PROFILE")'
 L["descr_setProfileLua"] = "Lua command to switch to specified profile.".."|n"..
                            "Can be used by AddOns to automate profile-switching."
 L["tab_other"] = "Misc"
-L["MinimapButton"] = "Show Minimap Button"
+L["toggle_MinimapButton"] = "Show Minimap Button"
 
 L["label_isInteracting"] = "Is Interacting"
 L["descr_isInteracting"] = "When the player is interacting with an NPC."
 L["expandForMore"] = "Expand for more options"
 
-L["MinimapButtonPosition"] = "Minimap Button Position"
+L["slider_MinimapButtonPosition"] = "Minimap Button Position"
+L["toggle_NoMinimapTransparency"] = "Disable Minimap transparency"
+L["descr_NoMinimapTransparency"] = "If enabled, the Minimap can only be fully visible or fully hidden|n|n"..
+                                   "This prevents a bug in the game where the Minimap will not update reliably if it is partially visible.|n|n"..
+                                   "You can disable this to allow a semi-transparent Minimap, but if you encounter an empty black background where the map should be, this is why."
+
+L["attention"] = "Attention!"
+L["MinimapWarningText"] = "The Minimap may not fade as expected because its Group uses Alpha values not supported by the Minimap.|n"..
+                          "Read the Minimap's tooltip in the option menu's \"%s\" tab to learn more."
+L["MinimapWarningGroup"] = "Relevant Group: "
+L["MinimapWarningSettings"] = "Relevant Settings: "
+

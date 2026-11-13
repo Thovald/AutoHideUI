@@ -60,9 +60,12 @@ local ALPHA_PREF = {
     L["Highest"], L["Lowest"],
 }
 
-Config.MINIMAP_DEFAULTS = {
-    hide = true,
-    minimapPos = 240
+Config.DB_GLOBALS = {
+    minimapButton = {
+        hide = true,
+        minimapPos = 240
+    },
+    minimapNoIntermediateAlpha = true
 }
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -438,35 +441,52 @@ local OPTIONS_TAB_FADE = {
 }
 
 local OPTIONS_TAB_MISC = {
-            name = L["tab_other"],
-            type = "group",
-            childGroups = "tab",
+    name = L["tab_other"],
+    type = "group",
+    childGroups = "tab",
+    order = 1,
+    args = {
+        checkbox_minimapButton = {
+            type = "toggle",
+            name = L["toggle_MinimapButton"],
+            width = 1.2,
+            get = function(info) return not Private.minimapButton.hide end,
+            set = function(info, value)
+                Private.minimapButton.hide = not value
+                Config.UpdateMinimapButtonVisibility()
+            end,
             order = 1,
-            args = {
-                checkbox_minimapButton = {
-                    type = "toggle",
-                    name = L["MinimapButton"],
-                    width = 1.5,
-                    get = function(info) return not Private.minimapButton.hide end,
-                    set = function(info, value)
-                        Private.minimapButton.hide = not value
-                        Config.UpdateMinimapButtonVisibility()
-                    end,
-                    order = 1,
-                },
-                fadeOutDelay = {
-                    type = "range",
-                    name = L["MinimapButtonPosition"],
-                    width = 1,
-                    min = 0,
-                    max = 360,
-                    softMax = 360,
-                    bigStep = 1,
-                    get = function() return Private.minimapButton.minimapPos end,
-                    set = function(_, value) Private.minimapButton.minimapPos = value Config.UpdateMinimapButtonVisibility() end,
-                    order = 5,
-                },
-            }
+        },
+        fadeOutDelay = {
+            type = "range",
+            name = L["slider_MinimapButtonPosition"],
+            width = 1,
+            min = 0,
+            max = 360,
+            softMax = 360,
+            bigStep = 1,
+            get = function() return Private.minimapButton.minimapPos end,
+            set = function(_, value) Private.minimapButton.minimapPos = value Config.UpdateMinimapButtonVisibility() end,
+            order = 2,
+        },
+        spacer1 = {
+            type = "description",
+            name = " ",
+            width = 1,
+            order = 3,
+        },
+        checkbox_minimapNoInbtwnAlpha = {
+            type = "toggle",
+            name = L["toggle_NoMinimapTransparency"],
+            width = 1.5,
+            get = function(info) return Private.db.global.minimapNoIntermediateAlpha end,
+            set = function(info, value)
+                Private.db.global.minimapNoIntermediateAlpha = value
+            end,
+            desc = L["descr_NoMinimapTransparency"],
+            order = 5,
+        },
+    }
 }
 
 Config.OPTIONS_MENU = {
@@ -677,7 +697,6 @@ end
 function Config.GetDefaultProfile()
     local defaultProfile = {
         profile = {
-            showMinimapButton = false,
             manualControl = {},
             groups = {},
             previewFrames = {

@@ -5,6 +5,20 @@ local L = LibStub("AceLocale-3.0"):GetLocale("AutoHideUI")
 
 local CHANGELOG_DATA = {
     {
+        version = "1.2.27",
+        date = "Nov 13th",
+        entries = {
+            {
+                title = "Misc",
+                content =  {
+                    "Added an option to the \"Misc\" tab to allow semi-transparent Minimaps again.|n"..
+                    "Bear in mind that a bug in the game will prevent the Minimap to update reliably while it's semi-transparent.",
+                    "Added a one-time warning if the Minimap's group would attempt to partially fade the Minimap."
+                },
+            },
+        },
+    },
+    {
         version = "1.2.25",
         date = "Nov 11th",
         entries = {
@@ -595,10 +609,10 @@ end
 changelogButton:SetScript("OnClick", function(self)
     local uiScale = UIParent:GetEffectiveScale()
     local t0, t1 = 0.65, 1.0
-    local v0, v1 = 790, 555
+    local v0, v1 = 810, 575
 
     local scaledHeight = v0 + (v1 - v0) * ((uiScale - t0) / (t1 - t0))
-    changelogFrame:SetHeight(min(max(555, scaledHeight), 790))
+    changelogFrame:SetHeight(min(max(575, scaledHeight), 810))
 
     changelogFrame:SetShown(not changelogFrame:IsShown())
 end)

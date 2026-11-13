@@ -27,8 +27,9 @@ L["group_defaultFrames"] = "Gewöhnliche Frames"
 L["group_customFrames"] = "Benutzerdefinierte Frames"
 L["descr_customFrames"] =   "Benutze den Frame Sucher oder gebe hier die Namen beliebiger Frames ein.".."|n"..
                             "Trenne die Einträge mit einem Komma."
-L["descr_Minimap"] = "Die Minikarte ist ein Sonderfall!|n|n"..
-                     "Anstelle einer Fade Animation, wechselt sie sofort zwischen vollständig sichtbar und ausgeblendet."
+L["descr_Minimap"] = "Die Minikarte ist ein Sonderfall und berücksichtigt nur Alpha Werte von genau 0 oder 1.|n|n"..
+                     "Falls die Gruppierung andere Werte benutzt, werden diese nicht an der Minikarte angewandt, da sie ansonsten nicht korrekt aktualisiert.|n|n"..
+                     "Diese Sicherung kann unter \"Sonstiges\" abgeschaltet werden."
 
 L["Player Frame"] = "Spieler"
 L["Target Frame"] = "Ziel"
@@ -263,10 +264,26 @@ L["cmd_setProfileLua"] = 'AutoHideUI:SetProfile("PROFIL")'
 L["descr_setProfileLua"] = "Lua-Befehl um zum angegebenen Profil zu wechseln.".."|n"..
                            "Kann von AddOns benutzt werden um Profil-Wechsel zu automatisieren."
 L["tab_other"] = "Sonstiges"
-L["MinimapButton"] = "Zeige Minimap Knopf"
+L["toggle_MinimapButton"] = "Zeige Minikarte Knopf"
 
 L["label_isInteracting"] = "Am Interagieren"
 L["descr_isInteracting"] = "Wenn der Spieler gerade mit einem NPC interagiert."
 L["expandForMore"] = "Erweitern um weitere Optionen zu sehen."
 
-L["MinimapButtonPosition"] = "Minimap Knopf Position"
+L["slider_MinimapButtonPosition"] = "Minikarte Knopf Position"
+L["toggle_NoMinimapTransparency"] = "Verhindere transparente Minikarte"
+L["descr_NoMinimapTransparency"] = "Wenn eingeschaltet, kann die Minikarte nur vollständig sichtbar oder versteckt sein.|n|n"..
+                                   "Ein Bug in WoW kann dafür sorgen, dass eine halb-transparente Minikarte nicht immer zuverlässig aktualisiert wird.|n|n"..
+                                   "Du kannst diese Option deaktivieren wenn du eine durchsichtige Minikarte willst, aber wenn dir später auffällt, dass die Minikarte manchmal schwarz bleibt, weißt du Bescheid."
+
+L["MinimapWarningText"] = "The Minimap may not fade as expected because its Group uses Alpha values not supported by the Minimap.|n"..
+                          "Read the Minimap's tooltip in the option menu's \"%s\" tab to learn more."
+L["MinimapWarningGroup"] = "Relevant Group: "
+L["MinimapWarningSettings"] = "Relevant Settings: "
+
+L["attention"] = "Achtung!"
+L["MinimapWarningText"] = "Es ist möglich, dass die Minikarte, wegen der Alpha Werte ihrer Gruppierung, nicht wie erwartet ausblended.|n"..
+                          "Lies den Tooltip der Minikarte im \"%s\"-Bereich des Optionsmenüs um mehr zu erfahren."
+L["MinimapWarningGroup"] = "Betroffene Gruppierung: "
+L["MinimapWarningSettings"] = "Betroffene Einstellungen: "
+

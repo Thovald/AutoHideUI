@@ -282,4 +282,4 @@ L["MinimapWarningText"] = "The Minimap may not fade as expected because its Grou
 L["MinimapWarningGroup"] = "Relevant Group: "
 L["MinimapWarningSettings"] = "Relevant Settings: "
 
-L["Chat"] = true
+L["Chat"] = "Chat Windows"

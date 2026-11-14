@@ -5,11 +5,30 @@ local L = LibStub("AceLocale-3.0"):GetLocale("AutoHideUI")
 
 local CHANGELOG_DATA = {
     {
+        version = "1.2.29",
+        date = "Nov 14th",
+        entries = {
+            {
+                title = "New",
+                content =  {
+                    "Added Chat to Common Frames selection.|n"..
+                    "DefaultUI, EllesmereUI, ElvUI, Chattynator and Prat are supported."
+                },
+            },
+            {
+                title = "Fixes",
+                content =  {
+                    "Fixed EllesmereUI interfering with Minimap visibility."
+                },
+            },
+        },
+    },
+    {
         version = "1.2.28",
         date = "Nov 13th",
         entries = {
             {
-                title = "Fixed",
+                title = "Fixes",
                 content =  {
                     "Fixed a recently introduced bug that could cause the AddOn to lock up when the options were opened."
                 },

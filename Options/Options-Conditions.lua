@@ -27,6 +27,32 @@ ConditionsTab.CONDITION_DEFINITIONS = {
         },
         type = "default",
     },
+    {
+        name = "mouseover",
+        db = {
+            enabled = true,
+            alpha = 1,
+            priority = false,
+            trigger = 1,
+        },
+        events = {
+            "WORLD_CURSOR_TOOLTIP_UPDATE",
+            "UPDATE_MOUSEOVER_UNIT",
+        },
+        type = "default",
+        extraOptions = {
+            {
+                entryName = "dropdown_mouseover",
+                settingName = "trigger",
+                widget = {
+                    desc = L["descr_mouseover"],
+                    type = "select",
+                    width = 0.8,
+                    values = function() return {L["dropdownOption_mouseover1"], L["dropdownOption_mouseover2"]} end,
+                },
+            },
+        },
+    },
     -- ─────────────────────────────────────────────────────────────────────────────----
     -- START instance
     -- ─────────────────────────────────────────────────────────────────────────────----
@@ -124,32 +150,7 @@ ConditionsTab.CONDITION_DEFINITIONS = {
     -- ─────────────────────────────────────────────────────────────────────────────----
     -- END instance
     -- ─────────────────────────────────────────────────────────────────────────────----
-    {
-        name = "mouseover",
-        db = {
-            enabled = true,
-            alpha = 1,
-            priority = false,
-            trigger = 1,
-        },
-        events = {
-            "WORLD_CURSOR_TOOLTIP_UPDATE",
-            "UPDATE_MOUSEOVER_UNIT",
-        },
-        type = "default",
-        extraOptions = {
-            {
-                entryName = "dropdown_mouseover",
-                settingName = "trigger",
-                widget = {
-                    desc = L["descr_mouseover"],
-                    type = "select",
-                    width = 0.8,
-                    values = function() return {L["dropdownOption_mouseover1"], L["dropdownOption_mouseover2"]} end,
-                },
-            },
-        },
-    },
+
     -- ─────────────────────────────────────────────────────────────────────────────----
     -- START target
     -- ─────────────────────────────────────────────────────────────────────────────----

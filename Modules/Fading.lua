@@ -179,9 +179,17 @@ function Fading.SetVisibilityFromAlpha(frame, endAlpha, threshold)
     end
 
     if endAlpha > threshold then
-        frame:Show()
+        if frame._origShow then
+            frame:_origShow()
+        else
+            frame:Show()
+        end
     else
-        frame:Hide()
+        if frame._origHide then
+            frame:_origHide()
+        else
+            frame:Hide()
+        end
     end
 end
 
@@ -193,9 +201,17 @@ local function UpdateFrameVisibility(frame, frameInfo, targetAlpha)
     local alpha = targetAlpha or frameInfo.group.states.endAlpha
 
     if alpha >= frameInfo.threshold and not isShown then
-        frame:Show()
+        if frame._origShow then
+            frame:_origShow()
+        else
+            frame:Show()
+        end
     elseif alpha < frameInfo.threshold and isShown then
-        frame:Hide()
+        if frame._origHide then
+            frame:_origHide()
+        else
+            frame:Hide()
+        end
     end
 end
 
@@ -212,9 +228,17 @@ function Fading.UpdateAllFrameVisibility(setVisibilityToValue)
             if setVisibilityToValue == nil or not frame:IsProtected() then
                 UpdateFrameVisibility(frame, frameInfo)
             elseif setVisibilityToValue then
-                frame:Show()
+                if frame._origShow then
+                    frame:_origShow()
+                else
+                    frame:Show()
+                end
             else
-                frame:Hide()
+                if frame._origHide then
+                    frame:_origHide()
+                else
+                    frame:Hide()
+                end
             end
         end
     end

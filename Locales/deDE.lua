@@ -287,4 +287,4 @@ L["MinimapWarningText"] = "Es ist möglich, dass die Minikarte, wegen der Alpha 
 L["MinimapWarningGroup"] = "Betroffene Gruppierung: "
 L["MinimapWarningSettings"] = "Betroffene Einstellungen: "
 
-L["Chat"] = true
+L["Chat"] = "Chat Fenster"

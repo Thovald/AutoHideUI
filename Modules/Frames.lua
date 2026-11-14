@@ -196,9 +196,8 @@ local function BARTENDER_CUSTOMGETTER(frameString)
             bar = {"BT4BarBagBar"},
             firstButton = {"CharacterReagentBag0Slot"},
         },
-        -- /dump BT4Button79:GetParent():GetName()
     }
-            
+
     local frameList = {}
 
     if frameString == "MainActionBar" then
@@ -469,7 +468,7 @@ local ADDON_FRAME_MAPPING = {
             MinimapCluster = {},
         },
         customGetter = function() return MINIMAPCLUSTER_CUSTOMGETTER("Minimap") end,
-        args = {forceAlpha = true},
+        args = {forceAlpha = true, forceVisibility = true},
     },
     {
         name = "EllesmereUI_ActionBars",
@@ -718,12 +717,10 @@ local ADDON_FRAME_MAPPING = {
             end
 
             -- getting all anonymous chat windows for mouseover.
-            -- we only need one.
             local f = EnumerateFrames()
             while f do
                 if f:GetParent() == chattynatorFrame then
                     tinsert(frameList, f)
-                   -- break
                 end
                 f=EnumerateFrames(f)
             end
@@ -987,6 +984,24 @@ local function RestoreOriginalAlphaFunctions()
     end
 end
 
+local function RestoreOriginalVisibilityFunctions()
+    local arg, val = "forceVisibility", true
+    local frameList = GetFramesByArg(arg, val)
+    for frame in pairs(frameList) do
+
+        if frame._origShow then
+            frame.Show = frame._origShow
+            frame._origShow = nil
+        end
+
+        if frame._origHide then
+            frame.Hide = frame._origHide
+            frame._origHide = nil
+        end
+
+    end
+end
+
 local function ReplaceAlphaFunctions(frame, groupInfo)
     if frame._origSetAlpha or frame._origSetAlphaFromBoolean then
         -- we should never get here but checking anyway cause continuing would be very bad
@@ -1008,6 +1023,20 @@ local function ReplaceAlphaFunctions(frame, groupInfo)
     end
 
     frame.lastAlpha = frame:GetAlpha()
+end
+
+local function ReplaceVisibilityFunctions(frame, groupInfo)
+    if frame._origShow then
+        -- we should never get here but checking anyway cause continuing would be very bad
+        return
+    end
+
+    frame._origShow = frame.Show
+    frame._origHide = frame.Hide
+
+    frame.Show = function() end
+    frame.Hide = function() end
+
 end
 
 local function RestoreOriginalParents()
@@ -1065,9 +1094,20 @@ local function ReplaceAllAlphaFunctions()
     end
 end
 
+local function ReplaceAllVisibilityFunctions()
+    local arg, val = "forceVisibility", true
+    local frameList = GetFramesByArg(arg, val)
+    for frame, frameInfo in pairs(frameList) do
+        if frameInfo.args.isInUse then
+            ReplaceVisibilityFunctions(frame, frameInfo.group)
+        end
+    end
+end
+
 function Frames.ResetFrames()
     RestoreOriginalAlphaFunctions()
     RestoreOriginalParents()
+    RestoreOriginalVisibilityFunctions()
     WipeActiveFramesLists()
 end
 
@@ -1366,6 +1406,7 @@ function Frames.InitFrames()
     FinishVisibilityFrames()
     ReparentAllCustomFrames()
     ReplaceAllAlphaFunctions()
+    ReplaceAllVisibilityFunctions()
 
     Frames.CheckMinimapSettings()
 end

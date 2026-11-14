@@ -16,9 +16,9 @@ local pairs, ipairs  = pairs, ipairs
 Config.selectedGroup = 1
 Config.isOptionsOpen = false
 local MENU_WIDTH = 630
-local MENU_HEIGHT = 850 -- this is now set on options open, based on ui scale
+local MENU_HEIGHT = 895 -- this is now set on options open, based on ui scale
 local MENU_HEIGHT_MIN = 400
-local MENU_HEIGHT_MAX = 1000
+local MENU_HEIGHT_MAX = 895
 local UI_WIDTH, UI_HEIGHT = UIParent:GetSize()
 local UI_PADDING = 5
 

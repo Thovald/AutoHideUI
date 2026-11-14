@@ -287,3 +287,6 @@ L["MinimapWarningText"] = "Es ist möglich, dass die Minikarte, wegen der Alpha 
 L["MinimapWarningGroup"] = "Betroffene Gruppierung: "
 L["MinimapWarningSettings"] = "Betroffene Einstellungen: "
 
+L["Chat"] = true
+L["descr_Chat"] = "Chattynator's Chat-Fenster ist für Mouseover Ereignisse leider nicht sichtbar.|n"..
+                  "Als provisorische Lösung kannst du einen Mouseover Bereich erstellen und diesen übers Chat Fenster ziehen."

@@ -282,3 +282,6 @@ L["MinimapWarningText"] = "The Minimap may not fade as expected because its Grou
 L["MinimapWarningGroup"] = "Relevant Group: "
 L["MinimapWarningSettings"] = "Relevant Settings: "
 
+L["Chat"] = true
+L["descr_Chat"] = "Chattynator's chat window will be invisible to mouseovers, unfortunately.|n"..
+                  "As a workaround, you can create and drag a Mouseover Area over the chat window."

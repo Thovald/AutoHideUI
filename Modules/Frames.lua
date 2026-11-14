@@ -99,6 +99,53 @@ local function MINIMAPCLUSTER_CUSTOMGETTER(frameString)
     return frameList
 end
 
+local function CHATFRAME_CUSTOMGETTER()
+    -- this will return 10 chat frames.
+    -- idk how to filter out the frames that aren't currently in use.
+
+    -- Chat Frames
+    local frameInfo = {
+        prefix = "ChatFrame",
+        suffix = "",
+        list = nil,
+    }
+    local frameList = Frames.GetIncrementalFrames(frameInfo)
+
+    -- Chat Tabs
+    local tabInfo = {
+        prefix = "ChatFrame",
+        suffix = "Tab",
+        list = frameList,
+    }
+    frameList = Frames.GetIncrementalFrames(tabInfo)
+
+    -- removing Chat Tabs that are already being faded via GeneralDockManager
+    local dockManager = Frames.GetFrameObjectFromString("GeneralDockManager")
+    if dockManager then
+        for _, frame in pairs(frameList) do
+            if frame:GetParent() == dockManager then
+                tremove(frame)
+            end
+        end
+        tinsert(frameList, dockManager)
+    end
+
+    -- Misc
+    local chatElements = {
+        "ChatFrame1ButtonFrame",
+        "QuickJoinToastButton",
+        "TextToSpeechButtonFrame"
+    }
+    for _, element in pairs(chatElements) do
+        local frameObject = Frames.GetFrameObjectFromString(element)
+        if frameObject then
+            tinsert(frameList, frameObject)
+        end
+    end
+
+    return frameList
+end
+
 local function BARTENDER_CUSTOMGETTER(frameString)
     local MAPPING = {
         MainActionBar = {
@@ -353,6 +400,27 @@ local ADDON_FRAME_MAPPING = {
         args = {reparent = true, forceAlpha = true},
     },
     {
+        name = "ElvUI_Chat",
+        isLoaded = function() return C_AddOns.IsAddOnLoaded("ElvUI") end,
+        frames = {
+            ChatFrame = {},
+        },
+        customGetter = function()
+            local frameList = CHATFRAME_CUSTOMGETTER()
+            local chatElements = {"LeftChatPanel", "RightChatPanel", "ChatFrameChannelButton"}
+
+            for _, element in pairs(chatElements) do
+                local frameObject = Frames.GetFrameObjectFromString(element)
+                if frameObject then
+                    tinsert(frameList, frameObject)
+                end
+            end
+
+            return frameList
+        end,
+        args = {forceAlpha = true},
+    },
+    {
         name = "Details",
         isLoaded = function() return C_AddOns.IsAddOnLoaded("Details") end,
         frames = {
@@ -571,6 +639,89 @@ local ADDON_FRAME_MAPPING = {
         args = {forceAlpha = true},
     },
     {
+        name = "EllesmereUI_Chat",
+        isLoaded = function() return C_AddOns.IsAddOnLoaded("EllesmereUIChat") end,
+        frames = {
+            ChatFrame = {},
+        },
+        customGetter = function()
+            -- entirely written by Claude. seems to work fine
+            local eui = EllesmereUI
+            local chatNS = eui and eui._ModuleNS and eui._ModuleNS["EllesmereUIChat"]
+            local cfd = eui and eui._chatCFD
+
+            if not (chatNS and cfd) then return nil end
+
+            local frames, seen = {}, {}
+            local function add(frame)
+                if frame and not seen[frame] then
+                    seen[frame] = true
+                    frames[#frames + 1] = frame
+                end
+            end
+
+            local function addWindow(cf)
+                if not cf then return end
+                local d = cfd(cf)
+                if not d.bg then return end -- not yet skinned/initialized
+
+                add(cf)
+                add(_G[cf:GetName() .. "EditBox"]) -- make it optional
+                add(d.bg)
+                add(d.resizeGrip)
+
+                if cf == _G["ChatFrame1"] then
+                    add(d.sidebar)
+                    local cfg = chatNS.ECHAT and chatNS.ECHAT.DB()
+                    if cfg and cfg.scrollButtonOnChat then
+                        add(d.scrollBtn)
+                    end
+                end
+            end
+
+            -- Include temporary windows as well as the usual numbered frames.
+            for i = 1, 20 do
+                addWindow(_G["ChatFrame" .. i])
+            end
+            local chatNames = _G["CHAT_FRAMES"]
+            if type(chatNames) == "table" then
+                for i = 1, #chatNames do
+                    addWindow(_G[chatNames[i]])
+                end
+            end
+
+            -- EUI-owned pieces that aren't children of the per-window panel.
+            add(chatNS._chatBgExt)
+            add(chatNS._chatPanelBorder)
+            add(chatNS._sidebarSeparateBorder)
+            add(chatNS._chatTabStrip)
+
+            -- Blizzard's real dock tabs are visible only in this style.
+            if chatNS.ChatBlizzTabs and chatNS.ChatBlizzTabs() then
+                add(_G["GeneralDockManager"])
+            end
+
+            return frames
+        end,
+        args = {forceAlpha = true},
+    },
+    {
+        name = "Chattynator",
+        isLoaded = function() return C_AddOns.IsAddOnLoaded("Chattynator") end,
+        frames = {
+            ChatFrame = {},
+        },
+        customGetter = function()
+            local frameList = {}
+            local chattynatorFrame = Chattynator.API:GetHyperlinkHandler()
+            if chattynatorFrame then
+                tinsert(frameList, chattynatorFrame)
+            end
+            return frameList
+        end,
+        args = {forceAlpha = true},
+    },
+    {
         name = "BasicMinimap",
         isLoaded = function() return C_AddOns.IsAddOnLoaded("BasicMinimap") end,
         frames = {
@@ -708,22 +859,17 @@ local SPECIAL_FRAMES = {
     },
     DamageMeter = {
         customGetter = function()
-            -- to add all secondary windows
-            local frameList = {}
-            local count = 1
-            local frameString = "DamageMeterSessionWindow"..count
-
-            local frameObject = Frames.GetFrameObjectFromString(frameString)
-            while frameObject do
-                if #frameList < count then
-                    tinsert(frameList, frameObject)
-                end
-                count = count + 1
-                frameString = "DamageMeterSessionWindow"..count
-                frameObject = Frames.GetFrameObjectFromString(frameString)
-            end
+            local info = {
+                prefix = "DamageMeterSessionWindow",
+                suffix = "",
+                list = nil,
+            }
+            local frameList = Frames.GetIncrementalFrames(info)
             return frameList
         end
+    },
+    ChatFrame = {
+        customGetter = CHATFRAME_CUSTOMGETTER,
     },
     MinimapCluster = {
         customGetter = MINIMAPCLUSTER_CUSTOMGETTER,
@@ -756,6 +902,21 @@ function Frames.ToggleHelperFrames()
             frame:Hide()
         end
     end
+end
+
+function Frames.GetIncrementalFrames(info)
+    -- returns {ChatFrame1, ChatFrame2, etc}
+    local frameList = info.list or {}
+    local count = 1
+
+    local frameObject = Frames.GetFrameObjectFromString(info.prefix..count..info.suffix)
+    while frameObject do
+        tinsert(frameList, frameObject)
+        count = count + 1
+        frameObject = Frames.GetFrameObjectFromString(info.prefix..count..info.suffix)
+    end
+
+    return frameList
 end
 
 function Main.FetchFramesFromString(frameString)

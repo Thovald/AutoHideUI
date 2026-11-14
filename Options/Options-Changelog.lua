@@ -608,7 +608,7 @@ function Changelog.ShowButton(anchorFrame)
     if not changelogFrame:IsShown() then
         changelogFrame:SetParent(changelogButton)
         changelogFrame:ClearAllPoints()
-        changelogFrame:SetPoint("TOPRIGHT", changelogButton, "TOPRIGHT", 0,0)
+        changelogFrame:SetPoint("TOPRIGHT", changelogButton, "TOPRIGHT", 50,-20)
         changelogFrame:SetFrameStrata("HIGH")
         changelogFrame:SetFrameLevel(50)
     end
@@ -621,10 +621,10 @@ end
 changelogButton:SetScript("OnClick", function(self)
     local uiScale = UIParent:GetEffectiveScale()
     local t0, t1 = 0.65, 1.0
-    local v0, v1 = 810, 575
+    local v0, v1 = 500, 575
 
     local scaledHeight = v0 + (v1 - v0) * ((uiScale - t0) / (t1 - t0))
-    changelogFrame:SetHeight(min(max(575, scaledHeight), 810))
+    changelogFrame:SetHeight(min(max(575, scaledHeight), 500))
 
     changelogFrame:SetShown(not changelogFrame:IsShown())
 end)

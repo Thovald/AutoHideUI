@@ -61,6 +61,7 @@ FramesTab.DEFAULT_FRAMES = {
     { frame = "ObjectiveTrackerFrame",          label = L["Objectives Frame"],  enabled = false },
     { frame = "MainStatusTrackingBarContainer", label = L["Experience Bar"],    enabled = true },
     { frame = "BagsBar",                        label = L["Bags Bar"],          enabled = true },
+    { frame = "ChatFrame",                      label = L["Chat"],              enabled = false,    description = L["descr_Chat"]},
 }
 
 -- resolving overrides
@@ -293,11 +294,13 @@ end
     Private.MouseoverAreas.CreateAreas()
 
     for uiFrame, frameInfo in pairs(Main.activeFrames) do
-        local type = frameInfo.isCustom and "custom" or "common"
-        local isSelected = frameInfo.group.index == Config.selectedGroup and frameInfo.isInUse
-        local shouldShow = Private.db.profile.previewFrames[type]
-        local hlFrame = FramesTab.SetHighlightFrame(uiFrame, type, shouldShow, isSelected)
-        UpdateActiveHighlightInfo(hlFrame, frameInfo.frameString)
+        if uiFrame:GetPoint() then
+            local type = frameInfo.isCustom and "custom" or "common"
+            local isSelected = frameInfo.group.index == Config.selectedGroup and frameInfo.isInUse
+            local shouldShow = Private.db.profile.previewFrames[type]
+            local hlFrame = FramesTab.SetHighlightFrame(uiFrame, type, shouldShow, isSelected)
+            UpdateActiveHighlightInfo(hlFrame, frameInfo.frameString)
+        end
     end
 
     for i, moFrame in ipairs(Private.MouseoverAreas.ActiveAreas) do

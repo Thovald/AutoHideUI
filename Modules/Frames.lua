@@ -119,6 +119,28 @@ local function CHATFRAME_CUSTOMGETTER()
     }
     frameList = Frames.GetIncrementalFrames(tabInfo)
 
+    -- Editbox borders
+    local editboxLeft = {
+        prefix = "ChatFrame",
+        suffix = "EditBoxLeft",
+        list = frameList,
+    }
+
+    local editboxMid = {
+        prefix = "ChatFrame",
+        suffix = "EditBoxMid",
+        list = frameList,
+    }
+
+    local editboxRight = {
+        prefix = "ChatFrame",
+        suffix = "EditBoxRight",
+        list = frameList,
+    }
+    frameList = Frames.GetIncrementalFrames(editboxLeft)
+    frameList = Frames.GetIncrementalFrames(editboxMid)
+    frameList = Frames.GetIncrementalFrames(editboxRight)
+
     -- removing Chat Tabs that are already being faded via GeneralDockManager
     local dockManager = Frames.GetFrameObjectFromString("GeneralDockManager")
     if dockManager then

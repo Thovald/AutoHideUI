@@ -563,8 +563,29 @@ local ADDON_FRAME_MAPPING = {
         name = "EllesmereUI_PlayerCastBar",
         isLoaded = function() return C_AddOns.IsAddOnLoaded("EllesmereUIResourceBars") end,
         frames = {
-            PlayerCastingBarFrame = {"ERB_CastBar"},
+            PlayerCastingBarFrame = {},
         },
+        customGetter = function()
+            -- adding ERB_CastBarFrame breaks EUI's castbar.
+            -- adding just ERB_CastBar leaves the background and other elements visible.
+            -- so we add each castbar element individually.
+            local frameList = {}
+
+            local castbarFrame = Frames.GetFrameObjectFromString("ERB_CastBarFrame")
+            if castbarFrame then
+                local children = { castbarFrame:GetChildren() }
+                for _, child in pairs(children) do
+                    if child.GetObjectType and child:GetObjectType() == "Frame" then
+                        tinsert(frameList, child)
+                    end
+                end
+                -- background is a Texture type
+                tinsert(frameList, castbarFrame._bg)
+            end
+
+            return frameList
+
+        end,
         args = {forceAlpha = true},
     },
     {

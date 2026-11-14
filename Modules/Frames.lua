@@ -666,7 +666,6 @@ local ADDON_FRAME_MAPPING = {
                 if not d.bg then return end -- not yet skinned/initialized
 
                 add(cf)
-                add(_G[cf:GetName() .. "EditBox"]) -- make it optional
                 add(d.bg)
                 add(d.resizeGrip)
 

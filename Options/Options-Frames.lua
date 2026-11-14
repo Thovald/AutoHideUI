@@ -61,7 +61,7 @@ FramesTab.DEFAULT_FRAMES = {
     { frame = "ObjectiveTrackerFrame",          label = L["Objectives Frame"],  enabled = false },
     { frame = "MainStatusTrackingBarContainer", label = L["Experience Bar"],    enabled = true },
     { frame = "BagsBar",                        label = L["Bags Bar"],          enabled = true },
-    { frame = "ChatFrame",                      label = L["Chat"],              enabled = false,    description = L["descr_Chat"]},
+    { frame = "ChatFrame",                      label = L["Chat"],              enabled = false},
 }
 
 -- resolving overrides

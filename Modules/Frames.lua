@@ -717,6 +717,18 @@ local ADDON_FRAME_MAPPING = {
             if chattynatorFrame then
                 tinsert(frameList, chattynatorFrame)
             end
+
+            -- getting all anonymous chat windows for mouseover.
+            -- we only need one.
+            local f = EnumerateFrames()
+            while f do
+                if f:GetParent() == chattynatorFrame then
+                    tinsert(frameList, f)
+                   -- break
+                end
+                f=EnumerateFrames(f)
+            end
+
             return frameList
         end,
         args = {forceAlpha = true},

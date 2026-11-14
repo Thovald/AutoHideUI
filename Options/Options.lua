@@ -106,6 +106,11 @@ function Config.CheckTextBounds(frame)
     local top = frame.text:GetTop()
     local bottom = frame.text:GetBottom()
 
+    -- happens with Chattynator's frames
+    if not left or not right or not top or not bottom then
+        return
+    end
+
     if left < leftBorder then
         x = math.abs(leftBorder - left)
     elseif right > rightBorder then

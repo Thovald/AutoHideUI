@@ -692,7 +692,9 @@ local ADDON_FRAME_MAPPING = {
             local chatNS = eui and eui._ModuleNS and eui._ModuleNS["EllesmereUIChat"]
             local cfd = eui and eui._chatCFD
 
-            if not (chatNS and cfd) then return nil end
+            if not (chatNS and cfd) then
+                return {}
+            end
 
             local frames, seen = {}, {}
             local function add(frame)

@@ -455,12 +455,6 @@ function Main.GetConditionsSettings(conditionsDB)
 end
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- Repairing DB
--- ─────────────────────────────────────────────────────────────────────────────
-
-
-
--- ─────────────────────────────────────────────────────────────────────────────
 -- Conditions
 -- ─────────────────────────────────────────────────────────────────────────────
 
@@ -724,9 +718,6 @@ local function CheckMissingHealthChange(key)
 end
 
 local function ConditionVehicle()
-    -- print( "inVehicle:", UnitInVehicle("player"), "canExit:", CanExitVehicle(), "inControl:", UnitInVehicleControlSeat("player"), "vehicleUI:", UnitHasVehicleUI("player"), "vehiclePlayerUI:", UnitHasVehiclePlayerFrameUI("player"), "isOverride:", HasOverrideActionBar())
-    -- print("  isActive:", ( UnitInVehicle("player") and ( CanExitVehicle() or UnitInVehicleControlSeat("player") or UnitHasVehiclePlayerFrameUI("player") )) -- player controls a vehicle
-    --     or HasOverrideActionBar())
     UpdateConditionForAllGroups(
         "inVehicle",
         ( UnitInVehicle("player") and ( CanExitVehicle() or UnitInVehicleControlSeat("player") or UnitHasVehicleUI("player") )) -- player controls a vehicle

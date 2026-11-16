@@ -141,11 +141,6 @@ local CreateMouseoverFrame = function()
     f:SetResizable(true)
     f:SetResizeBounds(MIN_SIZE, MIN_SIZE)
 
-    -- --debug texture
-    -- local t = f:CreateTexture()
-    -- t:SetColorTexture(1,0,0,0.25)
-    -- t:SetAllPoints()
-
     -- mover frame
     local mover = CreateFrame("Frame", nil, f)
     f.mover = mover

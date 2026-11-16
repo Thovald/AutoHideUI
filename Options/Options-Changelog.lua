@@ -9,6 +9,12 @@ local CHANGELOG_DATA = {
         date = "Nov 16th",
         entries = {
             {
+                title = "Misc",
+                content =  {
+                    "Added support for Chatify"
+                },
+            },
+            {
                 title = "Fixes",
                 content =  {
                     "Fixed EUI's player castbar not fading all castbar elements.",

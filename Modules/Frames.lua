@@ -775,6 +775,27 @@ local ADDON_FRAME_MAPPING = {
         args = {forceAlpha = true},
     },
     {
+        name = "Chatify",
+        isLoaded = function() return C_AddOns.IsAddOnLoaded("Chatify") end,
+        frames = {
+            ChatFrame = {},
+        },
+        customGetter = function()
+            local frameList = CHATFRAME_CUSTOMGETTER()
+            local chatifyFrames = {"ChatifyQuickChatButtons", "ChatifyChatMenuSettingsContainer"}
+
+            for _, frameString in pairs(chatifyFrames) do
+                local frame = Frames.GetFrameObjectFromString(frameString)
+                if frame then
+                    tinsert(frameList, frame)
+                end
+            end
+
+            return frameList
+        end,
+        args = {forceAlpha = true},
+    },
+    {
         name = "BasicMinimap",
         isLoaded = function() return C_AddOns.IsAddOnLoaded("BasicMinimap") end,
         frames = {

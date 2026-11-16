@@ -25,16 +25,14 @@ local lastClickTime = 0
 -- ─────────────────────────────────────────────────────────────────────────────
 
 function FrameFinder.Start()
+    -- deferring FrameFinder with RunNextFrame won't reliably run SuspendAddon.
+    -- instead of relying on a longer delay, we simply run it in the OnOptionsClose hook.
+    Private.FrameFinder.QueueStart = true
     if Main.blizzFrame and Main.blizzFrame:IsVisible() then
         HideUIPanel(SettingsPanel)
     else
         AceConfigDialog:Close("AutoHideUI")
     end
-
-    RunNextFrame(function()
-        Main.SuspendAddon()
-        FrameFinder:ShowWindow()
-    end)
 end
 
 function FrameFinder.ShowWindow()

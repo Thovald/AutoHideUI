@@ -730,6 +730,15 @@ local function OnOptionsClose()
     CloseAllPopups()
     Config.isOptionsOpen = false
     Main.ReInitAddon()
+
+    -- more robust way to launch FrameFinder tool.
+    if Private.FrameFinder.QueueStart then
+        RunNextFrame(function()
+            Main.SuspendAddon()
+            Private.FrameFinder:ShowWindow()
+            Private.FrameFinder.QueueStart = false
+        end)
+    end
 end
 
 local function OnOptionsOpen(frame)

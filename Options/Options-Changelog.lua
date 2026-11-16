@@ -5,6 +5,19 @@ local L = LibStub("AceLocale-3.0"):GetLocale("AutoHideUI")
 
 local CHANGELOG_DATA = {
     {
+        version = "1.2.30",
+        date = "Nov 16th",
+        entries = {
+            {
+                title = "Fixes",
+                content =  {
+                    "Fixed EUI's player castbar not fading all castbar elements.",
+                    "Fixed an issue where launching the FrameFinder tool wouldn't always suspend the AddOn.",
+                },
+            },
+        },
+    },
+    {
         version = "1.2.29",
         date = "Nov 14th",
         entries = {

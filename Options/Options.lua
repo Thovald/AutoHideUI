@@ -721,24 +721,81 @@ function Config.GetDefaultGroup(name)
     return defaultGroup
 end
 
-local function OnOptionsClose()
+local optionsClosePending = false
+
+local function AreOptionsWindowsOpen()
+    local aceWindow = AceConfigDialog.OpenFrames["AutoHideUI"]
+    local aceFrame = aceWindow and aceWindow.frame
+    return Main.blizzFrame:IsVisible() or (aceFrame ~= nil and aceFrame:IsShown())
+end
+
+local function CloseToolWindows()
+    if AutoHideUIFrameFinderFrame and AutoHideUIFrameFinderFrame:IsShown() then
+        Private.FrameFinder.HideWindow()
+    end
+
+    if AutoHideUIMouseoverAreasFrame and AutoHideUIMouseoverAreasFrame:IsShown() then
+        Private.MouseoverAreas.HideWindow()
+    end
+end
+
+local function CloseOptionsWindowsIfOpen()
+    if not AreOptionsWindowsOpen() then
+        return false
+    end
+
     if Main.blizzFrame:IsVisible() then
+        HideUIPanel(SettingsPanel)
+    end
+
+    local aceWindow = AceConfigDialog.OpenFrames["AutoHideUI"]
+    local aceFrame = aceWindow and aceWindow.frame
+    if aceFrame and aceFrame:IsShown() then
+        AceConfigDialog:Close("AutoHideUI")
+    end
+
+    return true
+end
+
+local function CompleteOptionsClose()
+    if CloseOptionsWindowsIfOpen() then
+        RunNextFrame(CompleteOptionsClose)
         return
     end
 
+    optionsClosePending = false
     FramesTab.HideAllHighlights()
     CloseAllPopups()
     Config.isOptionsOpen = false
     Main.ReInitAddon()
 
-    -- more robust way to launch FrameFinder tool.
-    if Private.FrameFinder.QueueStart then
-        RunNextFrame(function()
+    RunNextFrame(function()
+        if Private.QueueFrameFinder then
             Main.SuspendAddon()
             Private.FrameFinder:ShowWindow()
-            Private.FrameFinder.QueueStart = false
-        end)
+            Private.QueueFrameFinder = false
+        elseif Private.QueueMouseoverAreas then
+            Main.SuspendAddon()
+            Private.MouseoverAreas:ShowWindow()
+            Private.MouseoverAreas:ShowMovers()
+            Private.QueueMouseoverAreas = false
+        end
+    end)
+end
+
+local function OnOptionsClose()
+    if CloseOptionsWindowsIfOpen() then
+        if (Private.QueueFrameFinder or Private.QueueMouseoverAreas) and not optionsClosePending then
+            optionsClosePending = true
+            RunNextFrame(CompleteOptionsClose)
+        end
+        return
     end
+
+    if optionsClosePending then
+        return
+    end
+    CompleteOptionsClose()
 end
 
 local function OnOptionsOpen(frame)
@@ -752,6 +809,7 @@ local function OnOptionsOpen(frame)
 
     UI_WIDTH, UI_HEIGHT = UIParent:GetSize()
 
+    CloseToolWindows()
     Config.isOptionsOpen = true
     Main.SuspendAddon()
 end

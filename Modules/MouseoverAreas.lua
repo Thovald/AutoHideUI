@@ -42,17 +42,13 @@ function MouseoverAreas.Start()
         return
     end
 
+    Private.QueueMouseoverAreas = true
+
     if Main.blizzFrame and Main.blizzFrame:IsVisible() then
         HideUIPanel(SettingsPanel)
     else
         AceConfigDialog:Close("AutoHideUI")
     end
-
-    RunNextFrame(function()
-        Main.SuspendAddon()
-        MouseoverAreas:ShowWindow()
-        MouseoverAreas:ShowMovers()
-    end)
 end
 
 function MouseoverAreas.ShowWindow()
@@ -320,6 +316,13 @@ do
     frame:SetSize(350, 195)
     frame:SetPoint("CENTER")
     frame:SetFrameStrata("DIALOG")
+    frame:EnableKeyboard(true)
+    frame:SetScript("OnKeyDown", function(_, key)
+        frame:SetPropagateKeyboardInput(key ~= "ESCAPE")
+        if key == "ESCAPE" then
+            MouseoverAreas.HideWindow()
+        end
+    end)
 
     frame:SetMovable(true)
     frame:EnableMouse(true)

@@ -27,7 +27,8 @@ local lastClickTime = 0
 function FrameFinder.Start()
     -- deferring FrameFinder with RunNextFrame won't reliably run SuspendAddon.
     -- instead of relying on a longer delay, we simply run it in the OnOptionsClose hook.
-    Private.FrameFinder.QueueStart = true
+    Private.QueueFrameFinder = true
+
     if Main.blizzFrame and Main.blizzFrame:IsVisible() then
         HideUIPanel(SettingsPanel)
     else
@@ -150,7 +151,10 @@ local BLACK_LIST = {
         ignoreFrame = true,
         ignoreChildren = true,
     },
-
+    ERB_CastBarFrame = {
+        ignoreFrame = true,
+        ignoreChildren = true,
+    }
 }
 
 -- mouseoverFrame
@@ -630,6 +634,13 @@ do
     frame:SetSize(590, 300)
     frame:SetPoint("CENTER")
     frame:SetFrameStrata("DIALOG")
+    frame:EnableKeyboard(true)
+    frame:SetScript("OnKeyDown", function(_, key)
+        frame:SetPropagateKeyboardInput(key ~= "ESCAPE")
+        if key == "ESCAPE" then
+            FrameFinder:Cancel()
+        end
+    end)
 
     frame:SetMovable(true)
     frame:EnableMouse(true)

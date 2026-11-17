@@ -18,7 +18,7 @@ local CHANGELOG_DATA = {
                 title = "Fixes",
                 content =  {
                     "Fixed EUI's player castbar not fading all castbar elements.",
-                    "Fixed an issue where launching the FrameFinder tool wouldn't always suspend the AddOn.",
+                    "Fixed FrameFinder and MouseoverAreas tool sometimes not pausing the AddOn and they both now close when pressing ESC.",
                 },
             },
         },

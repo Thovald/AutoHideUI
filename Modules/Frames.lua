@@ -618,7 +618,8 @@ local ADDON_FRAME_MAPPING = {
                 return
             end
 
-            local specID = GetSpecializationInfo(GetSpecialization())
+            local specIndex = C_SpecializationInfo.GetSpecialization()
+            local specID = C_SpecializationInfo.GetSpecializationInfo(specIndex)
             Main.refreshFramesOnSpecChange = true
 
             if pbEnabled and erbProfile.primary.disabledSpecs and not erbProfile.primary.disabledSpecs[specID] then
@@ -676,8 +677,35 @@ local ADDON_FRAME_MAPPING = {
         name = "EllesmereUI_PartyFrames",
         isLoaded = function() return C_AddOns.IsAddOnLoaded("EllesmereUIRaidFrames") end,
         frames = {
-            PartyFrame = {"ERFPartyHeader"},
+            PartyFrame = {},
         },
+        customGetter = function()
+            local frameList = {}
+            local headers = {"ERFPartyHeader", "ERFPetHeader"}
+
+            for k,v in pairs(headers) do
+                local frame = Frames.GetFrameObjectFromString(v)
+                if frame then
+                    tinsert(frameList, frame)
+                end
+            end
+
+            local partyFrames = {
+                prefix = "ERFPartyHeaderUnitButton",
+                suffix = "",
+                list = frameList,
+            }
+            frameList = Frames.GetIncrementalFrames(partyFrames)
+
+            local petFrames = {
+                prefix = "ERFPetHeaderUnitButton",
+                suffix = "",
+                list = frameList,
+            }
+            frameList = Frames.GetIncrementalFrames(petFrames)
+
+            return frameList
+        end,
         args = {forceAlpha = true},
     },
     {
@@ -929,7 +957,31 @@ local SPECIAL_FRAMES = {
                     frame.background.SetIgnoreParentAlpha = function(_, _) end
                 end
             end
-        end
+        end,
+        customGetter = function()
+            local selectionBorder = {
+                prefix = "CompactPartyFrameMember",
+                suffix = "SelectionHighlight",
+                list = nil,
+            }
+            local frameList = Frames.GetIncrementalFrames(selectionBorder)
+
+            local partyFrame = Frames.GetFrameObjectFromString("PartyFrame")
+            if partyFrame then
+                tinsert(frameList, partyFrame)
+
+                -- phased icon on oldschool party frames
+                for i=1,4 do
+                    local memberFrame = partyFrame["MemberFrame"..i]
+                    if memberFrame and memberFrame.NotPresentIcon then
+                        tinsert(frameList, memberFrame.NotPresentIcon)
+                    end
+                end
+
+            end
+
+            return frameList
+        end,
     },
     DamageMeter = {
         customGetter = function()

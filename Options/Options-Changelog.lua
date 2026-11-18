@@ -5,6 +5,22 @@ local L = LibStub("AceLocale-3.0"):GetLocale("AutoHideUI")
 
 local CHANGELOG_DATA = {
     {
+        version = "1.2.31",
+        date = "Nov 18th",
+        entries = {
+            {
+                title = "Fixes",
+                content =  {
+                    "Fixed DefaultUI's PartyFrame selection border not fading.",
+                    "Fixed phasing indicator not fading on DefaultUI's oldschool PartyFrame.",
+                    "Fixed EllesmereUI's party pets not fading.",
+                    "Fixed EllesmereUI's party members not being visible for mouseovers.",
+                    "Fixed an error that could happen with EUI's resource bars."
+                },
+            },
+        },
+    },
+    {
         version = "1.2.30",
         date = "Nov 16th",
         entries = {

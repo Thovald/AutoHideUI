@@ -26,6 +26,7 @@ local HIGHLIGHT_COLORS = {
 
 -- same order as these will appear in the options.
 -- "descr" and "divide" are optional.
+-- frame-string is used in savedvariables too! update db if these strings change.
 
 FramesTab.DEFAULT_FRAMES = {
     -- unitframes
@@ -61,7 +62,7 @@ FramesTab.DEFAULT_FRAMES = {
     { frame = "ObjectiveTrackerFrame",          label = L["Objectives Frame"],  enabled = false },
     { frame = "MainStatusTrackingBarContainer", label = L["Experience Bar"],    enabled = true },
     { frame = "BagsBar",                        label = L["Bags Bar"],          enabled = true },
-    { frame = "ChatFrame",                      label = L["Chat"],              enabled = false},
+    { frame = "ChatFrame",                      label = L["Chat"],              enabled = false,    description = L["descr_Chat"]},
 }
 
 -- resolving overrides

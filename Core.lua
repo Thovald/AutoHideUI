@@ -358,11 +358,11 @@ local function InitAddon()
     Fading.ResetPendingFades()
     RegisterAllEvents()
     MouseoverAreas.CreateAreas()
+    Frames.ToggleHelperFrames() -- needs to be before mouseover stuff!
     Main.CreateMouseoverLists()
     Main.CreateMouseoverTicker()
     Main.UpdateAllConditions()
     Fading.SetAllAlpha()
-    Frames.ToggleHelperFrames()
     ManualControl.StartListening()
 end
 

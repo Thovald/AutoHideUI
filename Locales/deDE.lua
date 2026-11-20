@@ -288,3 +288,5 @@ L["MinimapWarningGroup"] = "Betroffene Gruppierung: "
 L["MinimapWarningSettings"] = "Betroffene Einstellungen: "
 
 L["Chat"] = "Chat Fenster"
+L["descr_Chat"] = "Wenn du ein neues Chat Fenster erstellst, öffne und schließe AutoHideUI's Optionsmenü um das neue Fenster zu erfassen.|n"..
+                  "Oder führe einfach \"/reloadui\" aus."

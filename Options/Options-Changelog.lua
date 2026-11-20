@@ -5,6 +5,20 @@ local L = LibStub("AceLocale-3.0"):GetLocale("AutoHideUI")
 
 local CHANGELOG_DATA = {
     {
+        version = "1.2.32",
+        date = "Nov 20th",
+        entries = {
+            {
+                title = "Fixes",
+                content =  {
+                    "Fixed EllesmereUI's ActionBars and other related bars showing the gryphon/wyvern graphics when they shouldn't.",
+                    "Optimized ChatFrame collection and included some elements that were missing previously.",
+                    "Fixed a bug where EllesmereUI's Minimap would be invisible to mouseovers when switching profiles."
+                },
+            },
+        },
+    },
+    {
         version = "1.2.31",
         date = "Nov 18th",
         entries = {

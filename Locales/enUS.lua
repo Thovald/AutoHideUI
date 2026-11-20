@@ -283,3 +283,5 @@ L["MinimapWarningGroup"] = "Relevant Group: "
 L["MinimapWarningSettings"] = "Relevant Settings: "
 
 L["Chat"] = "Chat Windows"
+L["descr_Chat"] = "When you create a new Chat Window, open and close AutoHideUI's options to register it for fading.|n"..
+                  "Or simply run \"/reloadui\"."

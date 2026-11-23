@@ -52,12 +52,12 @@ local healthStates = {
     player = {
         isMissingHealth = false,
         maxHealthChangeTime = 0,
-        healthTimer = nil,
+        timer = nil,
     },
     party = {
         isMissingHealth = false,
         maxHealthChangeTime = 0,
-        healthTimer = nil,
+        timer = nil,
     }
 }
 local PARTY_UNITS = {
@@ -65,6 +65,18 @@ local PARTY_UNITS = {
     party2 = true,
     party3 = true,
     party4 = true,
+}
+
+-- power-check stuff
+local TIME_TO_FLAG_IDLE_POWER = 3
+local powerState = {
+    lastPower = "",
+    currentPower = "",
+    isPowerActive = false,
+    lastPowerChange = 0,
+    maxPowerChangeTime = 0,
+    ignoreNextTick = false,
+    timer = nil,
 }
 
 local INSTANCE_TYPE_MAPPING = {
@@ -119,6 +131,22 @@ local DRUID_FORMS= {
         [29] = true, -- Flight Form
     },
     {}, -- user selected "None"
+}
+
+-- mapping of power types to condition names
+local CONDITION_POWER_MAPPING = {
+    MANA = "powerMana",
+    RAGE = "powerRage",
+    FOCUS = "powerFocus",
+    ENERGY = "powerEnergy",
+    RUNIC_POWER = "powerRunicPower",
+    LUNAR_POWER  = "powerLunarPower",
+    HOLY_POWER = "powerHolyPower",
+    MAELSTROM = "powerMaelstrom",
+    CHI = "powerChi",
+    INSANITY = "powerInsanity",
+    FURY = "powerFury",
+    PAIN = "powerPain",
 }
 
 local GetTime, pairs, ipairs, C_Timer
@@ -352,13 +380,18 @@ local function ResetAddon()
     wipe(Main.framesThatToggleVisibility)
 end
 
+local function UpdatePlayerInfo()
+    Main.UpdateCurrentPower()
+end
+
 local function InitAddon()
+    UpdatePlayerInfo()
     Frames.InitFrames()
     Fading.SaveOriginalAlphas()
     Fading.ResetPendingFades()
     RegisterAllEvents()
     MouseoverAreas.CreateAreas()
-    Frames.ToggleHelperFrames() -- needs to be before mouseover stuff!
+    Frames.ToggleHelperFrames() -- must be before mouseover stuff!
     Main.CreateMouseoverLists()
     Main.CreateMouseoverTicker()
     Main.UpdateAllConditions()
@@ -699,14 +732,14 @@ local function CheckMissingHealthChange(key)
         return false
     end
 
-    if healthStates[key].healthTimer then
+    if healthStates[key].timer then
         ---@diagnostic disable-next-line: undefined-field
-        healthStates[key].healthTimer:Cancel()
+        healthStates[key].timer:Cancel()
     end
 
     healthStates[key].isMissingHealth = true
 
-    healthStates[key].healthTimer = C_Timer.NewTimer(TIME_TO_FLAG_FULL_HEALTH, function()
+    healthStates[key].timer = C_Timer.NewTimer(TIME_TO_FLAG_FULL_HEALTH, function()
         healthStates[key].isMissingHealth = false
         ConditionHealth()
         Fading.offsetForFadeDelay = TIME_TO_FLAG_FULL_HEALTH * -1
@@ -715,6 +748,66 @@ local function CheckMissingHealthChange(key)
     end)
 
     return true
+end
+
+local function ConditionPower(powerType, val)
+    local conditionName = CONDITION_POWER_MAPPING[powerType]
+    if conditionName then
+        UpdateConditionForAllGroups(conditionName, val)
+    end
+end
+
+local function HasPowerChanged()
+    local currentTime = GetTime()
+    if currentTime == powerState.maxPowerChangeTime then
+        return false
+    elseif currentTime == powerState.lastPowerChange then
+        powerState.lastPowerChange = currentTime
+        return false
+    elseif powerState.ignoreNextTick then
+        powerState.ignoreNextTick = false
+        return false
+    end
+
+    if powerState.timer then
+        ---@diagnostic disable-next-line: undefined-field
+        powerState.timer:Cancel()
+    end
+
+    powerState.isPowerActive = true
+    powerState.lastPowerChange = currentTime
+
+    powerState.timer = C_Timer.NewTimer(TIME_TO_FLAG_IDLE_POWER, function()
+        powerState.isPowerActive = false
+        ConditionPower(powerState.currentPower, false)
+        Fading.offsetForFadeDelay = TIME_TO_FLAG_IDLE_POWER * -1
+        Fading.FadeAllGroups()
+        Fading.offsetForFadeDelay = 0
+    end)
+
+    return true
+end
+
+function Main.UpdateCurrentPower()
+    local powerID, powerType = UnitPowerType("player")
+
+    powerState.lastPower = powerState.currentPower or powerType
+    powerState.currentPower = powerType
+
+    if powerType == "MANA" then
+        local role = select(5, GetSpecializationInfo(GetSpecialization()))
+        if role ~= "HEALER" then
+            powerState.currentPower = ""
+        end
+    end
+
+    if powerState.lastPower ~= powerState.currentPower and not powerState.isPowerActive then
+        powerState.ignoreNextTick = true
+    elseif HasPowerChanged() then
+        ConditionPower(powerState.lastPower, false)
+        ConditionPower(powerState.currentPower, true) -- not using powerType because of healer mana condition
+        Fading.FadeAllGroups()
+    end
 end
 
 local function ConditionVehicle()
@@ -916,6 +1009,27 @@ local function OnMaxHealthChange(unit)
     end
 end
 
+local function OnPowerChange(unit, powerType)
+    if unit ~= "player" then
+        return
+    end
+
+    if powerState.currentPower ~= powerType then
+        return
+    end
+
+    if HasPowerChanged() then
+        ConditionPower(powerType, true)
+        Fading.FadeAllGroups()
+    end
+end
+
+local function OnMaxPowerChange(unit)
+    if unit == "player" then
+        powerState.maxPowerChangeTime = GetTime()
+    end
+end
+
 local function OnMaxHealthModifierChange(unit)
     if unit == "player" then
         healthStates.player.maxHealthChangeTime = GetTime()
@@ -1002,6 +1116,9 @@ local EVENT_HANDLER = {
     UNIT_HEALTH = OnHealthChange,
     UNIT_MAXHEALTH = OnMaxHealthChange,
     UNIT_MAX_HEALTH_MODIFIERS_CHANGED = OnMaxHealthModifierChange,
+    UNIT_DISPLAYPOWER = Main.UpdateCurrentPower,
+    UNIT_POWER_UPDATE = OnPowerChange,
+    UNIT_MAXPOWER = OnMaxPowerChange,
     UNIT_SPELLCAST_START = OnCastStart,
     UNIT_SPELLCAST_CHANNEL_START = OnCastStart,
     UNIT_SPELLCAST_STOP = OnCastEnd,
@@ -1019,7 +1136,7 @@ local SYSTEM_EVENT_HANDLER = {
     PLAYER_REGEN_ENABLED = OnCombatEnd,
     PLAYER_REGEN_DISABLED = OnCombatStart,
     FIRST_FRAME_RENDERED = OnFirstFrame,
-    ACTIVE_PLAYER_SPECIALIZATION_CHANGED = function() RunNextFrame(OnSpecChange) end
+    ACTIVE_PLAYER_SPECIALIZATION_CHANGED = function() RunNextFrame(OnSpecChange) end,
 }
 
 function systemFrame:OnEvent(event, ...)

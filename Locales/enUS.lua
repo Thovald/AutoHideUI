@@ -285,3 +285,21 @@ L["MinimapWarningSettings"] = "Relevant Settings: "
 L["Chat"] = "Chat Windows"
 L["descr_Chat"] = "When you create a new Chat Window, open and close AutoHideUI's options to register it for fading.|n"..
                   "Or simply run \"/reloadui\"."
+
+L["label_power"] = "Resource Active"
+L["label_powerMana"] = "Mana"
+L["label_powerRage"] = "Rage"
+L["label_powerFocus"] = "Focus"
+L["label_powerEnergy"] = "Energy"
+L["label_powerRunicPower"] = "Runic Power"
+L["label_powerLunarPower"] = "Astral Power"
+L["label_powerHolyPower"] = "Holy Power"
+L["label_powerMaelstrom"] = "Maelstrom"
+L["label_powerChi"] = "Chi"
+L["label_powerInsanity"] = "Insanity"
+L["label_powerFury"] = "Fury"
+L["label_powerPain"] = "Pain"
+L["descr_power"] = "When the player's primary resource is not at rest.|n"..
+                   "For example when missing Mana or when more than 0 Rage is available."
+L["descr_powerMana"] = "Will only trigger in healer specs."
+

@@ -5,6 +5,26 @@ local L = LibStub("AceLocale-3.0"):GetLocale("AutoHideUI")
 
 local CHANGELOG_DATA = {
     {
+        version = "1.2.33",
+        date = "Nov 23rd",
+        entries = {
+            {
+                title = "New",
+                content =  {
+                    "Added new Condition for Player's Resource being in use.|n"..
+                    "Due to AddOn restrictions this relies on a workaround. If your resource didn't change for more than 3sec it's assumed that it's at rest."
+                },
+            },
+            {
+                title = "Fixes",
+                content =  {
+                    "Fixed some tooltips in the Conditions tab.",
+                    "The \"Disable All\" button in the Conditions tab won't disable children anymore.",
+                },
+            },
+        },
+    },
+    {
         version = "1.2.32",
         date = "Nov 20th",
         entries = {

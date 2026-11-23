@@ -343,6 +343,182 @@ ConditionsTab.CONDITION_DEFINITIONS = {
             },
         },
     },
+
+
+
+
+
+
+    -- ─────────────────────────────────────────────────────────────────────────────----
+    -- START focus 
+    -- ─────────────────────────────────────────────────────────────────────────────----
+    {
+        name = "power",
+        db = {
+            enabled = false,
+            alpha = 1,
+            priority = false,
+        },
+        description = L["descr_power"],
+        events = {
+            "UNIT_DISPLAYPOWER",
+            "UNIT_POWER_UPDATE",
+            "UNIT_MAXPOWER",
+        },
+        type = "parent",
+    },
+    {
+        name = "powerMana",
+        db = {
+            enabled = true,
+            alpha = 1,
+            priority = false,
+            customize = false,
+        },
+        description = L["descr_powerMana"],
+        type = "child",
+        parent = "power",
+    },
+    {
+        name = "powerRage",
+        db = {
+            enabled = true,
+            alpha = 1,
+            priority = false,
+            customize = false,
+        },
+        type = "child",
+        parent = "power",
+    },
+    {
+        name = "powerFocus",
+        db = {
+            enabled = true,
+            alpha = 1,
+            priority = false,
+            customize = false,
+        },
+        type = "child",
+        parent = "power",
+    },
+    {
+        name = "powerEnergy",
+        db = {
+            enabled = true,
+            alpha = 1,
+            priority = false,
+            customize = false,
+        },
+        type = "child",
+        parent = "power",
+    },
+    {
+        name = "powerRunicPower",
+        db = {
+            enabled = true,
+            alpha = 1,
+            priority = false,
+            customize = false,
+        },
+        type = "child",
+        parent = "power",
+    },
+    {
+        name = "powerLunarPower",
+        db = {
+            enabled = true,
+            alpha = 1,
+            priority = false,
+            customize = false,
+        },
+        type = "child",
+        parent = "power",
+    },
+    {
+        name = "powerHolyPower",
+        db = {
+            enabled = true,
+            alpha = 1,
+            priority = false,
+            customize = false,
+        },
+        type = "child",
+        parent = "power",
+    },
+    {
+        name = "powerMaelstrom",
+        db = {
+            enabled = true,
+            alpha = 1,
+            priority = false,
+            customize = false,
+        },
+        type = "child",
+        parent = "power",
+    },
+    {
+        name = "powerChi",
+        db = {
+            enabled = true,
+            alpha = 1,
+            priority = false,
+            customize = false,
+        },
+        type = "child",
+        parent = "power",
+    },
+    {
+        name = "powerInsanity",
+        db = {
+            enabled = true,
+            alpha = 1,
+            priority = false,
+            customize = false,
+        },
+        type = "child",
+        parent = "power",
+    },
+    {
+        name = "powerFury",
+        db = {
+            enabled = true,
+            alpha = 1,
+            priority = false,
+            customize = false,
+        },
+        type = "child",
+        parent = "power",
+    },
+    {
+        name = "powerPain",
+        db = {
+            enabled = true,
+            alpha = 1,
+            priority = false,
+            customize = false,
+        },
+        type = "child",
+        parent = "power",
+    },
+
+
+
+
+
+
+
+    -- ─────────────────────────────────────────────────────────────────────────────----
+    -- END focus
+    -- ─────────────────────────────────────────────────────────────────────────────----
+
+
+
+
+
+
+
+
+
     {
         name = "mounted",
         db = {
@@ -566,7 +742,9 @@ end
 
 function ConditionsTab.DisableSelectedGroupConditions()
     for _, info in pairs(Private.db.profile.groups[Config.selectedGroup].conditions) do
-        info.enabled = false
+        if info.customize == nil then -- means this is not a child condition
+            info.enabled = false
+        end
     end
 end
 
@@ -594,6 +772,13 @@ local function GetConditionWidget(widgetInfo, conditionInfo)
         }
 
     elseif widgetName == "expand" then
+        widgetInfo.description = function()
+            if sessionOptionStates[conditionName.."Expanded"] then
+                return ""
+            else
+                return L["expandForMore"]
+            end
+        end
         return {
             type = "toggle",
             name = function()
@@ -664,7 +849,7 @@ local function CreateConditionWidget(widgetInfo, conditionInfo, entryInfo)
 
     local widget = GetConditionWidget(widgetInfo, conditionInfo)
     widget.order = widgetInfo.order or entryInfo.widgetOrder
-    widget.desc = conditionInfo.description or widgetInfo.description or (entryInfo.type == "parent" and L["expandForMore"] or nil)
+    widget.desc = widgetInfo.description or (widgetInfo.name == "enable" and conditionInfo.description or nil)
 
     if widgetInfo.width == "remaining" then
         widget.width = CONDITION_MAXIMUM_WIDTH - entryInfo.totalWidth

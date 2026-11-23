@@ -5,7 +5,7 @@ local Main = Private.Main
 local Migration = Private.Migration
 local Config = Private.Config
 
-Main.DB_SCHEMA_VERSION = 4
+Main.DB_SCHEMA_VERSION = 5
 
 local MigrationDB = {
     -- when parent/child conditions, manualControl and mouseover areas were introduced
@@ -209,6 +209,22 @@ local MigrationDB = {
         end
         profile.showMinimapButton = nil
     end,
+
+    [5] = function(profile, profileName)
+        Migration.AddCondition(profile, "power")
+        Migration.AddCondition(profile, "powerMana")
+        Migration.AddCondition(profile, "powerRage")
+        Migration.AddCondition(profile, "powerFocus")
+        Migration.AddCondition(profile, "powerEnergy")
+        Migration.AddCondition(profile, "powerRunicPower")
+        Migration.AddCondition(profile, "powerLunarPower")
+        Migration.AddCondition(profile, "powerHolyPower")
+        Migration.AddCondition(profile, "powerMaelstrom")
+        Migration.AddCondition(profile, "powerChi")
+        Migration.AddCondition(profile, "powerInsanity")
+        Migration.AddCondition(profile, "powerFury")
+        Migration.AddCondition(profile, "powerPain")
+    end
 }
 
 function Migration.AddCondition(profile, conditionName)

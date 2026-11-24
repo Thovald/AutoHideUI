@@ -842,8 +842,8 @@ function Main.UpdateCurrentPower(unit)
     end
     powerState.rawPowerType = powerType
 
-    local specialization = GetSpecialization()
-    local isHealer = specialization and select(5, GetSpecializationInfo(specialization)) == "HEALER"
+    local specialization = C_SpecializationInfo.GetSpecialization()
+    local isHealer = specialization and select(5, C_SpecializationInfo.GetSpecializationInfo(specialization)) == "HEALER"
 
     if not isHealer then
         SetPowerInactive("MANA")

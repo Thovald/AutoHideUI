@@ -298,12 +298,9 @@ L["label_powerFocus"] = "Fokus"
 L["label_powerEnergy"] = "Energie"
 L["label_powerRunicPower"] = "Runenmacht"
 L["label_powerLunarPower"] = "Astrale Macht"
-L["label_powerHolyPower"] = "Heilige Kraft"
 L["label_powerMaelstrom"] = "Mahlstrom"
-L["label_powerChi"] = "Chi"
 L["label_powerInsanity"] = "Wahnsinn"
 L["label_powerFury"] = "Jähzorn"
-L["label_powerPain"] = "Schmerz"
-L["descr_power"] = "Wenn sich die primäre Ressource des Spielers nicht im Ruhezustand befindet.|n"..
+L["descr_power"] = "Wenn sich die primäre Ressource des Spielers nicht im Ruhezustand befindet.|n|n"..
                    "Zum Beispiel wenn Mana fehlt oder mehr als 0 Wut zur Verfügung steht."
 L["descr_powerMana"] = "Nur in Heilungsspezialisierungen aktiv."

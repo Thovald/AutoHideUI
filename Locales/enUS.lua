@@ -293,13 +293,10 @@ L["label_powerFocus"] = "Focus"
 L["label_powerEnergy"] = "Energy"
 L["label_powerRunicPower"] = "Runic Power"
 L["label_powerLunarPower"] = "Astral Power"
-L["label_powerHolyPower"] = "Holy Power"
 L["label_powerMaelstrom"] = "Maelstrom"
-L["label_powerChi"] = "Chi"
 L["label_powerInsanity"] = "Insanity"
 L["label_powerFury"] = "Fury"
-L["label_powerPain"] = "Pain"
-L["descr_power"] = "When the player's primary resource is not at rest.|n"..
+L["descr_power"] = "When the player's primary resource is not at rest.|n|n"..
                    "For example when missing Mana or when more than 0 Rage is available."
-L["descr_powerMana"] = "Will only trigger in healer specs."
+L["descr_powerMana"] = "Will only trigger in healing specs."
 

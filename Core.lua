@@ -34,6 +34,7 @@ systemFrame:RegisterEvent("PLAYER_LOGIN")
 systemFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
 systemFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
 systemFrame:RegisterEvent("FIRST_FRAME_RENDERED")
+systemFrame:RegisterEvent("ACTIVE_PLAYER_SPECIALIZATION_CHANGED")
 
 -- these are what we read and write to on runtime
 Main.activeStrings = {} -- [frameString] = { frames = {frameObject, ...}, args = {} , group = reference to parent group}
@@ -70,13 +71,24 @@ local PARTY_UNITS = {
 -- power-check stuff
 local TIME_TO_FLAG_IDLE_POWER = 3
 local powerState = {
-    lastPower = "",
     currentPower = "",
-    isPowerActive = false,
-    lastPowerChange = 0,
-    maxPowerChangeTime = 0,
-    ignoreNextTick = false,
-    timer = nil,
+    rawPowerType = nil,
+    byType = {},
+    maxPowerChangeTimes = {},
+    powerTypeTransition = nil,
+}
+
+-- mapping of power types to condition names
+local CONDITION_POWER_MAPPING = {
+    MANA = "powerMana",
+    RAGE = "powerRage",
+    FOCUS = "powerFocus",
+    ENERGY = "powerEnergy",
+    RUNIC_POWER = "powerRunicPower",
+    LUNAR_POWER  = "powerLunarPower",
+    MAELSTROM = "powerMaelstrom",
+    INSANITY = "powerInsanity",
+    FURY = "powerFury",
 }
 
 local INSTANCE_TYPE_MAPPING = {
@@ -131,22 +143,6 @@ local DRUID_FORMS= {
         [29] = true, -- Flight Form
     },
     {}, -- user selected "None"
-}
-
--- mapping of power types to condition names
-local CONDITION_POWER_MAPPING = {
-    MANA = "powerMana",
-    RAGE = "powerRage",
-    FOCUS = "powerFocus",
-    ENERGY = "powerEnergy",
-    RUNIC_POWER = "powerRunicPower",
-    LUNAR_POWER  = "powerLunarPower",
-    HOLY_POWER = "powerHolyPower",
-    MAELSTROM = "powerMaelstrom",
-    CHI = "powerChi",
-    INSANITY = "powerInsanity",
-    FURY = "powerFury",
-    PAIN = "powerPain",
 }
 
 local GetTime, pairs, ipairs, C_Timer
@@ -381,7 +377,7 @@ local function ResetAddon()
 end
 
 local function UpdatePlayerInfo()
-    Main.UpdateCurrentPower()
+    Main.UpdateCurrentPower("player")
 end
 
 local function InitAddon()
@@ -757,57 +753,107 @@ local function ConditionPower(powerType, val)
     end
 end
 
-local function HasPowerChanged()
-    local currentTime = GetTime()
-    if currentTime == powerState.maxPowerChangeTime then
-        return false
-    elseif currentTime == powerState.lastPowerChange then
-        powerState.lastPowerChange = currentTime
-        return false
-    elseif powerState.ignoreNextTick then
-        powerState.ignoreNextTick = false
-        return false
-    end
-
-    if powerState.timer then
-        ---@diagnostic disable-next-line: undefined-field
-        powerState.timer:Cancel()
-    end
-
-    powerState.isPowerActive = true
-    powerState.lastPowerChange = currentTime
-
-    powerState.timer = C_Timer.NewTimer(TIME_TO_FLAG_IDLE_POWER, function()
-        powerState.isPowerActive = false
-        ConditionPower(powerState.currentPower, false)
-        Fading.offsetForFadeDelay = TIME_TO_FLAG_IDLE_POWER * -1
-        Fading.FadeAllGroups()
-        Fading.offsetForFadeDelay = 0
-    end)
-
-    return true
+local function FadeAfterPowerTimeout()
+    Fading.offsetForFadeDelay = TIME_TO_FLAG_IDLE_POWER * -1
+    Fading.FadeAllGroups()
+    Fading.offsetForFadeDelay = 0
 end
 
-function Main.UpdateCurrentPower()
-    local powerID, powerType = UnitPowerType("player")
-
-    powerState.lastPower = powerState.currentPower or powerType
-    powerState.currentPower = powerType
-
-    if powerType == "MANA" then
-        local role = select(5, GetSpecializationInfo(GetSpecialization()))
-        if role ~= "HEALER" then
-            powerState.currentPower = ""
+local function SchedulePowerTimeout(powerType, state, delay)
+    state.timer = C_Timer.NewTimer(delay, function()
+        state.timer = nil
+        local remaining = TIME_TO_FLAG_IDLE_POWER - (GetTime() - state.lastChange)
+        if remaining > 0 then
+            SchedulePowerTimeout(powerType, state, remaining)
+            return
         end
+
+        if state.isActive then
+            state.isActive = false
+            ConditionPower(powerType, false)
+            FadeAfterPowerTimeout()
+        end
+    end)
+end
+
+local function SetPowerInactive(powerType)
+    local state = powerState.byType[powerType]
+    if not state then
+        return
     end
 
-    if powerState.lastPower ~= powerState.currentPower and not powerState.isPowerActive then
-        powerState.ignoreNextTick = true
-    elseif HasPowerChanged() then
-        ConditionPower(powerState.lastPower, false)
-        ConditionPower(powerState.currentPower, true) -- not using powerType because of healer mana condition
-        Fading.FadeAllGroups()
+    if state.timer then
+        ---@diagnostic disable-next-line: undefined-field
+        state.timer:Cancel()
+        state.timer = nil
     end
+
+    if not state.isActive then
+        return
+    end
+
+    state.isActive = false
+    ConditionPower(powerType, false)
+    Fading.FadeAllGroups()
+end
+
+local function SetPowerActive(powerType)
+    if not CONDITION_POWER_MAPPING[powerType] then
+        return
+    end
+
+    local state = powerState.byType[powerType]
+    if not state then
+        state = {
+            isActive = false,
+            lastChange = 0,
+            timer = nil,
+        }
+        powerState.byType[powerType] = state
+    end
+
+    state.lastChange = GetTime()
+    if state.isActive then
+        return
+    end
+
+    state.isActive = true
+    ConditionPower(powerType, true)
+    SchedulePowerTimeout(powerType, state, TIME_TO_FLAG_IDLE_POWER)
+    Fading.FadeAllGroups()
+end
+
+function Main.UpdateCurrentPower(unit)
+    if unit and unit ~= "player" then
+        return
+    end
+
+    local _, powerType = UnitPowerType("player")
+
+    -- if power changed it will also send a power_update event. that alone should not flag the condition as active.
+    if powerState.rawPowerType and powerState.rawPowerType ~= powerType and powerType then
+        local transition = { powerType = powerType }
+        powerState.powerTypeTransition = transition
+        C_Timer.After(0, function()
+            if powerState.powerTypeTransition == transition then
+                powerState.powerTypeTransition = nil
+            end
+        end)
+    end
+    powerState.rawPowerType = powerType
+
+    local specialization = GetSpecialization()
+    local isHealer = specialization and select(5, GetSpecializationInfo(specialization)) == "HEALER"
+
+    if not isHealer then
+        SetPowerInactive("MANA")
+    end
+
+    if powerType == "MANA" and not isHealer then
+        powerType = ""
+    end
+
+    powerState.currentPower = powerType or ""
 end
 
 local function ConditionVehicle()
@@ -850,6 +896,11 @@ function Main.UpdateAllConditions()
     ConditionHealth()
     ConditionFlying()
     ConditonIsInteracting()
+    for powerType, state in pairs(powerState.byType) do
+        if state.isActive then
+            ConditionPower(powerType, true)
+        end
+    end
 end
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -1018,15 +1069,19 @@ local function OnPowerChange(unit, powerType)
         return
     end
 
-    if HasPowerChanged() then
-        ConditionPower(powerType, true)
-        Fading.FadeAllGroups()
+    local currentTime = GetTime()
+    local transition = powerState.powerTypeTransition
+    if powerState.maxPowerChangeTimes[powerType] == currentTime
+    or (transition and transition.powerType == powerType) then -- no activation during power changes (shapeshift)
+        return
     end
+
+    SetPowerActive(powerType)
 end
 
-local function OnMaxPowerChange(unit)
-    if unit == "player" then
-        powerState.maxPowerChangeTime = GetTime()
+local function OnMaxPowerChange(unit, powerType)
+    if unit == "player" and powerType then
+        powerState.maxPowerChangeTimes[powerType] = GetTime()
     end
 end
 
@@ -1062,6 +1117,7 @@ local function OnRestingChange()
 end
 
 local function OnSpecChange()
+    Main.UpdateCurrentPower("player")
     if Main.refreshFramesOnSpecChange then
         Main.ReInitAddon()
     end
@@ -1126,6 +1182,10 @@ local EVENT_HANDLER = {
     PLAYER_UPDATE_RESTING = OnRestingChange,
     PLAYER_INTERACTION_MANAGER_FRAME_SHOW = OnInteractStart,
     PLAYER_INTERACTION_MANAGER_FRAME_HIDE = OnInteractEnd,
+    QUEST_GREETING = OnInteractStart,
+    QUEST_PROGRESS = OnInteractStart,
+    QUEST_FINISHED = OnQuestDetail,
+    QUEST_COMPLETE = OnQuestDetail,
     QUEST_DETAIL = OnQuestDetail,
 
 }

@@ -6,20 +6,23 @@ local L = LibStub("AceLocale-3.0"):GetLocale("AutoHideUI")
 local CHANGELOG_DATA = {
     {
         version = "1.2.33",
-        date = "Nov 23rd",
+        date = "Nov 24th",
         entries = {
             {
                 title = "New",
                 content =  {
-                    "Added new Condition for Player's Resource being in use.|n"..
-                    "Due to AddOn restrictions this relies on a workaround. If your resource didn't change for more than 3sec it's assumed that it's at rest."
+                    "Added new Condition for Player Resource.|n"..
+                    "Due to AddOn restrictions this relies on a workaround by simply monitoring resource activity:|n"..
+                    "The condition is active if your resource value changed recently.|n"..
+                    "And inactive if your resource didn't change for more than 3sec."
                 },
             },
             {
                 title = "Fixes",
                 content =  {
+                    "Fixed \"isInteracting\" Condition not triggering when turning in quests.",
                     "Fixed some tooltips in the Conditions tab.",
-                    "The \"Disable All\" button in the Conditions tab won't disable children anymore.",
+                    "The \"Disable All\" button in the Conditions tab won't disable child-conditions anymore.",
                 },
             },
         },

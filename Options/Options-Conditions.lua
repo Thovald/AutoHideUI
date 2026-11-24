@@ -283,6 +283,10 @@ ConditionsTab.CONDITION_DEFINITIONS = {
         type = "default",
         description = L["descr_isInteracting"],
         events = {
+            "QUEST_GREETING",
+            "QUEST_PROGRESS",
+            "QUEST_FINISHED",
+            "QUEST_COMPLETE",
             "PLAYER_INTERACTION_MANAGER_FRAME_SHOW",
             "PLAYER_INTERACTION_MANAGER_FRAME_HIDE",
             "QUEST_DETAIL"
@@ -343,15 +347,11 @@ ConditionsTab.CONDITION_DEFINITIONS = {
             },
         },
     },
-
-
-
-
-
-
     -- ─────────────────────────────────────────────────────────────────────────────----
-    -- START focus 
+    -- START power
     -- ─────────────────────────────────────────────────────────────────────────────----
+    -- if we add more, need new entries in core.lua's CONDITION_POWER_MAPPING
+    -- and in locales
     {
         name = "power",
         db = {
@@ -435,29 +435,7 @@ ConditionsTab.CONDITION_DEFINITIONS = {
         parent = "power",
     },
     {
-        name = "powerHolyPower",
-        db = {
-            enabled = true,
-            alpha = 1,
-            priority = false,
-            customize = false,
-        },
-        type = "child",
-        parent = "power",
-    },
-    {
         name = "powerMaelstrom",
-        db = {
-            enabled = true,
-            alpha = 1,
-            priority = false,
-            customize = false,
-        },
-        type = "child",
-        parent = "power",
-    },
-    {
-        name = "powerChi",
         db = {
             enabled = true,
             alpha = 1,
@@ -489,36 +467,9 @@ ConditionsTab.CONDITION_DEFINITIONS = {
         type = "child",
         parent = "power",
     },
-    {
-        name = "powerPain",
-        db = {
-            enabled = true,
-            alpha = 1,
-            priority = false,
-            customize = false,
-        },
-        type = "child",
-        parent = "power",
-    },
-
-
-
-
-
-
-
     -- ─────────────────────────────────────────────────────────────────────────────----
-    -- END focus
+    -- END power
     -- ─────────────────────────────────────────────────────────────────────────────----
-
-
-
-
-
-
-
-
-
     {
         name = "mounted",
         db = {

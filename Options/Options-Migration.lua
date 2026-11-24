@@ -218,13 +218,10 @@ local MigrationDB = {
         Migration.AddCondition(profile, "powerEnergy")
         Migration.AddCondition(profile, "powerRunicPower")
         Migration.AddCondition(profile, "powerLunarPower")
-        Migration.AddCondition(profile, "powerHolyPower")
         Migration.AddCondition(profile, "powerMaelstrom")
-        Migration.AddCondition(profile, "powerChi")
         Migration.AddCondition(profile, "powerInsanity")
         Migration.AddCondition(profile, "powerFury")
-        Migration.AddCondition(profile, "powerPain")
-    end
+    end,
 }
 
 function Migration.AddCondition(profile, conditionName)

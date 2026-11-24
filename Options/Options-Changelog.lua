@@ -5,6 +5,18 @@ local L = LibStub("AceLocale-3.0"):GetLocale("AutoHideUI")
 
 local CHANGELOG_DATA = {
     {
+        version = "1.2.34",
+        date = "Nov 24th",
+        entries = {
+            {
+                title = "Misc",
+                content =  {
+                    "Improved handling of frames that were not immediately available at login and therefore were not included in the initial scan.|n"
+                },
+            },
+        },
+    },
+    {
         version = "1.2.33",
         date = "Nov 24th",
         entries = {

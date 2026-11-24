@@ -370,6 +370,8 @@ local function ClearQueues()
 end
 
 local function ResetAddon()
+    Main.CancelMissingFramesTimer()
+    wipe(Frames.missingFrames)
     Frames.ResetFrames()
     MouseoverAreas.ClearAreas()
     ResetStates()
@@ -393,6 +395,8 @@ local function InitAddon()
     Main.UpdateAllConditions()
     Fading.SetAllAlpha()
     ManualControl.StartListening()
+
+    --print("Init done! Missing Frames:", #Frames.missingFrames)
 end
 
 function Main.SuspendAddon()
@@ -481,6 +485,32 @@ function Main.GetConditionsSettings(conditionsDB)
     end
 
     return conditions
+end
+
+function Main.CancelMissingFramesTimer()
+    if Frames.missingFramesTimer then
+        Frames.missingFramesTimer:Cancel()
+        Frames.missingFramesTimer = nil
+    end
+end
+
+local function ReCheckMissingFrames()
+    for _, info in ipairs(Frames.missingFrames) do
+        local frameString, groupDB = unpack(info)
+        local frameInfo = Frames.GetAllFrameObjectsFromString(frameString, groupDB)
+        if frameInfo then
+            --print("found frame! running reinit")
+            Main.ReInitAddon()
+            return
+        end
+    end
+end
+
+local function QueueMissingFramesCheck()
+    if #Frames.missingFrames > 0 then
+        Main.CancelMissingFramesTimer()
+        Frames.missingFramesTimer = C_Timer.NewTimer(3, ReCheckMissingFrames)
+    end
 end
 
 -- ─────────────────────────────────────────────────────────────────────────────
@@ -925,6 +955,7 @@ local function OnFirstFrame()
         end
         InitAddon()
         Fading.UpdateAllFrameVisibility()
+        QueueMissingFramesCheck()
     end)
 end
 

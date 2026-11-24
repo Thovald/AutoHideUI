@@ -8,6 +8,8 @@ local minimapHelperFrameList = {} -- mouseover helpers for when minimap is hidde
 local addonLoadedStates = {}
 local FRAME_INFO_TEMPLATE = {frames = {}, args = {}, frameString = ""}
 local DYNAMIC_ADDON_FRAMES = {}
+Frames.missingFramesTimer = nil
+Frames.missingFrames = {}
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Spell Flyout Frame
@@ -1397,6 +1399,7 @@ local function GetAllFrameObjectsFromString(frameString, groupDB)
 
     return frameInfo
 end
+Frames.GetAllFrameObjectsFromString = GetAllFrameObjectsFromString
 
 local function GetAllCommonFrames(groupDB)
     -- the GUI's frame selection
@@ -1408,6 +1411,8 @@ local function GetAllCommonFrames(groupDB)
             frameList[frameString] = frameInfo
             frameInfo.args.isInUse = isChecked
             frameInfo.args.isCustom = false
+        else
+            tinsert(Frames.missingFrames, {frameString, groupDB})
         end
     end
 
@@ -1426,6 +1431,8 @@ local function GetAllCustomFrames(groupDB)
                 frameInfo.args.isInUse = true
                 frameInfo.args.isCustom = true
                 frameList[frameString] = frameInfo
+            else
+                tinsert(Frames.missingFrames, {frameString, groupDB})
             end
         end
     end

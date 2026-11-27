@@ -233,6 +233,37 @@ local MigrationDB = {
     end
 }
 
+local DEPRECATED_SETTINGS = {
+    -- deprecated in db_schema 6
+    { path = { "profiles", "ANY", "groups", "ANY", "config", "timeToFade" } },
+}
+
+local function RemovePath(tbl, path, depth)
+    if type(tbl) ~= "table" then
+        return
+    end
+
+    local key = path[depth]
+    if depth == #path then
+        tbl[key] = nil
+        return
+    end
+
+    if key == "ANY" then
+        for _, child in pairs(tbl) do
+            RemovePath(child, path, depth + 1)
+        end
+    else
+        RemovePath(tbl[key], path, depth + 1)
+    end
+end
+
+function Migration.RemoveDeprecatedSettings()
+    for _, info in ipairs(DEPRECATED_SETTINGS) do
+        RemovePath(Private.db, info.path, 1)
+    end
+end
+
 function Migration.AddCondition(profile, conditionName)
     local newConditionDB
 

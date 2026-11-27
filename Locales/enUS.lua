@@ -62,9 +62,10 @@ L["Experience Bar"] = true
 -- tab: fade behavior
 L["tab_fadeSetup"] = "Fade Settings"
 L["group_fadeAnimation"] = "Fade Animation"
-L["slider_fadeOutDelay"] = "Delay before fading out"
-L["slider_fadeInDelay"] = "Delay before fading in"
-L["slider_fadeDuration"] = "Duration of Fade-Animation"
+L["slider_fadeOutDelay"] = "Delay before Fade-Out"
+L["slider_fadeInDelay"] = "Delay before Fade-In"
+L["slider_durationFadeOut"] = "Duration of Fade-Out Animation"
+L["slider_durationFadeIn"] = "Duration of Fade-In Animation"
 
 L["group_alpha"] = "Alpha"
 L["slider_idleAlpha"] = "Alpha when no Conditions are active"
@@ -299,4 +300,3 @@ L["label_powerFury"] = "Fury"
 L["descr_power"] = "When the player's primary resource is not at rest.|n|n"..
                    "For example when missing Mana or when more than 0 Rage is available."
 L["descr_powerMana"] = "Will only trigger in healing specs."
-

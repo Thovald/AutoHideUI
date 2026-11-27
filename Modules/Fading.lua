@@ -131,7 +131,7 @@ local function AutoHide_FrameFade_OnUpdate(self, elapsed)
 		fadeInfo = FADE_QUEUE[index].ahui_fadeInfo
 		fadeInfo.fadeTimer = fadeInfo.fadeTimer + totalElapsed
 
-		if fadeInfo.fadeTimer < fadeInfo.timeToFade then
+		if fadeInfo.fadeTimer < fadeInfo.fadeDuration then
             newAlpha = fadeInfo.currentAlpha + (fadeInfo.alphaStep * framerateDiff)
             fadeInfo.alphaFunc(frame, newAlpha)
             fadeInfo.currentAlpha = newAlpha
@@ -269,6 +269,10 @@ function Fading.CancelPendingFade(group)
     end
 end
 
+local function GetFadeDuration(group)
+    return group.states.fadeMode == "OUT" and group.config.durationFadeOut or group.config.durationFadeIn
+end
+
 local function PlayFadeAnimation(group, alphaStep)
     for _, frame in pairs(group.frames) do
         if not Main.helperFrames[frame] then
@@ -280,7 +284,7 @@ local function PlayFadeAnimation(group, alphaStep)
                 tDeleteItem(FADE_QUEUE, frame) -- in case user managed to add frames to multiple groups
                 frame.ahui_fadeInfo = {
                     mode = group.states.fadeMode,
-                    timeToFade = group.config.timeToFade,
+                    fadeDuration = GetFadeDuration(group),
                     startAlpha = group.states.startAlpha,
                     endAlpha = group.states.endAlpha,
                     alphaFunc = alphaFunc,
@@ -316,8 +320,8 @@ local function FadeImmediately(group)
     end
 end
 
-function Fading.GetRequiredSteps(timeToFade)
-    return max(1, timeToFade / FADE_THROTTLE)
+function Fading.GetRequiredSteps(fadeDuration)
+    return max(1, fadeDuration / FADE_THROTTLE)
 end
 
 local function ApplyFade(group, targetAlpha)
@@ -332,15 +336,18 @@ local function ApplyFade(group, targetAlpha)
     end
 
     states.endAlpha = targetAlpha
-    states.fadeEndTime = GetTime() + group.config.timeToFade
 
-    local requiredSteps = Fading.GetRequiredSteps(group.config.timeToFade)
+    local fadeDuration = GetFadeDuration(group)
+    states.fadeEndTime = GetTime() + fadeDuration
+
+    local requiredSteps = Fading.GetRequiredSteps(fadeDuration)
 
     if requiredSteps >= 2 then
         local alphaDiff = states.endAlpha - states.startAlpha
         local alphaStep =  alphaDiff / requiredSteps
         PlayFadeAnimation(group, alphaStep)
     else
+        Fading.RemoveGroupFromFadeQueue(group)
         FadeImmediately(group)
     end
 

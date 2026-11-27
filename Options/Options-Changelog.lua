@@ -5,6 +5,18 @@ local L = LibStub("AceLocale-3.0"):GetLocale("AutoHideUI")
 
 local CHANGELOG_DATA = {
     {
+        version = "1.2.36",
+        date = "Nov 27th",
+        entries = {
+            {
+                title = "New",
+                content =  {
+                    "FadeIn and FadeOut duration can now be set independently and increased range of fade duration sliders.",
+                },
+            },
+        },
+    },
+    {
         version = "1.2.35",
         date = "Nov 24th",
         entries = {

@@ -194,12 +194,12 @@ local function UpdateMouseoverColor(helperFrame)
 end
 
 function FrameFinder.FadeOut(frame)
-    local timeToFade = 0.3
-    local requiredSteps = Fading.GetRequiredSteps(timeToFade)
+    local fadeDuration = 0.3
+    local requiredSteps = Fading.GetRequiredSteps(fadeDuration)
     local alphaStep =  -0.75 / requiredSteps
     frame.ahui_fadeInfo = {
         mode = "OUT",
-        timeToFade = timeToFade,
+        fadeDuration = fadeDuration,
         startAlpha = 1,
         endAlpha = 0.25,
         alphaFunc = frame._origSetAlpha or frame.SetAlpha,
@@ -214,12 +214,12 @@ function FrameFinder.FadeOut(frame)
 end
 
 function FrameFinder.FadeIn(frame)
-    local timeToFade = 0.3
-    local requiredSteps = Fading.GetRequiredSteps(timeToFade)
+    local fadeDuration = 0.3
+    local requiredSteps = Fading.GetRequiredSteps(fadeDuration)
     local alphaStep =  0.75 / requiredSteps
     frame.ahui_fadeInfo = {
         mode = "IN",
-        timeToFade = timeToFade,
+        fadeDuration = fadeDuration,
         startAlpha = 0.25,
         endAlpha = 1,
         alphaFunc = frame._origSetAlpha or frame.SetAlpha,

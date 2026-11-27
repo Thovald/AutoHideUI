@@ -5,7 +5,7 @@ local Main = Private.Main
 local Migration = Private.Migration
 local Config = Private.Config
 
-Main.DB_SCHEMA_VERSION = 5
+Main.DB_SCHEMA_VERSION = 6
 
 local MigrationDB = {
     -- when parent/child conditions, manualControl and mouseover areas were introduced
@@ -222,6 +222,15 @@ local MigrationDB = {
         Migration.AddCondition(profile, "powerInsanity")
         Migration.AddCondition(profile, "powerFury")
     end,
+
+    [6] = function(profile)
+        for i, group in pairs(profile.groups) do
+            if group.config then
+                group.config.durationFadeIn = 0
+                group.config.durationFadeOut = group.config.timeToFade
+            end
+        end
+    end
 }
 
 function Migration.AddCondition(profile, conditionName)
